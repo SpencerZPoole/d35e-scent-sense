@@ -8,11 +8,11 @@ This repository contains module code, public-safe documentation, and validation 
 
 - Foundry Virtual Tabletop: minimum `14`, verified `14.361`
 - D35E system: minimum `3.0.2`, verified `3.0.2`
-- Module version: `0.1.0`
+- Module version: `0.1.1`
 
 ## Release Status
 
-This repository is release-manifest-ready for version `0.1.0`.
+This repository is release-manifest-ready for version `0.1.1`.
 
 Install through this manifest URL:
 

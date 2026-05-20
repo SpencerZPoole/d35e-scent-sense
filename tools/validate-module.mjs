@@ -21,7 +21,7 @@ const requiredFiles = [
 
 const errors = [];
 const expectedManifestUrl = "https://github.com/SpencerZPoole/d35e-scent-sense/releases/latest/download/module.json";
-const expectedDownloadUrl = "https://github.com/SpencerZPoole/d35e-scent-sense/releases/download/v0.1.0/d35e-scent-sense-v0.1.0.zip";
+const expectedDownloadUrl = "https://github.com/SpencerZPoole/d35e-scent-sense/releases/download/v0.1.1/d35e-scent-sense-v0.1.1.zip";
 
 function fail(message) {
   errors.push(message);
@@ -50,8 +50,8 @@ readJson("lang/en.json");
 if (manifest) {
   if (manifest.id !== "d35e-scent-sense") fail("module.json id must be d35e-scent-sense");
   if (manifest.title !== "D35E Scent Sense") fail("module.json title must be D35E Scent Sense");
-  if (manifest.version !== "0.1.0") fail("module.json version must be 0.1.0");
-  if (manifest.license !== "MIT") fail("module.json license must be MIT");
+  if (manifest.version !== "0.1.1") fail("module.json version must be 0.1.1");
+  if (manifest.license !== "LICENSE.md") fail("module.json license must point to LICENSE.md");
   if (typeof manifest.url !== "string" || !manifest.url.includes("d35e-scent-sense")) fail("module.json url is missing or incorrect");
   if (manifest.manifest !== expectedManifestUrl) fail("module.json manifest URL is missing or incorrect");
   if (manifest.download !== expectedDownloadUrl) fail("module.json download URL is missing or incorrect");
@@ -65,7 +65,16 @@ if (manifest) {
   if (system?.compatibility?.verified !== "3.0.2") fail("D35E verified compatibility must be 3.0.2");
 
   for (const scriptPath of manifest.scripts ?? []) {
-    if (!fs.existsSync(path.join(root, scriptPath))) fail(`Manifest script path does not exist: ${scriptPath}`);
+    const fullScriptPath = path.join(root, scriptPath);
+    if (!fs.existsSync(fullScriptPath)) {
+      fail(`Manifest script path does not exist: ${scriptPath}`);
+      continue;
+    }
+
+    const scriptContent = fs.readFileSync(fullScriptPath, "utf8");
+    if (scriptContent.includes("game.socket") && manifest.socket !== true) {
+      fail(`Manifest script uses game.socket but module.json socket is not true: ${scriptPath}`);
+    }
   }
 
   for (const language of manifest.languages ?? []) {
@@ -75,7 +84,7 @@ if (manifest) {
 
 if (packageJson) {
   if (packageJson.name !== "d35e-scent-sense") fail("package.json name must be d35e-scent-sense");
-  if (packageJson.version !== "0.1.0") fail("package.json version must be 0.1.0");
+  if (packageJson.version !== "0.1.1") fail("package.json version must be 0.1.1");
   if (packageJson.license !== "MIT") fail("package.json license must be MIT");
   if (packageJson.private !== true) fail("package.json should be private to prevent accidental npm publication");
   for (const scriptName of ["check:js", "check:public", "validate", "test"]) {

@@ -4,7 +4,7 @@ Date: 2026-05-20
 
 ## Scope
 
-This audit covers the public staging copy at `PublicForks/d35e-scent-sense`. The live Foundry module remains the source behavior copy and was not edited by this packaging pass.
+This audit covers the public release copy of `d35e-scent-sense`. The live Foundry module remains the source behavior copy and was not edited by this packaging pass.
 
 ## Findings
 
@@ -13,7 +13,8 @@ This audit covers the public staging copy at `PublicForks/d35e-scent-sense`. The
 - Public metadata uses `3.5e SRD` and `D35E Foundry system` wording.
 - Original code and documentation are covered by `LICENSE.md`.
 - SRD-derived Scent mechanics are identified under `OGL-1.0a.txt`.
-- The manifest includes release `manifest` and `download` URLs for tag `v0.1.0`.
+- The manifest includes release `manifest` and `download` URLs for tag `v0.1.1`.
+- The manifest enables the package socket namespace required by owner/GM Scent alerts.
 
 ## Remaining Human Review
 

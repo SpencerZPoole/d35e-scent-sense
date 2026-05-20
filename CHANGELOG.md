@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.1.1 - 2026-05-20
+
+- Added the required Foundry module socket manifest flag for owner/GM alert messaging.
+- Pointed the Foundry manifest license field at `LICENSE.md`.
+- Hardened validation so socket-using scripts require `"socket": true`.
+
 ## 0.1.0 - 2026-05-20
 
 - Staged a public-safe source copy of the local D35E Scent Sense module.
