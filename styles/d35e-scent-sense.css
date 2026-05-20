@@ -9,6 +9,7 @@
 }
 
 .d35e-scent-context-manager select,
+.d35e-scent-context-manager input[type="text"],
 .d35e-scent-context-manager button {
   min-height: 30px;
 }
@@ -34,7 +35,7 @@
 
 .d35e-scent-context-manager__controls {
   display: grid;
-  grid-template-columns: repeat(3, minmax(120px, 1fr)) minmax(180px, 1.4fr) auto;
+  grid-template-columns: repeat(4, minmax(110px, 1fr)) minmax(170px, 1.2fr) minmax(180px, 1.3fr) auto;
   gap: 8px;
   align-items: end;
 }
@@ -72,6 +73,11 @@
 
 .d35e-scent-context-manager td:first-child {
   min-width: 140px;
+}
+
+.d35e-scent-context-manager__tags,
+.d35e-scent-context-manager td input[type="text"] {
+  min-width: 150px;
 }
 
 .d35e-scent-context-manager td strong,

@@ -5,14 +5,17 @@
     evaluateScentDetection,
     format,
     getContextApi,
+    getOdorProfile,
     getScentContext,
     getScentRange,
+    identifyFamiliarOdor,
     localize,
     measureTokenDistance,
     moduleId,
     refreshOverlay,
     resetNotificationState,
     roundDistance,
+    setOdorProfileFlags,
     setScentContextFlags,
     template,
   } = {}) {
@@ -41,6 +44,11 @@
           option("false", localize("D35EScent.ContextManager.No")),
           option("true", localize("D35EScent.ContextManager.Yes")),
         ],
+        falseOdor: [
+          option("inherit", localize("D35EScent.ContextManager.Inherit")),
+          option("false", localize("D35EScent.ContextManager.No")),
+          option("true", localize("D35EScent.ContextManager.Yes")),
+        ],
       };
     }
 
@@ -49,6 +57,20 @@
       const value = contextApi?.readFlag?.(document, key);
       if (value === undefined) return "inherit";
       return String(contextApi?.normalizeFlagValue?.(key, value) ?? value);
+    }
+
+    function profileSelection(document, key) {
+      const profileApi = globalThis.d35eScentSenseOdorProfile;
+      const value = profileApi?.readFlag?.(document, key);
+      if (value === undefined) return "inherit";
+      return String(profileApi?.normalizeFlagValue?.(key, value) ?? value);
+    }
+
+    function profileTagsValue(document) {
+      const profileApi = globalThis.d35eScentSenseOdorProfile;
+      const value = profileApi?.readFlag?.(document, "odorTags");
+      if (value === undefined) return "";
+      return profileApi?.normalizeOdorTags?.(value)?.join(", ") ?? "";
     }
 
     function getDefaultSourceTokenId() {
@@ -71,6 +93,18 @@
       if (detection.detectable === true && detection.pinpoint === true) return localize("D35EScent.ContextManager.Preview.Pinpoint");
       if (detection.detectable === true) return localize("D35EScent.ContextManager.Preview.Detectable");
       return localize("D35EScent.ContextManager.Preview.OutOfRange");
+    }
+
+    function formatTags(tags) {
+      return Array.isArray(tags) && tags.length > 0 ? tags.join(", ") : localize("D35EScent.ContextManager.None");
+    }
+
+    function formatFamiliarity(match) {
+      if (!match || match.targetTags.length === 0) return localize("D35EScent.ContextManager.Familiarity.NoTags");
+      if (match.familiar) {
+        return format("D35EScent.ContextManager.Familiarity.Match", { tags: match.matchedTags.join(", ") });
+      }
+      return localize("D35EScent.ContextManager.Familiarity.NoMatch");
     }
 
     function buildContextManagerData(selectedSourceTokenId = "") {
@@ -97,6 +131,8 @@
           const document = token.document;
           const range = getScentRange(token.actor);
           const scentContext = getScentContext(sourceToken, token, { scene });
+          const odorProfile = getOdorProfile?.(token, { scene })?.profile ?? scentContext.odorProfile ?? scentContext.context;
+          const familiarMatch = sourceToken?.actor ? identifyFamiliarOdor?.(sourceToken.actor, odorProfile) : null;
           const relevant = getContextApi()?.readFlag?.(document, "scentRelevant") === true;
           const detection = sourceToken && sourceToken.id !== token.id && sourceRange > 0
             ? evaluateScentDetection(sourceToken, token, { baseRange: sourceRange, distance: measureTokenDistance(sourceToken, token), scene })
@@ -111,14 +147,21 @@
             windBand: contextSelection(document, "windBand"),
             odorStrength: contextSelection(document, "odorStrength"),
             maskingOdor: contextSelection(document, "maskingOdor"),
+            falseOdor: profileSelection(document, "falseOdor"),
+            odorTags: profileTagsValue(document),
             scentRelevant: relevant,
             effectiveWind: scentContext.context.windBand,
             effectiveOdor: scentContext.context.odorStrength,
             effectiveMasking: scentContext.context.maskingOdor ? localize("D35EScent.ContextManager.Yes") : localize("D35EScent.ContextManager.No"),
+            effectiveFalseOdor: odorProfile.falseOdor ? localize("D35EScent.ContextManager.Yes") : localize("D35EScent.ContextManager.No"),
+            effectiveTags: formatTags(odorProfile.odorTags),
+            familiarity: formatFamiliarity(familiarMatch),
             sourceSummary: format("D35EScent.ContextManager.SourceSummary", {
               wind: formatContextSource(scentContext.sources.windBand),
               odor: formatContextSource(scentContext.sources.odorStrength),
               masking: formatContextSource(scentContext.sources.maskingOdor),
+              falseOdor: formatContextSource(scentContext.sources.falseOdor),
+              tags: formatContextSource(scentContext.sources.odorTags),
             }),
             preview: detection ? {
               label: formatDetectionPreview(detection),
@@ -135,6 +178,8 @@
           windBand: contextSelection(scene, "windBand"),
           odorStrength: contextSelection(scene, "odorStrength"),
           maskingOdor: contextSelection(scene, "maskingOdor"),
+          falseOdor: profileSelection(scene, "falseOdor"),
+          odorTags: profileTagsValue(scene),
         },
         sourceTokenId,
         sourceOptions,
@@ -158,6 +203,7 @@
     async function clearSceneContextFlags() {
       if (!canvas?.scene) return;
       await setScentContextFlags(canvas.scene, { windBand: "inherit", odorStrength: "inherit", maskingOdor: "inherit" }, { token: false, refresh: false });
+      await setOdorProfileFlags?.(canvas.scene, { falseOdor: "inherit", odorTags: "inherit" }, { refresh: false });
       await afterContextManagerWrite();
     }
 
@@ -170,6 +216,7 @@
         maskingOdor: "inherit",
         scentRelevant: "inherit",
       }, { token: true, refresh: false });
+      await setOdorProfileFlags?.(token.document, { falseOdor: "inherit", odorTags: "inherit" }, { refresh: false });
       await afterContextManagerWrite();
     }
 
@@ -184,6 +231,10 @@
           odorStrength: getSelectValue(root, '[name="scene.odorStrength"]'),
           maskingOdor: getSelectValue(root, '[name="scene.maskingOdor"]'),
         }, { token: false, refresh: false });
+        await setOdorProfileFlags?.(scene, {
+          falseOdor: getSelectValue(root, '[name="scene.falseOdor"]'),
+          odorTags: root.querySelector('[name="scene.odorTags"]')?.value ?? "",
+        }, { refresh: false });
       }
 
       for (const row of root.querySelectorAll("[data-scent-token-id]")) {
@@ -196,6 +247,10 @@
           maskingOdor: row.querySelector('[data-field="maskingOdor"]')?.value ?? "inherit",
           scentRelevant: row.querySelector('[data-field="scentRelevant"]')?.checked === true,
         }, { token: true, refresh: false });
+        await setOdorProfileFlags?.(token.document, {
+          falseOdor: row.querySelector('[data-field="falseOdor"]')?.value ?? "inherit",
+          odorTags: row.querySelector('[data-field="odorTags"]')?.value ?? "",
+        }, { refresh: false });
       }
 
       await afterContextManagerWrite();
@@ -218,7 +273,7 @@
             resizable: true,
           },
           position: {
-            width: 860,
+            width: 1080,
           },
           form: {
             submitOnChange: false,

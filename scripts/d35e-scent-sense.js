@@ -111,6 +111,10 @@
     return globalThis.d35eScentSenseState;
   }
 
+  function getOdorProfileApi() {
+    return globalThis.d35eScentSenseOdorProfile;
+  }
+
   function firstDefined(...values) {
     return values.find((value) => value !== undefined && value !== null && value !== "");
   }
@@ -176,14 +180,17 @@
       evaluateScentDetection,
       format,
       getContextApi,
+      getOdorProfile,
       getScentContext,
       getScentRange,
+      identifyFamiliarOdor,
       localize,
       measureTokenDistance,
       moduleId: MODULE_ID,
       refreshOverlay,
       resetNotificationState,
       roundDistance,
+      setOdorProfileFlags,
       setScentContextFlags,
       template: CONTEXT_MANAGER_TEMPLATE,
     });
@@ -194,6 +201,26 @@
 
   function getTargetDocument(targetToken) {
     return targetToken?.document ?? targetToken;
+  }
+
+  function getOdorProfileInputs(documentOrToken, options = {}) {
+    const document = getTargetDocument(documentOrToken);
+    const documentName = document?.documentName;
+    let scene = options.scene ?? canvas?.scene ?? null;
+    let targetDocument = null;
+    let targetActor = null;
+
+    if (documentName === "Scene") {
+      scene = document;
+    } else if (documentName === "Actor" || document?.items) {
+      targetActor = document;
+    } else {
+      targetDocument = document;
+      targetActor = documentOrToken?.actor ?? document?.actor ?? null;
+      scene = options.scene ?? document?.parent ?? canvas?.scene ?? null;
+    }
+
+    return { targetDocument, targetActor, scene };
   }
 
   function buildScentContext(sourceToken, targetToken, options = {}) {
@@ -208,7 +235,36 @@
     const contextApi = getContextApi();
 
     if (contextApi?.getScentContext) {
-      return contextApi.getScentContext({ explicit, targetDocument, targetActor, scene });
+      const scentContext = contextApi.getScentContext({ explicit, targetDocument, targetActor, scene });
+      const odorProfile = getOdorProfileApi()?.getOdorProfile?.({ explicit, targetDocument, targetActor, scene });
+      if (!odorProfile) return scentContext;
+
+      return {
+        ...scentContext,
+        context: {
+          ...scentContext.context,
+          odorStrength: odorProfile.profile.odorStrength,
+          maskingOdor: odorProfile.profile.maskingOdor,
+          falseOdor: odorProfile.profile.falseOdor,
+          odorTags: odorProfile.profile.odorTags,
+        },
+        sources: {
+          ...scentContext.sources,
+          odorStrength: odorProfile.sources.odorStrength,
+          maskingOdor: odorProfile.sources.maskingOdor,
+          falseOdor: odorProfile.sources.falseOdor,
+          odorTags: odorProfile.sources.odorTags,
+        },
+        values: {
+          ...scentContext.values,
+          odorStrength: odorProfile.values.odorStrength,
+          maskingOdor: odorProfile.values.maskingOdor,
+          falseOdor: odorProfile.values.falseOdor,
+          odorTags: odorProfile.values.odorTags,
+        },
+        odorProfile: odorProfile.profile,
+        odorProfileSources: odorProfile.sources,
+      };
     }
 
     const rules = getScentRules();
@@ -216,6 +272,34 @@
       context: rules?.normalizeContext?.({}) ?? { windBand: "normal", odorStrength: "normal", maskingOdor: false },
       sources: { windBand: "default", odorStrength: "default", maskingOdor: "default" },
       values: {},
+    };
+  }
+
+  function getOdorProfile(documentOrToken, options = {}) {
+    const odorProfileApi = getOdorProfileApi();
+    const { targetDocument, targetActor, scene } = getOdorProfileInputs(documentOrToken, options);
+    const explicit = options.odorProfile ?? options.context ?? options;
+
+    return odorProfileApi?.getOdorProfile?.({ explicit, targetDocument, targetActor, scene }) ?? {
+      profile: { odorStrength: "normal", maskingOdor: false, falseOdor: false, odorTags: [] },
+      sources: { odorStrength: "default", maskingOdor: "default", falseOdor: "default", odorTags: "default" },
+      values: {},
+    };
+  }
+
+  function identifyFamiliarOdor(actor, targetProfile, options = {}) {
+    const odorProfileApi = getOdorProfileApi();
+    const profile = targetProfile?.profile
+      ? targetProfile.profile
+      : targetProfile?.getFlag || targetProfile?.document || targetProfile?.flags
+        ? getOdorProfile(targetProfile, options).profile
+        : targetProfile;
+
+    return odorProfileApi?.identifyFamiliarOdor?.(actor, profile, options) ?? {
+      familiar: false,
+      matchedTags: [],
+      actorTags: [],
+      targetTags: [],
     };
   }
 
@@ -450,6 +534,36 @@
 
     for (const [key, value] of Object.entries(changes.set ?? {})) {
       if (contextApi?.readFlag?.(document, key) === value) continue;
+      await document.setFlag(MODULE_ID, key, value);
+      setKeys.push(key);
+    }
+
+    const updated = setKeys.length > 0 || unsetKeys.length > 0;
+    if (updated && options.refresh !== false) {
+      resetNotificationState({ scan: true });
+      refreshOverlay();
+    }
+
+    return { updated, set: setKeys, unset: unsetKeys };
+  }
+
+  async function setOdorProfileFlags(document, values = {}, options = {}) {
+    if (game.user?.isGM !== true) return { updated: false, reason: "not-gm", set: [], unset: [] };
+    if (!document?.setFlag || !document?.unsetFlag) return { updated: false, reason: "invalid-document", set: [], unset: [] };
+
+    const odorProfileApi = getOdorProfileApi();
+    const changes = odorProfileApi?.buildFlagChanges?.(values) ?? { set: {}, unset: [] };
+    const setKeys = [];
+    const unsetKeys = [];
+
+    for (const key of changes.unset ?? []) {
+      if (odorProfileApi?.readFlag?.(document, key) === undefined) continue;
+      await document.unsetFlag(MODULE_ID, key);
+      unsetKeys.push(key);
+    }
+
+    for (const [key, value] of Object.entries(changes.set ?? {})) {
+      if (JSON.stringify(odorProfileApi?.readFlag?.(document, key)) === JSON.stringify(value)) continue;
       await document.setFlag(MODULE_ID, key, value);
       setKeys.push(key);
     }
@@ -739,6 +853,8 @@
       evaluateScentDetection,
       evaluateScentState,
       getEffectiveScentRange,
+      getOdorProfile,
+      getOdorProfileApi,
       getScentContext,
       getScentRange,
       getContextApi,
@@ -746,11 +862,13 @@
       getScentStateApi,
       getTrackingByScentDc,
       hasScent,
+      identifyFamiliarOdor,
       isOverlayVisible,
       openContextManager,
       refresh,
       resetNotificationState,
       scan,
+      setOdorProfileFlags,
       setScentContextFlags,
       setOverlayVisible,
       syncActorTokens,

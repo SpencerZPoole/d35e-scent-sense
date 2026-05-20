@@ -21,6 +21,7 @@ This roadmap turns the current Scent helper into a stable `v1.0.0` module with d
 - Add familiar odor tags and identification helpers.
 - Add false/powerful odor source flags and context-manager controls.
 - Add `getOdorProfile`, `setOdorProfileFlags`, and `identifyFamiliarOdor`.
+- Keep familiar odor matching GM-facing and non-identifying for players.
 
 ## v0.7.0 Scent Tracking
 

@@ -27,6 +27,18 @@
         </select>
       </label>
 
+      <label>
+        <span>{{localize "D35EScent.ContextManager.FalseOdor.Label"}}</span>
+        <select name="scene.falseOdor">
+          {{selectOptions options.falseOdor selected=scene.falseOdor valueAttr="value" labelAttr="label"}}
+        </select>
+      </label>
+
+      <label class="d35e-scent-context-manager__tags">
+        <span>{{localize "D35EScent.ContextManager.OdorTags.Label"}}</span>
+        <input type="text" name="scene.odorTags" value="{{scene.odorTags}}" placeholder="{{localize 'D35EScent.ContextManager.OdorTags.Placeholder'}}">
+      </label>
+
       <label class="d35e-scent-context-manager__source">
         <span>{{localize "D35EScent.ContextManager.SourcePreview"}}</span>
         <select name="sourceTokenId">
@@ -51,6 +63,8 @@
             <th>{{localize "D35EScent.ContextManager.Wind.Label"}}</th>
             <th>{{localize "D35EScent.ContextManager.Odor.Label"}}</th>
             <th>{{localize "D35EScent.ContextManager.Masking.Label"}}</th>
+            <th>{{localize "D35EScent.ContextManager.FalseOdor.Label"}}</th>
+            <th>{{localize "D35EScent.ContextManager.OdorTags.Label"}}</th>
             <th>{{localize "D35EScent.ContextManager.GmMarked"}}</th>
             <th>{{localize "D35EScent.ContextManager.Effective"}}</th>
             <th>{{localize "D35EScent.ContextManager.Preview.Label"}}</th>
@@ -80,11 +94,21 @@
                   {{selectOptions ../options.masking selected=maskingOdor valueAttr="value" labelAttr="label"}}
                 </select>
               </td>
+              <td>
+                <select data-field="falseOdor">
+                  {{selectOptions ../options.falseOdor selected=falseOdor valueAttr="value" labelAttr="label"}}
+                </select>
+              </td>
+              <td>
+                <input type="text" data-field="odorTags" value="{{odorTags}}" placeholder="{{localize 'D35EScent.ContextManager.OdorTags.Placeholder'}}">
+              </td>
               <td class="d35e-scent-context-manager__mark">
                 <input type="checkbox" data-field="scentRelevant" {{#if scentRelevant}}checked{{/if}}>
               </td>
               <td>
-                <span>{{effectiveWind}} / {{effectiveOdor}} / {{effectiveMasking}}</span>
+                <span>{{effectiveWind}} / {{effectiveOdor}} / {{effectiveMasking}} / {{effectiveFalseOdor}}</span>
+                <small>{{effectiveTags}}</small>
+                <small>{{familiarity}}</small>
                 <small>{{sourceSummary}}</small>
               </td>
               <td>

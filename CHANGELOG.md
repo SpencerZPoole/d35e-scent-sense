@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.6.0 - 2026-05-20
+
+- Added a pure odor-profile helper layer for odor strength, masking odors, false odor sources, and familiar odor tags.
+- Added `game.d35eScentSense.getOdorProfile`, `setOdorProfileFlags`, `identifyFamiliarOdor`, and `game.d35eScentSense.odorProfile`.
+- Extended the GM Scent Context manager with false odor and odor tag controls for scene and token flags.
+- Added GM-facing odor profile details to Scent context output without changing player-facing identity privacy.
+- Updated validation, tests, documentation, and release metadata for the odor profile layer.
+
 ## 0.5.0 - 2026-05-20
 
 - Added a pure detection-state helper for presence, available direction requests, requested direction, GM-revealed direction, and 5 ft pinpoint.

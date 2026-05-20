@@ -56,12 +56,17 @@
 
     function buildGmContextContent(detail) {
       if (!detail?.context) return "";
+      const tags = Array.isArray(detail.context.odorTags) && detail.context.odorTags.length > 0
+        ? detail.context.odorTags.join(", ")
+        : "none";
 
       return `<p>${escapeHtml(format("D35EScent.Alert.GmContextDetail", {
         range: Number.isFinite(detail.effectiveRange) ? roundDistance(detail.effectiveRange) : "?",
         wind: detail.context.windBand ?? "normal",
         odor: detail.context.odorStrength ?? "normal",
         masking: detail.context.maskingOdor === true ? "yes" : "no",
+        falseOdor: detail.context.falseOdor === true ? "yes" : "no",
+        tags,
       }))}</p>`;
     }
 
