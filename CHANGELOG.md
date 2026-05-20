@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.6.3 - 2026-05-20
+
+- Preserved false odor and odor tag metadata on detection results after RAW range evaluation normalizes wind, odor strength, and masking context.
+- Completed final scratch-world product validation for the odor profile detection context path.
+
 ## 0.6.2 - 2026-05-20
 
 - Fixed Scent range discovery for D35E actors with `noVisionOverride` enabled; that D35E option controls token vision override behavior and should not suppress Scent.

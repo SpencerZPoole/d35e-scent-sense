@@ -441,7 +441,14 @@
     const context = buildScentContext(sourceToken, targetToken, options);
 
     if (rules?.evaluateDetection) {
-      return rules.evaluateDetection({ sourceToken, targetToken, baseRange, distance, context, pinpointRange: PINPOINT_RANGE });
+      const detection = rules.evaluateDetection({ sourceToken, targetToken, baseRange, distance, context, pinpointRange: PINPOINT_RANGE });
+      return {
+        ...detection,
+        context: {
+          ...context,
+          ...(detection.context ?? {}),
+        },
+      };
     }
 
     const effectiveRange = context.maskingOdor ? 0 : baseRange;
