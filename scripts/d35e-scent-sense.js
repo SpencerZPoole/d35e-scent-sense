@@ -39,6 +39,7 @@
     PRESENCE_ALERT: "presenceAlert",
     PINPOINT_ALERT: "pinpointAlert",
     MOVE_ACTION_REQUEST: "moveActionRequest",
+    DIRECTION_REVEALED: "directionRevealed",
     SCAN_REQUEST: "scanRequest",
   };
 
@@ -104,6 +105,10 @@
 
   function getContextApi() {
     return globalThis.d35eScentSenseContext;
+  }
+
+  function getScentStateApi() {
+    return globalThis.d35eScentSenseState;
   }
 
   function firstDefined(...values) {
@@ -346,7 +351,7 @@
     return rules?.calculateEffectiveRange?.(baseRange, context) ?? baseRange;
   }
 
-  function evaluateScentDetection(sourceToken, targetToken, options = {}) {
+  function evaluateBaseScentDetection(sourceToken, targetToken, options = {}) {
     const rules = getScentRules();
     const baseRange = options.baseRange !== undefined ? positiveNumber(options.baseRange, 0) : getScentRange(getTokenActor(sourceToken));
     const distance = options.distance !== undefined ? Number(options.distance) : measureTokenDistance(sourceToken, targetToken);
@@ -370,6 +375,52 @@
       distance,
       context,
       pinpointRange: PINPOINT_RANGE,
+    };
+  }
+
+  function getDirectionStatus(sourceToken, targetToken, options = {}) {
+    return ensureRuntimes().alerts.getDirectionStatus({
+      sceneId: options.scene?.id ?? targetToken?.scene?.id ?? targetToken?.document?.parent?.id ?? canvas?.scene?.id,
+      sourceTokenId: sourceToken?.id,
+      targetTokenId: targetToken?.id,
+    });
+  }
+
+  function evaluateScentState(sourceToken, targetToken, options = {}) {
+    const stateApi = getScentStateApi();
+    const detection = options.detection ?? evaluateBaseScentDetection(sourceToken, targetToken, options);
+    const directionStatus = options.directionStatus ?? getDirectionStatus(sourceToken, targetToken, options);
+
+    return stateApi?.evaluateScentState?.({
+      detection,
+      directionAvailable: options.directionAvailable,
+      directionStatus,
+    }) ?? {
+      ...detection,
+      state: detection.detectable ? detection.pinpoint ? RANGE_BANDS.PINPOINT : RANGE_BANDS.PRESENCE : "none",
+      states: detection.detectable ? [detection.pinpoint ? RANGE_BANDS.PINPOINT : RANGE_BANDS.PRESENCE] : [],
+      notificationBand: detection.band,
+      directionAvailable: false,
+      directionRequested: false,
+      directionRevealed: false,
+      directionStatus: "none",
+      requiresGmDirection: false,
+    };
+  }
+
+  function evaluateScentDetection(sourceToken, targetToken, options = {}) {
+    const detection = evaluateBaseScentDetection(sourceToken, targetToken, options);
+    const state = evaluateScentState(sourceToken, targetToken, { ...options, detection });
+    return {
+      ...detection,
+      state: state.state,
+      states: state.states,
+      directionAvailable: state.directionAvailable,
+      directionRequested: state.directionRequested,
+      directionRevealed: state.directionRevealed,
+      directionStatus: state.directionStatus,
+      requiresGmDirection: state.requiresGmDirection,
+      notificationBand: state.notificationBand,
     };
   }
 
@@ -521,11 +572,11 @@
         if (!shouldEvaluateScentTarget(sourceToken, targetToken)) continue;
 
         const distance = measureTokenDistance(sourceToken, targetToken);
-        const detection = evaluateScentDetection(sourceToken, targetToken, { baseRange: range, distance, scene });
-        if (!detection.detectable) continue;
+        const scentState = evaluateScentState(sourceToken, targetToken, { baseRange: range, distance, scene });
+        if (!scentState.detectable) continue;
         if (isWallBlocked(sourceToken, targetToken)) continue;
 
-        const band = detection.band;
+        const band = scentState.notificationBand ?? scentState.band;
         if (band === RANGE_BANDS.PRESENCE && !enablePresence) continue;
         if (band === RANGE_BANDS.PINPOINT && !enablePinpoint) continue;
 
@@ -537,9 +588,9 @@
 
         notificationState.add(stateKey);
         if (band === RANGE_BANDS.PINPOINT) {
-          await dispatchPinpointAlert({ scene, sourceToken, targetToken, distance, recipients, detection });
+          await dispatchPinpointAlert({ scene, sourceToken, targetToken, distance, recipients, detection: scentState });
         } else {
-          await dispatchPresenceAlert({ scene, sourceToken, targetToken, distance, recipients, detection });
+          await dispatchPresenceAlert({ scene, sourceToken, targetToken, distance, recipients, detection: scentState });
         }
         alerts += 1;
       }
@@ -591,6 +642,10 @@
 
   function registerSocket() {
     return ensureRuntimes().alerts.registerSocket();
+  }
+
+  function registerChatMessageHook() {
+    return ensureRuntimes().alerts.registerChatMessageHook();
   }
 
   function openContextManager(options = {}) {
@@ -664,6 +719,7 @@
     });
     Hooks.on("getSceneControlButtons", registerContextManagerTool);
     Hooks.on("renderTokenHUD", renderTokenHudToggle);
+    registerChatMessageHook();
     Hooks.on("userConnected", queueScan);
     Hooks.on("updateCombat", queueScan);
 
@@ -681,11 +737,13 @@
       },
       canTrackByScent,
       evaluateScentDetection,
+      evaluateScentState,
       getEffectiveScentRange,
       getScentContext,
       getScentRange,
       getContextApi,
       getScentRules,
+      getScentStateApi,
       getTrackingByScentDc,
       hasScent,
       isOverlayVisible,

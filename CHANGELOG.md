@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.5.0 - 2026-05-20
+
+- Added a pure detection-state helper for presence, available direction requests, requested direction, GM-revealed direction, and 5 ft pinpoint.
+- Added `game.d35eScentSense.evaluateScentState(sourceToken, targetToken, options)` and `game.d35eScentSense.state`.
+- Kept `evaluateScentDetection` backward compatible while adding non-breaking state metadata.
+- Added runtime-only direction request and reveal tracking with a GM-only reveal action.
+- Updated validation, tests, documentation, and release metadata for the new state layer.
+
 ## 0.4.0 - 2026-05-20
 
 - Added RAW coverage, architecture, and v1 roadmap documentation.

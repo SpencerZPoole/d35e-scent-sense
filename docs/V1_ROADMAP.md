@@ -12,8 +12,8 @@ This roadmap turns the current Scent helper into a stable `v1.0.0` module with d
 
 - Add explicit detection states: `presence`, `directionAvailable`, `directionRequested`, `directionRevealed`, and `pinpoint`.
 - Add `game.d35eScentSense.evaluateScentState(sourceToken, targetToken, options)`.
-- Keep `evaluateScentDetection` as a compatibility wrapper.
-- Track direction-request events cleanly for GM adjudication without automatically spending actions.
+- Keep `evaluateScentDetection` as a compatibility wrapper with non-breaking state metadata.
+- Track direction-request and GM-revealed events cleanly for GM adjudication without automatically spending actions.
 
 ## v0.6.0 Odor Profiles
 

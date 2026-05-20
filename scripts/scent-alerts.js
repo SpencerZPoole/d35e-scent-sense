@@ -17,9 +17,17 @@
     socketTypes,
   } = {}) {
     let socketRegistered = false;
+    let chatHookRegistered = false;
 
     const handledSocketMessages = new Set();
     const gmEventCache = new Map();
+    const directionState = new Map();
+
+    const DIRECTION_STATUSES = Object.freeze({
+      NONE: "none",
+      REQUESTED: "requested",
+      REVEALED: "revealed",
+    });
 
     function isPrimaryActiveGm() {
       if (game.user?.isGM !== true) return false;
@@ -72,6 +80,28 @@
       trimGmEventCache();
     }
 
+    function makeDirectionKey({ sceneId, sourceTokenId, targetTokenId } = {}) {
+      if (!sceneId || !sourceTokenId || !targetTokenId) return null;
+      return `${sceneId}|${sourceTokenId}|${targetTokenId}`;
+    }
+
+    function setDirectionStatus(detail, status) {
+      const key = makeDirectionKey(detail);
+      if (!key) return false;
+      directionState.set(key, {
+        status,
+        eventId: detail.eventId,
+        updatedAt: Date.now(),
+      });
+      return true;
+    }
+
+    function getDirectionStatus(detail) {
+      const key = makeDirectionKey(detail);
+      if (!key) return DIRECTION_STATUSES.NONE;
+      return directionState.get(key)?.status ?? DIRECTION_STATUSES.NONE;
+    }
+
     function dispatchSocketMessage(payload) {
       payload.id ??= randomId();
       game.socket?.emit(socketName, payload);
@@ -103,6 +133,11 @@
 
     function buildPinpointContent() {
       return `<p>${escapeHtml(localize("D35EScent.Alert.Pinpoint"))}</p>`;
+    }
+
+    function buildDirectionRevealButton(eventId) {
+      if (!eventId) return "";
+      return `<p><button type="button" data-d35e-scent-action="direction-revealed" data-event-id="${escapeHtml(eventId)}">${escapeHtml(localize("D35EScent.Alert.GmDirectionRevealButton"))}</button></p>`;
     }
 
     async function sendMoveActionRequest(alert) {
@@ -163,7 +198,7 @@
     }
 
     async function handleMoveActionRequest(payload) {
-      if (game.user?.isGM !== true) return;
+      if (!isPrimaryActiveGm()) return;
 
       const detail = gmEventCache.get(payload.eventId);
       const actorName = escapeHtml(detail?.sourceName ?? payload.sourceName ?? "A token");
@@ -171,6 +206,7 @@
 
       let content = `<p>${escapeHtml(format("D35EScent.Alert.GmDirectionRequest", { actor: actorName }))}</p>`;
       if (detail) {
+        setDirectionStatus(detail, DIRECTION_STATUSES.REQUESTED);
         content += `<p>${escapeHtml(format("D35EScent.Alert.GmDirectionDetail", {
           actor: detail.sourceName,
           target: detail.targetName,
@@ -178,9 +214,60 @@
           scene: sceneName,
         }))}</p>`;
         content += buildGmContextContent(detail);
+        content += buildDirectionRevealButton(detail.eventId);
       }
 
       await createGmWhisper(content);
+      queueScan();
+    }
+
+    async function handleDirectionRevealed(payload) {
+      if (game.user?.isGM !== true) return;
+
+      const detail = gmEventCache.get(payload.eventId);
+      if (!detail) return;
+
+      setDirectionStatus(detail, DIRECTION_STATUSES.REVEALED);
+      queueScan();
+    }
+
+    async function requestDirectionReveal(eventId) {
+      if (game.user?.isGM !== true || !eventId) return;
+
+      const payload = {
+        id: randomId(),
+        type: socketTypes.DIRECTION_REVEALED,
+        eventId,
+      };
+
+      game.socket?.emit(socketName, payload);
+      await handleDirectionRevealed(payload);
+    }
+
+    function bindDirectionRevealButtons(html) {
+      if (game.user?.isGM !== true) return;
+
+      const root = html?.[0] ?? html;
+      if (!root?.querySelectorAll) return;
+
+      for (const button of root.querySelectorAll('[data-d35e-scent-action="direction-revealed"]')) {
+        if (button.dataset.d35eScentBound === "true") continue;
+        button.dataset.d35eScentBound = "true";
+
+        button.addEventListener("click", async (event) => {
+          event.preventDefault();
+          const eventId = button.dataset.eventId;
+          button.disabled = true;
+
+          try {
+            await requestDirectionReveal(eventId);
+            button.textContent = localize("D35EScent.Alert.GmDirectionRevealMarked");
+          } catch (error) {
+            button.disabled = false;
+            console.error(`${moduleId} | Failed to mark Scent direction as revealed.`, error);
+          }
+        });
+      }
     }
 
     async function handleSocketMessage(payload) {
@@ -193,6 +280,11 @@
 
       if (payload.type === socketTypes.MOVE_ACTION_REQUEST) {
         await handleMoveActionRequest(payload);
+        return;
+      }
+
+      if (payload.type === socketTypes.DIRECTION_REVEALED) {
+        await handleDirectionRevealed(payload);
         return;
       }
 
@@ -212,12 +304,17 @@
         eventId,
         sceneId: scene.id,
         sceneName: scene.name,
+        sourceTokenId: sourceToken.id,
+        targetTokenId: targetToken.id,
+        sourceActorId: sourceToken.actor?.id,
+        targetActorId: targetToken.actor?.id,
         sourceName: sourceToken.name,
         targetName: targetToken.name,
         distance,
         effectiveRange: detection?.effectiveRange,
         context: detection?.context,
-        band: rangeBands.PRESENCE,
+        state: detection?.state,
+        band: detection?.notificationBand ?? detection?.band ?? rangeBands.PRESENCE,
       });
 
       await dispatchSocketMessage({
@@ -238,12 +335,17 @@
         eventId,
         sceneId: scene.id,
         sceneName: scene.name,
+        sourceTokenId: sourceToken.id,
+        targetTokenId: targetToken.id,
+        sourceActorId: sourceToken.actor?.id,
+        targetActorId: targetToken.actor?.id,
         sourceName: sourceToken.name,
         targetName: targetToken.name,
         distance,
         effectiveRange: detection?.effectiveRange,
         context: detection?.context,
-        band: rangeBands.PINPOINT,
+        state: detection?.state,
+        band: detection?.notificationBand ?? detection?.band ?? rangeBands.PINPOINT,
       };
       cacheGmEvent(eventId, detail);
 
@@ -282,9 +384,19 @@
       socketRegistered = true;
     }
 
+    function registerChatMessageHook() {
+      if (chatHookRegistered === true) return;
+
+      Hooks.on("renderChatMessage", (_message, html) => bindDirectionRevealButtons(html));
+      Hooks.on("renderChatMessageHTML", (_message, html) => bindDirectionRevealButtons(html));
+
+      chatHookRegistered = true;
+    }
+
     function reset() {
       handledSocketMessages.clear();
       gmEventCache.clear();
+      directionState.clear();
     }
 
     return Object.freeze({
@@ -292,7 +404,9 @@
       dispatchPresenceAlert,
       getActiveGmIds,
       getActiveOwnerRecipients,
+      getDirectionStatus,
       isPrimaryActiveGm,
+      registerChatMessageHook,
       registerSocket,
       reset,
     });

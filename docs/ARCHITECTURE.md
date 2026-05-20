@@ -10,6 +10,7 @@ Supporting runtime modules own the specialized behavior:
 
 - `scent-rules.js`: pure SRD-derived Scent calculations and tracking helpers.
 - `scent-context.js`: pure context flag normalization and precedence.
+- `scent-state.js`: pure detection-state normalization for presence, direction request/reveal status, and pinpoint.
 - `scent-detection.js`: Foundry-aware target filtering, distance measurement, and wall blocking.
 - `scent-overlay.js`: local Scent rings, pinpoint cues, and Token HUD overlay toggles.
 - `scent-alerts.js`: sockets, owner alerts, GM whispers, direction requests, and pinpoint notifications.
@@ -27,9 +28,8 @@ Supporting runtime modules own the specialized behavior:
 
 ## Future Architecture Work
 
-The next major architecture changes should add stateful service boundaries without changing existing APIs:
+The next major architecture changes should continue adding stateful service boundaries without changing existing APIs:
 
-- A detection-state service for presence, direction, and pinpoint state transitions.
 - An odor-profile service for familiar odors, false odors, and masking sources.
 - A trail service for scene-level Scent tracking records and Survival roll prompts.
 - A migration service for module-owned flags and future schema changes.
