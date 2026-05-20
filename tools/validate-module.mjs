@@ -13,9 +13,18 @@ const requiredFiles = [
   "CHANGELOG.md",
   "CONTRIBUTING.md",
   "SECURITY.md",
+  "docs/ARCHITECTURE.md",
+  "docs/RAW_COVERAGE_MATRIX.md",
+  "docs/V1_ROADMAP.md",
   "lang/en.json",
   "scripts/scent-rules.js",
   "scripts/scent-context.js",
+  "scripts/scent-detection.js",
+  "scripts/scent-overlay.js",
+  "scripts/scent-alerts.js",
+  "scripts/scent-d35e-integration.js",
+  "scripts/scent-context-manager.js",
+  "scripts/scent-api.js",
   "scripts/d35e-scent-sense.js",
   "styles/d35e-scent-sense.css",
   "templates/scent-context-manager.hbs",
@@ -27,7 +36,18 @@ const requiredFiles = [
 
 const errors = [];
 const expectedManifestUrl = "https://github.com/SpencerZPoole/d35e-scent-sense/releases/latest/download/module.json";
-const expectedDownloadUrl = "https://github.com/SpencerZPoole/d35e-scent-sense/releases/download/v0.3.0/d35e-scent-sense-v0.3.0.zip";
+const expectedDownloadUrl = "https://github.com/SpencerZPoole/d35e-scent-sense/releases/download/v0.4.0/d35e-scent-sense-v0.4.0.zip";
+const expectedScripts = [
+  "scripts/scent-rules.js",
+  "scripts/scent-context.js",
+  "scripts/scent-detection.js",
+  "scripts/scent-overlay.js",
+  "scripts/scent-alerts.js",
+  "scripts/scent-d35e-integration.js",
+  "scripts/scent-context-manager.js",
+  "scripts/scent-api.js",
+  "scripts/d35e-scent-sense.js",
+];
 
 function fail(message) {
   errors.push(message);
@@ -56,7 +76,7 @@ readJson("lang/en.json");
 if (manifest) {
   if (manifest.id !== "d35e-scent-sense") fail("module.json id must be d35e-scent-sense");
   if (manifest.title !== "D35E Scent Sense") fail("module.json title must be D35E Scent Sense");
-  if (manifest.version !== "0.3.0") fail("module.json version must be 0.3.0");
+  if (manifest.version !== "0.4.0") fail("module.json version must be 0.4.0");
   if (manifest.license !== "LICENSE.md") fail("module.json license must point to LICENSE.md");
   if (typeof manifest.url !== "string" || !manifest.url.includes("d35e-scent-sense")) fail("module.json url is missing or incorrect");
   if (manifest.manifest !== expectedManifestUrl) fail("module.json manifest URL is missing or incorrect");
@@ -69,9 +89,9 @@ if (manifest) {
   if (!system) fail("module.json must declare D35E system relationship");
   if (system?.compatibility?.minimum !== "3.0.2") fail("D35E minimum compatibility must be 3.0.2");
   if (system?.compatibility?.verified !== "3.0.2") fail("D35E verified compatibility must be 3.0.2");
-  if (manifest.scripts?.[0] !== "scripts/scent-rules.js") fail("module.json must load scripts/scent-rules.js first");
-  if (manifest.scripts?.[1] !== "scripts/scent-context.js") fail("module.json must load scripts/scent-context.js before the main module script");
-  if (manifest.scripts?.[2] !== "scripts/d35e-scent-sense.js") fail("module.json must load scripts/d35e-scent-sense.js after helper scripts");
+  if (JSON.stringify(manifest.scripts) !== JSON.stringify(expectedScripts)) {
+    fail("module.json scripts must load helper runtimes before scripts/d35e-scent-sense.js");
+  }
 
   for (const scriptPath of manifest.scripts ?? []) {
     const fullScriptPath = path.join(root, scriptPath);
@@ -97,7 +117,7 @@ if (manifest) {
 
 if (packageJson) {
   if (packageJson.name !== "d35e-scent-sense") fail("package.json name must be d35e-scent-sense");
-  if (packageJson.version !== "0.3.0") fail("package.json version must be 0.3.0");
+  if (packageJson.version !== "0.4.0") fail("package.json version must be 0.4.0");
   if (packageJson.license !== "MIT") fail("package.json license must be MIT");
   if (packageJson.private !== true) fail("package.json should be private to prevent accidental npm publication");
   for (const scriptName of ["check:js", "check:public", "test:context", "test:rules", "validate", "test"]) {

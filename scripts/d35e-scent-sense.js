@@ -10,15 +10,9 @@
   const DETECTION_MODE_ID = "scentPinpoint";
   const DEFAULT_SCENT_RANGE = 30;
   const PINPOINT_RANGE = 5;
-  const OVERLAY_NAME = `${MODULE_ID}.overlay`;
-  const CUE_NAME = `${MODULE_ID}.pinpointCue`;
-  const CONTEXT_MANAGER_TOOL_ID = `${MODULE_ID}-context-manager`;
   const CONTEXT_MANAGER_TEMPLATE = `modules/${MODULE_ID}/templates/scent-context-manager.hbs`;
-  const TOKEN_REFRESH_PATCHED = Symbol.for(`${MODULE_ID}.tokenDocumentRefreshDetectionModesPatched`);
-  const TOKEN_REFRESH_ORIGINAL = Symbol.for(`${MODULE_ID}.tokenDocumentRefreshDetectionModesOriginal`);
   const HOOKS_REGISTERED = Symbol.for(`${MODULE_ID}.hooksRegistered`);
   const SETTINGS_REGISTERED = Symbol.for(`${MODULE_ID}.settingsRegistered`);
-  const SOCKET_REGISTERED = Symbol.for(`${MODULE_ID}.socketRegistered`);
   const BOOTSTRAPPED = Symbol.for(`${MODULE_ID}.bootstrapped`);
 
   const SETTINGS = {
@@ -53,17 +47,11 @@
     PINPOINT: "pinpoint",
   };
 
-  let overlayContainer = null;
-  let cueContainer = null;
-  let wallCollisionWarningShown = false;
   let scanInProgress = false;
   let scanQueuedDuringRun = false;
-  let contextManager = null;
+  let moduleRuntimes = null;
 
-  const pendingActorSync = new Set();
   const notificationState = new Set();
-  const handledSocketMessages = new Set();
-  const gmEventCache = new Map();
 
   function isD35E() {
     return game.system?.id === "D35E";
@@ -128,6 +116,75 @@
     } catch (_error) {
       return undefined;
     }
+  }
+
+  function ensureRuntimes() {
+    if (moduleRuntimes) return moduleRuntimes;
+
+    const detection = globalThis.d35eScentSenseDetection.create({
+      getSetting,
+      positiveNumber,
+      settings: SETTINGS,
+    });
+
+    const overlay = globalThis.d35eScentSenseOverlay.create({
+      clone,
+      getSetting,
+      getScentRange,
+      hasScent,
+      localize,
+      moduleId: MODULE_ID,
+      positiveNumber,
+      settings: SETTINGS,
+    });
+
+    const alerts = globalThis.d35eScentSenseAlerts.create({
+      escapeHtml,
+      format,
+      getSetting,
+      localize,
+      moduleId: MODULE_ID,
+      queueScan,
+      randomId,
+      rangeBands: RANGE_BANDS,
+      roundDistance,
+      settings: SETTINGS,
+      showLocalPinpointCue,
+      socketName: SOCKET_NAME,
+      socketTypes: SOCKET_TYPES,
+    });
+
+    const integration = globalThis.d35eScentSenseD35EIntegration.create({
+      clone,
+      detectionModeId: DETECTION_MODE_ID,
+      getScentRange,
+      isD35E,
+      moduleId: MODULE_ID,
+      pinpointRange: PINPOINT_RANGE,
+      positiveNumber,
+      queueScan,
+      refreshOverlay,
+      senseId: SENSE_ID,
+    });
+
+    const contextManagerRuntime = globalThis.d35eScentSenseContextManager.create({
+      evaluateScentDetection,
+      format,
+      getContextApi,
+      getScentContext,
+      getScentRange,
+      localize,
+      measureTokenDistance,
+      moduleId: MODULE_ID,
+      refreshOverlay,
+      resetNotificationState,
+      roundDistance,
+      setScentContextFlags,
+      template: CONTEXT_MANAGER_TEMPLATE,
+    });
+
+    moduleRuntimes = { alerts, contextManager: contextManagerRuntime, detection, integration, overlay };
+    return moduleRuntimes;
   }
 
   function getTargetDocument(targetToken) {
@@ -356,480 +413,68 @@
   }
 
   function registerScentSense() {
-    if (!isD35E()) return;
-    CONFIG.D35E ??= {};
-    CONFIG.D35E.senses ??= {};
-    CONFIG.D35E.senses[SENSE_ID] ??= "D35E.Sense.scent";
+    return ensureRuntimes().integration.registerScentSense();
   }
 
   function registerDetectionMode() {
-    if (!isD35E()) return;
-
-    const DetectionMode = foundry.canvas?.perception?.DetectionMode;
-    if (!DetectionMode || !CONFIG.Canvas?.detectionModes) {
-      console.warn(`${MODULE_ID} | Foundry detection mode API was not available.`);
-      return;
-    }
-
-    if (CONFIG.Canvas.detectionModes[DETECTION_MODE_ID]) return;
-
-    class DetectionModeScentPinpoint extends DetectionMode {
-      static ID = DETECTION_MODE_ID;
-      static LABEL = "D35E.Sense.scentPinpoint";
-      static DETECTION_TYPE = DetectionMode.DETECTION_TYPES.OTHER;
-      static PRIORITY = 200_400;
-
-      constructor(data = {}, ...args) {
-        data.walls = true;
-        super(data, ...args);
-      }
-
-      static getDetectionFilter() {
-        this._detectionFilter ??= foundry.canvas.rendering.filters.OutlineOverlayFilter.create({
-          outlineColor: [0.42, 0.7, 0.28, 1],
-          knockout: false,
-          wave: true,
-        });
-        return this._detectionFilter;
-      }
-
-      _canDetect() {
-        return true;
-      }
-    }
-
-    CONFIG.Canvas.detectionModes[DETECTION_MODE_ID] = new DetectionModeScentPinpoint({
-      id: DetectionModeScentPinpoint.ID,
-      label: DetectionModeScentPinpoint.LABEL,
-      type: DetectionModeScentPinpoint.DETECTION_TYPE,
-    });
-  }
-
-  function buildDetectionModesWithScent(currentModes, range) {
-    const shouldEnable = range > 0;
-    const scentMode = shouldEnable ? { enabled: true, range: Math.min(PINPOINT_RANGE, range) } : null;
-
-    if (Array.isArray(currentModes)) {
-      const modes = currentModes.map((mode) => ({ ...mode }));
-      const index = modes.findIndex((mode) => mode.id === DETECTION_MODE_ID);
-
-      if (scentMode) {
-        if (index >= 0) {
-          const existing = modes[index];
-          if (existing.enabled === true && existing.range === scentMode.range) return { changed: false, modes: currentModes };
-          modes[index] = { ...existing, ...scentMode, id: DETECTION_MODE_ID };
-        } else {
-          modes.push({ id: DETECTION_MODE_ID, ...scentMode });
-        }
-      } else if (index >= 0) {
-        modes.splice(index, 1);
-      } else {
-        return { changed: false, modes: currentModes };
-      }
-
-      sortDetectionModeArray(modes);
-      return { changed: true, modes };
-    }
-
-    const modes = clone(currentModes ?? {});
-    const existing = modes[DETECTION_MODE_ID];
-
-    if (scentMode) {
-      if (existing?.enabled === true && existing?.range === scentMode.range) return { changed: false, modes: currentModes };
-      modes[DETECTION_MODE_ID] = scentMode;
-      return { changed: true, modes };
-    }
-
-    if (existing === undefined) return { changed: false, modes: currentModes };
-    delete modes[DETECTION_MODE_ID];
-    return { changed: true, modes };
-  }
-
-  function buildDetectionModeUpdateData(path, currentModes, range) {
-    const result = buildDetectionModesWithScent(currentModes, range);
-    if (!result.changed) return null;
-
-    if (Array.isArray(currentModes)) return { [path]: result.modes };
-
-    if (range > 0) {
-      return { [`${path}.${DETECTION_MODE_ID}`]: { enabled: true, range: Math.min(PINPOINT_RANGE, range) } };
-    }
-
-    const ForcedDeletion = foundry.data?.operators?.ForcedDeletion;
-    if (ForcedDeletion) return { [`${path}.${DETECTION_MODE_ID}`]: new ForcedDeletion() };
-
-    return { [`${path}.-=${DETECTION_MODE_ID}`]: null };
-  }
-
-  function sortDetectionModeArray(modes) {
-    const basicId = foundry.canvas.perception.DetectionMode.BASIC_MODE_ID;
-    modes.sort((a, b) => {
-      if (a.id === basicId) return -1;
-      if (b.id === basicId) return 1;
-
-      const priorityA = CONFIG.Canvas?.detectionModes?.[a.id]?.constructor?.PRIORITY ?? 0;
-      const priorityB = CONFIG.Canvas?.detectionModes?.[b.id]?.constructor?.PRIORITY ?? 0;
-      return priorityA - priorityB;
-    });
-  }
-
-  function applyScentDetectionMode(tokenDocument) {
-    const actor = tokenDocument?.actor;
-    const range = getScentRange(actor);
-    const result = buildDetectionModesWithScent(tokenDocument?.detectionModes, range);
-    if (!result.changed) return false;
-
-    tokenDocument.detectionModes = result.modes;
-    return true;
-  }
-
-  async function persistTokenScentDetection(tokenDocument) {
-    if (!game.user?.isGM || !tokenDocument?.update) return false;
-
-    const range = getScentRange(tokenDocument.actor);
-    const updateData = buildDetectionModeUpdateData("detectionModes", tokenDocument.detectionModes, range);
-    if (!updateData) return false;
-
-    await tokenDocument.update(updateData, { [MODULE_ID]: { sync: true }, stopAuraUpdate: true });
-    return true;
-  }
-
-  async function persistPrototypeScentDetection(actor) {
-    if (!game.user?.isGM || !actor?.update) return false;
-
-    const range = getScentRange(actor);
-    const currentModes = foundry.utils.getProperty(actor, "prototypeToken.detectionModes") ?? {};
-    const updateData = buildDetectionModeUpdateData("prototypeToken.detectionModes", currentModes, range);
-    if (!updateData) return false;
-
-    await actor.update(updateData, { [MODULE_ID]: { sync: true }, stopAuraUpdate: true });
-    return true;
+    return ensureRuntimes().integration.registerDetectionMode();
   }
 
   async function syncActorTokens(actor) {
-    if (!actor || !["character", "npc"].includes(actor.type)) return;
-
-    if (game.user?.isGM) {
-      await persistPrototypeScentDetection(actor);
-
-      for (const token of actor.getActiveTokens?.(true) ?? []) {
-        await persistTokenScentDetection(token.document);
-      }
-    }
-
-    refreshOverlay();
-    queueScan();
+    return ensureRuntimes().integration.syncActorTokens(actor);
   }
 
   function queueActorSync(actor) {
-    if (!actor?.id) return;
-    pendingActorSync.add(actor.id);
-    debouncedFlushActorSync();
+    return ensureRuntimes().integration.queueActorSync(actor);
   }
-
-  async function flushActorSync() {
-    const actorIds = Array.from(pendingActorSync);
-    pendingActorSync.clear();
-
-    for (const actorId of actorIds) {
-      const actor = game.actors?.get(actorId);
-      if (!actor) continue;
-      try {
-        await syncActorTokens(actor);
-      } catch (error) {
-        console.error(`${MODULE_ID} | Failed to sync scent detection for ${actor.name}.`, error);
-      }
-    }
-
-    refreshOverlay();
-    queueScan();
-  }
-
-  const debouncedFlushActorSync = foundry.utils.debounce(flushActorSync, 100);
   const debouncedRefreshOverlay = foundry.utils.debounce(refreshOverlay, 50);
   const debouncedScan = foundry.utils.debounce(() => {
     scan().catch((error) => console.error(`${MODULE_ID} | Scent scan failed.`, error));
   }, 150);
 
   function patchTokenDocumentRefresh() {
-    if (!isD35E()) return;
-
-    const TokenDocumentClass = CONFIG.Token?.documentClass ?? globalThis.TokenDocument;
-    if (!TokenDocumentClass?.prototype?.refreshDetectionModes) {
-      console.warn(`${MODULE_ID} | TokenDocument.refreshDetectionModes was not found; scent detection will rely on hooks only.`);
-      return;
-    }
-
-    if (TokenDocumentClass.prototype[TOKEN_REFRESH_PATCHED] === true) return;
-
-    const original = TokenDocumentClass.prototype.refreshDetectionModes;
-    Object.defineProperty(TokenDocumentClass.prototype, TOKEN_REFRESH_ORIGINAL, { value: original });
-
-    TokenDocumentClass.prototype.refreshDetectionModes = function d35eScentSenseRefreshDetectionModes(...args) {
-      const result = original.call(this, ...args);
-      applyScentDetectionMode(this);
-      return result;
-    };
-
-    Object.defineProperty(TokenDocumentClass.prototype, TOKEN_REFRESH_PATCHED, { value: true });
-  }
-
-  function getActorFromEntity(actorOrToken) {
-    if (!actorOrToken) return null;
-    if (actorOrToken.actor) return actorOrToken.actor;
-    if (actorOrToken.document?.actor) return actorOrToken.document.actor;
-    if (actorOrToken.documentName === "Actor") return actorOrToken;
-    return null;
-  }
-
-  function getOverlayKey(actorOrToken) {
-    const actor = getActorFromEntity(actorOrToken);
-    if (actor?.id) return `actor:${actor.id}`;
-
-    const tokenDocument = actorOrToken?.document ?? actorOrToken;
-    if (tokenDocument?.id) return `token:${tokenDocument.id}`;
-    return null;
-  }
-
-  function readOverlayHiddenActors() {
-    const value = getSetting(SETTINGS.OVERLAY_HIDDEN_ACTORS);
-    return value && typeof value === "object" ? clone(value) : {};
+    return ensureRuntimes().integration.patchTokenDocumentRefresh();
   }
 
   function isOverlayVisible(actorOrToken) {
-    if (getSetting(SETTINGS.OVERLAY_ENABLED) !== true) return false;
-
-    const key = getOverlayKey(actorOrToken);
-    if (!key) return true;
-
-    const hidden = readOverlayHiddenActors();
-    return hidden[key] !== true;
+    return ensureRuntimes().overlay.isOverlayVisible(actorOrToken);
   }
 
   async function setOverlayVisible(actorOrToken, visible) {
-    const key = getOverlayKey(actorOrToken);
-    if (!key) return false;
-
-    const hidden = readOverlayHiddenActors();
-    if (visible === true) delete hidden[key];
-    else hidden[key] = true;
-
-    await game.settings.set(MODULE_ID, SETTINGS.OVERLAY_HIDDEN_ACTORS, hidden);
-    refreshOverlay();
-    return true;
-  }
-
-  function canCurrentUserSeeScentOverlay(token) {
-    if (!token?.actor) return false;
-    if (!isOverlayVisible(token)) return false;
-    if (token.document?.hidden === true && game.user?.isGM !== true) return false;
-    if (game.user?.isGM === true) return true;
-    return token.actor.testUserPermission?.(game.user, "OWNER") === true;
-  }
-
-  function getSceneUnitsToPixels(range) {
-    const distance = positiveNumber(canvas?.scene?.grid?.distance, positiveNumber(canvas?.dimensions?.distance, 5));
-    const size = positiveNumber(canvas?.grid?.size, positiveNumber(canvas?.dimensions?.size, 100));
-    return (range / distance) * size;
-  }
-
-  function getOrCreateOverlayContainer() {
-    if (!canvas?.tokens) return null;
-
-    if (overlayContainer?.parent) return overlayContainer;
-
-    overlayContainer = canvas.tokens.getChildByName?.(OVERLAY_NAME) ?? new PIXI.Container();
-    overlayContainer.name = OVERLAY_NAME;
-    overlayContainer.eventMode = "none";
-    overlayContainer.interactive = false;
-    overlayContainer.sortableChildren = false;
-
-    if (!overlayContainer.parent) canvas.tokens.addChildAt(overlayContainer, 0);
-    return overlayContainer;
-  }
-
-  function getOrCreateCueContainer() {
-    if (!canvas?.tokens) return null;
-    if (cueContainer?.parent) return cueContainer;
-
-    cueContainer = canvas.tokens.getChildByName?.(CUE_NAME) ?? new PIXI.Container();
-    cueContainer.name = CUE_NAME;
-    cueContainer.eventMode = "none";
-    cueContainer.interactive = false;
-    cueContainer.sortableChildren = false;
-
-    if (!cueContainer.parent) canvas.tokens.addChild(cueContainer);
-    return cueContainer;
-  }
-
-  function clearOverlay() {
-    if (!overlayContainer) return;
-    overlayContainer.removeChildren().forEach((child) => child.destroy({ children: true }));
+    return ensureRuntimes().overlay.setOverlayVisible(actorOrToken, visible);
   }
 
   function refreshOverlay() {
-    if (!canvas?.ready || !canvas?.tokens?.placeables || !isD35E()) return;
-
-    const container = getOrCreateOverlayContainer();
-    if (!container) return;
-
-    clearOverlay();
-
-    for (const token of canvas.tokens.placeables) {
-      if (!canCurrentUserSeeScentOverlay(token)) continue;
-
-      const range = getScentRange(token.actor);
-      if (range <= 0) continue;
-
-      const radius = getSceneUnitsToPixels(range);
-      if (!Number.isFinite(radius) || radius <= 0) continue;
-
-      const ring = new PIXI.Graphics();
-      ring.lineStyle(2, 0x6fac48, 0.9);
-      ring.drawCircle(token.center.x, token.center.y, radius);
-      container.addChild(ring);
-    }
+    if (!isD35E()) return;
+    return ensureRuntimes().overlay.refreshOverlay();
   }
 
   function showLocalPinpointCue(point) {
-    if (!canvas?.ready || !point) return;
-
-    const container = getOrCreateCueContainer();
-    if (!container) return;
-
-    const radius = Math.max(14, positiveNumber(canvas.grid?.size, 100) * 0.22);
-    const cue = new PIXI.Graphics();
-    cue.lineStyle(4, 0x6fac48, 0.95);
-    cue.drawCircle(point.x, point.y, radius);
-    cue.lineStyle(1, 0xffffff, 0.75);
-    cue.drawCircle(point.x, point.y, Math.max(6, radius * 0.55));
-    container.addChild(cue);
-
-    window.setTimeout(() => {
-      if (!cue.destroyed) cue.destroy();
-    }, 2500);
+    return ensureRuntimes().overlay.showLocalPinpointCue(point);
   }
 
   function isPrimaryActiveGm() {
-    if (game.user?.isGM !== true) return false;
-
-    const activeGms = game.users
-      .filter((user) => user.active && user.isGM)
-      .sort((a, b) => String(a.id).localeCompare(String(b.id)));
-    return activeGms[0]?.id === game.user.id;
+    return ensureRuntimes().alerts.isPrimaryActiveGm();
   }
 
   function getActiveGmIds() {
-    return game.users.filter((user) => user.active && user.isGM).map((user) => user.id);
+    return ensureRuntimes().alerts.getActiveGmIds();
   }
 
   function getActiveOwnerRecipients(token) {
-    if (!token?.actor) return [];
-
-    const nonGmOwners = game.users
-      .filter((user) => user.active && !user.isGM && token.actor.testUserPermission?.(user, "OWNER") === true)
-      .map((user) => user.id);
-    if (nonGmOwners.length > 0) return nonGmOwners;
-
-    if (game.user?.isGM === true && token.actor.testUserPermission?.(game.user, "OWNER") === true) return [game.user.id];
-    return [];
-  }
-
-  function isInvisibleActor(actor) {
-    if (!actor) return false;
-    if (actor.system?.attributes?.conditions?.invisible === true) return true;
-    try {
-      if (actor.isInvisible?.() === true) return true;
-    } catch (_error) {
-      return false;
-    }
-    return false;
-  }
-
-  function isUnknownTarget(token) {
-    if (token?.document?.hidden === true) return true;
-    return isInvisibleActor(token?.actor);
-  }
-
-  function isGmMarkedTarget(token) {
-    return (
-      token?.document?.getFlag?.(MODULE_ID, "scentRelevant") === true ||
-      token?.actor?.getFlag?.(MODULE_ID, "scentRelevant") === true
-    );
-  }
-
-  function targetMatchesTriggerScope(token) {
-    const scope = getSetting(SETTINGS.TRIGGER_SCOPE);
-    if (scope === "allCreatures") return true;
-    if (scope === "allHostiles") return true;
-    if (scope === "gmMarked") return isGmMarkedTarget(token);
-    return isUnknownTarget(token);
-  }
-
-  function isScentOpponent(_sourceToken, targetToken) {
-    return targetToken?.document?.disposition === CONST.TOKEN_DISPOSITIONS.HOSTILE;
+    return ensureRuntimes().alerts.getActiveOwnerRecipients(token);
   }
 
   function shouldEvaluateScentTarget(sourceToken, targetToken) {
-    if (!targetToken?.actor || targetToken.id === sourceToken?.id) return false;
-
-    if (getSetting(SETTINGS.TRIGGER_SCOPE) !== "allCreatures" && !isScentOpponent(sourceToken, targetToken)) {
-      return false;
-    }
-
-    return targetMatchesTriggerScope(targetToken);
+    return ensureRuntimes().detection.shouldEvaluateScentTarget(sourceToken, targetToken);
   }
 
   function measureTokenDistance(sourceToken, targetToken) {
-    const source = sourceToken?.center;
-    const target = targetToken?.center;
-    if (!source || !target) return Infinity;
-
-    try {
-      const Ray = foundry.canvas?.geometry?.Ray ?? globalThis.Ray;
-      if (Ray && canvas?.grid?.measureDistances) {
-        const distances = canvas.grid.measureDistances([{ ray: new Ray(source, target) }], { gridSpaces: true });
-        const distance = positiveNumber(distances?.[0], 0);
-        if (distance > 0 || source.x === target.x && source.y === target.y) return distance;
-      }
-    } catch (_error) {
-      // Fall through to the generic measurement path.
-    }
-
-    try {
-      const result = canvas?.grid?.measurePath?.([source, target], { gridSpaces: true });
-      const distance = positiveNumber(result?.distance, 0);
-      if (distance > 0 || source.x === target.x && source.y === target.y) return distance;
-    } catch (_error) {
-      // Fall through to Euclidean conversion.
-    }
-
-    const pixelDistance = Math.hypot(target.x - source.x, target.y - source.y);
-    const gridSize = positiveNumber(canvas?.grid?.size, positiveNumber(canvas?.dimensions?.size, 100));
-    const gridDistance = positiveNumber(canvas?.scene?.grid?.distance, positiveNumber(canvas?.dimensions?.distance, 5));
-    return (pixelDistance / gridSize) * gridDistance;
+    return ensureRuntimes().detection.measureTokenDistance(sourceToken, targetToken);
   }
 
   function isWallBlocked(sourceToken, targetToken) {
-    if (getSetting(SETTINGS.RESPECT_WALLS) !== true) return false;
-
-    const source = sourceToken?.center;
-    const target = targetToken?.center;
-    if (!source || !target) return false;
-
-    try {
-      const backend = CONFIG.Canvas?.polygonBackends?.sight;
-      if (typeof backend?.testCollision === "function") {
-        return backend.testCollision(source, target, { type: "sight", mode: "any" }) === true;
-      }
-    } catch (error) {
-      if (!wallCollisionWarningShown) {
-        console.warn(`${MODULE_ID} | Could not test wall collision for Scent alerts; falling back to unblocked alerts.`, error);
-        wallCollisionWarningShown = true;
-      }
-    }
-
-    return false;
+    return ensureRuntimes().detection.isWallBlocked(sourceToken, targetToken);
   }
 
   function makeStateKey(sceneId, sourceTokenId, targetTokenId, band) {
@@ -840,227 +485,12 @@
     return Math.round(distance * 10) / 10;
   }
 
-  function buildGmContextContent(detail) {
-    if (!detail?.context) return "";
-
-    return `<p>${escapeHtml(format("D35EScent.Alert.GmContextDetail", {
-      range: Number.isFinite(detail.effectiveRange) ? roundDistance(detail.effectiveRange) : "?",
-      wind: detail.context.windBand ?? "normal",
-      odor: detail.context.odorStrength ?? "normal",
-      masking: detail.context.maskingOdor === true ? "yes" : "no",
-    }))}</p>`;
-  }
-
-  function trimGmEventCache() {
-    const maxEntries = 200;
-    if (gmEventCache.size <= maxEntries) return;
-
-    const removeCount = gmEventCache.size - maxEntries;
-    for (const eventId of Array.from(gmEventCache.keys()).slice(0, removeCount)) {
-      gmEventCache.delete(eventId);
-    }
-  }
-
-  function cacheGmEvent(eventId, data) {
-    gmEventCache.set(eventId, data);
-    trimGmEventCache();
-  }
-
-  function dispatchSocketMessage(payload) {
-    payload.id ??= randomId();
-    game.socket?.emit(SOCKET_NAME, payload);
-
-    if (payload.recipients?.includes(game.user?.id)) {
-      handleSocketMessage(payload).catch((error) => console.error(`${MODULE_ID} | Failed to handle local socket payload.`, error));
-    }
-  }
-
-  async function createWhisper(userIds, content) {
-    const recipients = Array.from(new Set(userIds.filter(Boolean)));
-    if (recipients.length === 0) return null;
-
-    return ChatMessage.create({
-      user: game.user.id,
-      speaker: ChatMessage.getSpeaker({ alias: "Scent" }),
-      whisper: recipients,
-      content,
-    });
-  }
-
-  async function createGmWhisper(content) {
-    return createWhisper(getActiveGmIds(), content);
-  }
-
-  function buildPresenceContent() {
-    return `<p>${escapeHtml(localize("D35EScent.Alert.Presence"))}</p><p>${escapeHtml(localize("D35EScent.Alert.PresencePrompt"))}</p>`;
-  }
-
-  function buildPinpointContent() {
-    return `<p>${escapeHtml(localize("D35EScent.Alert.Pinpoint"))}</p>`;
-  }
-
-  async function sendMoveActionRequest(alert) {
-    const payload = {
-      id: randomId(),
-      type: SOCKET_TYPES.MOVE_ACTION_REQUEST,
-      eventId: alert.eventId,
-      sourceName: alert.sourceName,
-      sceneName: alert.sceneName,
-    };
-
-    game.socket?.emit(SOCKET_NAME, payload);
-    if (game.user?.isGM === true) await handleSocketMessage(payload);
-  }
-
-  async function showPresenceAlert(alert) {
-    if (getSetting(SETTINGS.NOTIFICATION_MODE) === "chat") {
-      await createWhisper([game.user.id], buildPresenceContent());
-      return;
-    }
-
-    const DialogV2 = foundry.applications?.api?.DialogV2;
-    if (!DialogV2?.confirm) {
-      await createWhisper([game.user.id], buildPresenceContent());
-      return;
-    }
-
-    const spendMoveAction = await DialogV2.confirm({
-      window: { title: localize("D35EScent.Alert.Title") },
-      content: buildPresenceContent(),
-      yes: { label: localize("D35EScent.Alert.SpendMove") },
-      no: { label: localize("D35EScent.Alert.Ignore") },
-    });
-
-    if (spendMoveAction === true) await sendMoveActionRequest(alert);
-  }
-
-  async function showPinpointAlert(alert) {
-    showLocalPinpointCue(alert.point);
-
-    if (getSetting(SETTINGS.NOTIFICATION_MODE) === "chat") {
-      await createWhisper([game.user.id], buildPinpointContent());
-      return;
-    }
-
-    const DialogV2 = foundry.applications?.api?.DialogV2;
-    if (!DialogV2?.confirm) {
-      await createWhisper([game.user.id], buildPinpointContent());
-      return;
-    }
-
-    await DialogV2.confirm({
-      window: { title: localize("D35EScent.Alert.Title") },
-      content: buildPinpointContent(),
-      yes: { label: "COMMON.Ok" },
-      no: { label: localize("D35EScent.Alert.Ignore") },
-    });
-  }
-
-  async function handleMoveActionRequest(payload) {
-    if (game.user?.isGM !== true) return;
-
-    const detail = gmEventCache.get(payload.eventId);
-    const actorName = escapeHtml(detail?.sourceName ?? payload.sourceName ?? "A token");
-    const sceneName = escapeHtml(detail?.sceneName ?? payload.sceneName ?? canvas?.scene?.name ?? "the current scene");
-
-    let content = `<p>${escapeHtml(format("D35EScent.Alert.GmDirectionRequest", { actor: actorName }))}</p>`;
-    if (detail) {
-      content += `<p>${escapeHtml(format("D35EScent.Alert.GmDirectionDetail", {
-        actor: detail.sourceName,
-        target: detail.targetName,
-        distance: roundDistance(detail.distance),
-        scene: sceneName,
-      }))}</p>`;
-      content += buildGmContextContent(detail);
-    }
-
-    await createGmWhisper(content);
-  }
-
-  async function handleSocketMessage(payload) {
-    if (!payload || typeof payload !== "object") return;
-
-    if (payload.type === SOCKET_TYPES.SCAN_REQUEST) {
-      if (isPrimaryActiveGm()) queueScan();
-      return;
-    }
-
-    if (payload.type === SOCKET_TYPES.MOVE_ACTION_REQUEST) {
-      await handleMoveActionRequest(payload);
-      return;
-    }
-
-    if (handledSocketMessages.has(payload.id)) return;
-    handledSocketMessages.add(payload.id);
-    if (handledSocketMessages.size > 500) handledSocketMessages.delete(handledSocketMessages.values().next().value);
-
-    if (!payload.recipients?.includes(game.user?.id)) return;
-
-    if (payload.type === SOCKET_TYPES.PRESENCE_ALERT) await showPresenceAlert(payload);
-    else if (payload.type === SOCKET_TYPES.PINPOINT_ALERT) await showPinpointAlert(payload);
-  }
-
   async function dispatchPresenceAlert({ scene, sourceToken, targetToken, distance, recipients, detection }) {
-    const eventId = randomId();
-    cacheGmEvent(eventId, {
-      eventId,
-      sceneId: scene.id,
-      sceneName: scene.name,
-      sourceName: sourceToken.name,
-      targetName: targetToken.name,
-      distance,
-      effectiveRange: detection?.effectiveRange,
-      context: detection?.context,
-      band: RANGE_BANDS.PRESENCE,
-    });
-
-    await dispatchSocketMessage({
-      type: SOCKET_TYPES.PRESENCE_ALERT,
-      eventId,
-      recipients,
-      sourceTokenId: sourceToken.id,
-      sourceActorId: sourceToken.actor?.id,
-      sourceName: sourceToken.name,
-      sceneId: scene.id,
-      sceneName: scene.name,
-    });
+    return ensureRuntimes().alerts.dispatchPresenceAlert({ scene, sourceToken, targetToken, distance, recipients, detection });
   }
 
   async function dispatchPinpointAlert({ scene, sourceToken, targetToken, distance, recipients, detection }) {
-    const eventId = randomId();
-    const detail = {
-      eventId,
-      sceneId: scene.id,
-      sceneName: scene.name,
-      sourceName: sourceToken.name,
-      targetName: targetToken.name,
-      distance,
-      effectiveRange: detection?.effectiveRange,
-      context: detection?.context,
-      band: RANGE_BANDS.PINPOINT,
-    };
-    cacheGmEvent(eventId, detail);
-
-    await dispatchSocketMessage({
-      type: SOCKET_TYPES.PINPOINT_ALERT,
-      eventId,
-      recipients,
-      sourceTokenId: sourceToken.id,
-      sourceActorId: sourceToken.actor?.id,
-      sourceName: sourceToken.name,
-      sceneId: scene.id,
-      sceneName: scene.name,
-      point: {
-        x: targetToken.center.x,
-        y: targetToken.center.y,
-      },
-    });
-
-    await createGmWhisper(`<p>${escapeHtml(format("D35EScent.Alert.GmPinpoint", {
-      actor: sourceToken.name,
-      target: targetToken.name,
-      scene: scene.name,
-    }))}</p>${buildGmContextContent(detail)}`);
+    return ensureRuntimes().alerts.dispatchPinpointAlert({ scene, sourceToken, targetToken, distance, recipients, detection });
   }
 
   async function scanScene(scene = canvas?.scene) {
@@ -1155,329 +585,20 @@
 
   function resetNotificationState(options = {}) {
     notificationState.clear();
-    gmEventCache.clear();
+    ensureRuntimes().alerts.reset();
     if (options.scan === true) queueScan();
   }
 
   function registerSocket() {
-    if (globalThis[SOCKET_REGISTERED] === true) return;
-    if (!game.socket?.on) return;
-
-    game.socket.on(SOCKET_NAME, (payload) => {
-      handleSocketMessage(payload).catch((error) => console.error(`${MODULE_ID} | Failed to handle socket payload.`, error));
-    });
-
-    globalThis[SOCKET_REGISTERED] = true;
-  }
-
-  function option(value, label) {
-    return { value, label };
-  }
-
-  function buildContextOptions() {
-    return {
-      wind: [
-        option("inherit", localize("D35EScent.ContextManager.Inherit")),
-        option("normal", localize("D35EScent.ContextManager.Wind.Normal")),
-        option("upwind", localize("D35EScent.ContextManager.Wind.Upwind")),
-        option("downwind", localize("D35EScent.ContextManager.Wind.Downwind")),
-      ],
-      odor: [
-        option("inherit", localize("D35EScent.ContextManager.Inherit")),
-        option("normal", localize("D35EScent.ContextManager.Odor.Normal")),
-        option("strong", localize("D35EScent.ContextManager.Odor.Strong")),
-        option("overpowering", localize("D35EScent.ContextManager.Odor.Overpowering")),
-      ],
-      masking: [
-        option("inherit", localize("D35EScent.ContextManager.Inherit")),
-        option("false", localize("D35EScent.ContextManager.No")),
-        option("true", localize("D35EScent.ContextManager.Yes")),
-      ],
-    };
-  }
-
-  function contextSelection(document, key) {
-    const contextApi = getContextApi();
-    const value = contextApi?.readFlag?.(document, key);
-    if (value === undefined) return "inherit";
-    return String(contextApi?.normalizeFlagValue?.(key, value) ?? value);
-  }
-
-  function getDefaultSourceTokenId() {
-    const controlled = canvas?.tokens?.controlled?.find((token) => getScentRange(token.actor) > 0);
-    if (controlled) return controlled.id;
-
-    return canvas?.tokens?.placeables?.find((token) => getScentRange(token.actor) > 0)?.id ?? "";
-  }
-
-  function getTokenById(tokenId) {
-    return canvas?.tokens?.placeables?.find((token) => token.id === tokenId) ?? null;
-  }
-
-  function formatContextSource(source) {
-    return localize(`D35EScent.ContextManager.Source.${source ?? "default"}`);
-  }
-
-  function formatDetectionPreview(detection) {
-    if (!detection) return localize("D35EScent.ContextManager.NoPreview");
-    if (detection.detectable === true && detection.pinpoint === true) return localize("D35EScent.ContextManager.Preview.Pinpoint");
-    if (detection.detectable === true) return localize("D35EScent.ContextManager.Preview.Detectable");
-    return localize("D35EScent.ContextManager.Preview.OutOfRange");
-  }
-
-  function buildContextManagerData(selectedSourceTokenId = "") {
-    const scene = canvas?.scene ?? null;
-    const tokens = (canvas?.tokens?.placeables ?? []).filter((token) => token?.actor);
-    const sourceOptions = [
-      option("", localize("D35EScent.ContextManager.NoPreview")),
-      ...tokens
-        .filter((token) => getScentRange(token.actor) > 0)
-        .map((token) => option(token.id, `${token.name} (${getScentRange(token.actor)} ft)`)),
-    ];
-
-    const sourceTokenId = sourceOptions.some((entry) => entry.value === selectedSourceTokenId)
-      ? selectedSourceTokenId
-      : getDefaultSourceTokenId();
-    const sourceToken = sourceTokenId ? getTokenById(sourceTokenId) : null;
-    const sourceRange = getScentRange(sourceToken?.actor);
-    const options = buildContextOptions();
-
-    const rows = tokens
-      .slice()
-      .sort((a, b) => String(a.name).localeCompare(String(b.name)))
-      .map((token) => {
-        const document = token.document;
-        const range = getScentRange(token.actor);
-        const scentContext = getScentContext(sourceToken, token, { scene });
-        const relevant = getContextApi()?.readFlag?.(document, "scentRelevant") === true;
-        const detection = sourceToken && sourceToken.id !== token.id && sourceRange > 0
-          ? evaluateScentDetection(sourceToken, token, { baseRange: sourceRange, distance: measureTokenDistance(sourceToken, token), scene })
-          : null;
-
-        return {
-          id: token.id,
-          name: token.name,
-          actorName: token.actor?.name ?? token.name,
-          range,
-          sourceStatus: range > 0 ? format("D35EScent.ContextManager.SourceStatus", { range }) : localize("D35EScent.ContextManager.NotSource"),
-          windBand: contextSelection(document, "windBand"),
-          odorStrength: contextSelection(document, "odorStrength"),
-          maskingOdor: contextSelection(document, "maskingOdor"),
-          scentRelevant: relevant,
-          effectiveWind: scentContext.context.windBand,
-          effectiveOdor: scentContext.context.odorStrength,
-          effectiveMasking: scentContext.context.maskingOdor ? localize("D35EScent.ContextManager.Yes") : localize("D35EScent.ContextManager.No"),
-          sourceSummary: format("D35EScent.ContextManager.SourceSummary", {
-            wind: formatContextSource(scentContext.sources.windBand),
-            odor: formatContextSource(scentContext.sources.odorStrength),
-            masking: formatContextSource(scentContext.sources.maskingOdor),
-          }),
-          preview: detection ? {
-            label: formatDetectionPreview(detection),
-            distance: Number.isFinite(detection.distance) ? roundDistance(detection.distance) : "?",
-            effectiveRange: Number.isFinite(detection.effectiveRange) ? roundDistance(detection.effectiveRange) : "?",
-          } : null,
-        };
-      });
-
-    return {
-      title: localize("D35EScent.ContextManager.Title"),
-      sceneName: scene?.name ?? localize("D35EScent.ContextManager.NoScene"),
-      scene: {
-        windBand: contextSelection(scene, "windBand"),
-        odorStrength: contextSelection(scene, "odorStrength"),
-        maskingOdor: contextSelection(scene, "maskingOdor"),
-      },
-      sourceTokenId,
-      sourceOptions,
-      options,
-      tokens: rows,
-      hasTokens: rows.length > 0,
-      buttons: [{ type: "submit", label: localize("D35EScent.ContextManager.Save"), icon: "fa-solid fa-floppy-disk" }],
-    };
-  }
-
-  function getSelectValue(root, selector) {
-    return root?.querySelector?.(selector)?.value ?? "inherit";
-  }
-
-  async function afterContextManagerWrite() {
-    resetNotificationState({ scan: true });
-    refreshOverlay();
-    await contextManager?.render?.(true);
-  }
-
-  async function clearSceneContextFlags() {
-    if (!canvas?.scene) return;
-    await setScentContextFlags(canvas.scene, { windBand: "inherit", odorStrength: "inherit", maskingOdor: "inherit" }, { token: false, refresh: false });
-    await afterContextManagerWrite();
-  }
-
-  async function clearTokenContextFlags(tokenId) {
-    const token = getTokenById(tokenId);
-    if (!token?.document) return;
-    await setScentContextFlags(token.document, {
-      windBand: "inherit",
-      odorStrength: "inherit",
-      maskingOdor: "inherit",
-      scentRelevant: "inherit",
-    }, { token: true, refresh: false });
-    await afterContextManagerWrite();
-  }
-
-  async function saveContextManagerForm(form) {
-    const root = form instanceof HTMLElement ? form : contextManager?.element;
-    if (!root) return;
-
-    const scene = canvas?.scene;
-    if (scene) {
-      await setScentContextFlags(scene, {
-        windBand: getSelectValue(root, '[name="scene.windBand"]'),
-        odorStrength: getSelectValue(root, '[name="scene.odorStrength"]'),
-        maskingOdor: getSelectValue(root, '[name="scene.maskingOdor"]'),
-      }, { token: false, refresh: false });
-    }
-
-    for (const row of root.querySelectorAll("[data-scent-token-id]")) {
-      const token = getTokenById(row.dataset.scentTokenId);
-      if (!token?.document) continue;
-
-      await setScentContextFlags(token.document, {
-        windBand: row.querySelector('[data-field="windBand"]')?.value ?? "inherit",
-        odorStrength: row.querySelector('[data-field="odorStrength"]')?.value ?? "inherit",
-        maskingOdor: row.querySelector('[data-field="maskingOdor"]')?.value ?? "inherit",
-        scentRelevant: row.querySelector('[data-field="scentRelevant"]')?.checked === true,
-      }, { token: true, refresh: false });
-    }
-
-    await afterContextManagerWrite();
-  }
-
-  function getContextManagerClass() {
-    const ApplicationV2 = foundry.applications?.api?.ApplicationV2;
-    const HandlebarsApplicationMixin = foundry.applications?.api?.HandlebarsApplicationMixin;
-    if (!ApplicationV2 || !HandlebarsApplicationMixin) return null;
-
-    const HandlebarsApplication = HandlebarsApplicationMixin(ApplicationV2);
-
-    return class ScentContextManagerApplication extends HandlebarsApplication {
-      static DEFAULT_OPTIONS = {
-        id: `${MODULE_ID}-context-manager`,
-        tag: "form",
-        classes: ["standard-form", "d35e-scent-context-manager"],
-        window: {
-          title: "D35EScent.ContextManager.Title",
-          resizable: true,
-        },
-        position: {
-          width: 860,
-        },
-        form: {
-          submitOnChange: false,
-          closeOnSubmit: false,
-          handler: this._onSubmit,
-        },
-      };
-
-      static PARTS = {
-        form: {
-          template: CONTEXT_MANAGER_TEMPLATE,
-          scrollable: [".d35e-scent-context-manager__tokens"],
-        },
-        footer: {
-          template: "templates/generic/form-footer.hbs",
-        },
-      };
-
-      constructor(options = {}) {
-        super(options);
-        this.sourceTokenId = options.sourceTokenId ?? getDefaultSourceTokenId();
-      }
-
-      async _prepareContext(options = {}) {
-        return {
-          ...(await super._prepareContext(options)),
-          ...buildContextManagerData(this.sourceTokenId),
-        };
-      }
-
-      async _onRender(context, options) {
-        await super._onRender(context, options);
-        const root = this.element;
-        if (!root?.querySelector) return;
-
-        root.querySelector('[name="sourceTokenId"]')?.addEventListener("change", (event) => {
-          this.sourceTokenId = event.currentTarget.value;
-          this.render(true);
-        });
-
-        root.querySelector('[data-action="clearSceneContext"]')?.addEventListener("click", (event) => {
-          event.preventDefault();
-          clearSceneContextFlags().catch((error) => console.error(`${MODULE_ID} | Failed to clear scene Scent context.`, error));
-        });
-
-        for (const button of root.querySelectorAll("[data-action='clearTokenContext']")) {
-          button.addEventListener("click", (event) => {
-            event.preventDefault();
-            clearTokenContextFlags(event.currentTarget.closest("[data-scent-token-id]")?.dataset?.scentTokenId)
-              .catch((error) => console.error(`${MODULE_ID} | Failed to clear token Scent context.`, error));
-          });
-        }
-      }
-
-      _updatePosition(position) {
-        if (!this.element?.parentElement) return position;
-        return super._updatePosition(position);
-      }
-
-      static async _onSubmit(event, form) {
-        event.preventDefault();
-        await saveContextManagerForm(form);
-      }
-    };
+    return ensureRuntimes().alerts.registerSocket();
   }
 
   function openContextManager(options = {}) {
-    if (game.user?.isGM !== true) {
-      ui.notifications?.warn(localize("D35EScent.ContextManager.GmOnly"));
-      return null;
-    }
-
-    const ContextManager = getContextManagerClass();
-    if (!ContextManager) {
-      ui.notifications?.warn(localize("D35EScent.ContextManager.Unavailable"));
-      return null;
-    }
-
-    contextManager = new ContextManager({ sourceTokenId: options.sourceTokenId ?? getDefaultSourceTokenId() });
-    contextManager.render(true);
-    return contextManager;
+    return ensureRuntimes().contextManager.openContextManager(options);
   }
 
   function registerContextManagerTool(controls) {
-    if (game.user?.isGM !== true) return;
-
-    const tokenControl = Array.isArray(controls)
-      ? controls.find((control) => control.name === "token" || control.name === "tokens")
-      : controls.tokens;
-    if (!tokenControl?.tools) return;
-
-    const toolData = {
-      name: CONTEXT_MANAGER_TOOL_ID,
-      order: 13,
-      title: "D35EScent.ContextManager.Tool",
-      icon: "fa-solid fa-wind",
-      button: true,
-      visible: true,
-      onClick: () => openContextManager(),
-      onChange: () => openContextManager(),
-    };
-
-    if (Array.isArray(tokenControl.tools)) {
-      if (!tokenControl.tools.some((tool) => tool.name === CONTEXT_MANAGER_TOOL_ID)) tokenControl.tools.push(toolData);
-    } else if (!tokenControl.tools[CONTEXT_MANAGER_TOOL_ID]) {
-      tokenControl.tools[CONTEXT_MANAGER_TOOL_ID] = toolData;
-    }
+    return ensureRuntimes().contextManager.registerContextManagerTool(controls);
   }
 
   async function refresh(options = {}) {
@@ -1499,33 +620,7 @@
   }
 
   function renderTokenHudToggle(app, html) {
-    const token = app?.object;
-    if (!token?.actor || !hasScent(token.actor)) return;
-    if (game.user?.isGM !== true && token.actor.testUserPermission?.(game.user, "OWNER") !== true) return;
-
-    const root = html instanceof HTMLElement ? html : html?.[0];
-    if (!root?.querySelector) return;
-
-    const column = root.querySelector(".col.left") ?? root.querySelector(".col.right");
-    if (!column || column.querySelector(`[data-action="${MODULE_ID}.toggleOverlay"]`)) return;
-
-    const control = document.createElement("div");
-    control.classList.add("control-icon");
-    control.dataset.action = `${MODULE_ID}.toggleOverlay`;
-    control.title = localize("D35EScent.HUD.ToggleOverlay");
-    const icon = document.createElement("i");
-    icon.classList.add("fas", "fa-wind");
-    control.appendChild(icon);
-    control.classList.toggle("active", isOverlayVisible(token));
-    control.addEventListener("click", async (event) => {
-      event.preventDefault();
-      event.stopPropagation();
-      const nextVisible = !isOverlayVisible(token);
-      await setOverlayVisible(token, nextVisible);
-      control.classList.toggle("active", nextVisible);
-    });
-
-    column.appendChild(control);
+    return ensureRuntimes().overlay.renderTokenHudToggle(app, html);
   }
 
   function registerHooks() {
@@ -1576,7 +671,7 @@
   }
 
   function exposeApi() {
-    const api = {
+    const api = globalThis.d35eScentSenseApi.create({
       constants: {
         MODULE_ID,
         SENSE_ID,
@@ -1584,13 +679,13 @@
         DEFAULT_SCENT_RANGE,
         PINPOINT_RANGE,
       },
-      context: getContextApi(),
-      rules: getScentRules(),
       canTrackByScent,
       evaluateScentDetection,
       getEffectiveScentRange,
       getScentContext,
       getScentRange,
+      getContextApi,
+      getScentRules,
       getTrackingByScentDc,
       hasScent,
       isOverlayVisible,
@@ -1601,7 +696,7 @@
       setScentContextFlags,
       setOverlayVisible,
       syncActorTokens,
-    };
+    });
 
     game.d35eScentSense = api;
     globalThis.d35eScentSense = api;

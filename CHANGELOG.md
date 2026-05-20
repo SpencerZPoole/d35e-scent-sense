@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.4.0 - 2026-05-20
+
+- Added RAW coverage, architecture, and v1 roadmap documentation.
+- Split the Foundry runtime into focused helper modules for detection, overlay, alerts/socket handling, D35E integration, context manager UI, and API construction.
+- Preserved the existing public API and behavior while reducing the size and responsibility of the main lifecycle script.
+- Updated validation to require the new helper scripts and release metadata.
+
 ## 0.3.0 - 2026-05-20
 
 - Added a GM-only Scent Context manager in Token Controls for scene defaults, token odor context, masking odors, and GM-marked Scent relevance.
