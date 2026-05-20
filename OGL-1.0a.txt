@@ -12,7 +12,8 @@ Open Game Content
 The following portions of this module are designated Open Game Content to the
 extent they are game mechanics derived from Open Game Content in the 3.5e
 System Reference Document: references to Scent as a special ability, its
-range handling, move-action direction handling, and 5 ft pinpoint handling.
+range handling, move-action direction handling, 5 ft pinpoint handling, and
+tracking-by-Scent DC handling.
 No setting lore, stat blocks, adventure text, compendium data, artwork, or
 non-SRD sourcebook text is included in this repository.
 

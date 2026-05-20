@@ -8,11 +8,11 @@ This repository contains module code, public-safe documentation, and validation 
 
 - Foundry Virtual Tabletop: minimum `14`, verified `14.361`
 - D35E system: minimum `3.0.2`, verified `3.0.2`
-- Module version: `0.6.3`
+- Module version: `0.7.0`
 
 ## Release Status
 
-This repository is release-manifest-ready for version `0.6.3`.
+This repository is release-manifest-ready for version `0.7.0`.
 
 Install through this manifest URL:
 
@@ -34,6 +34,7 @@ For development testing, copy or clone this folder into your Foundry `Data/modul
 - Provides RAW-aware helper calculations for wind, odor strength, masking odors, and tracking by Scent.
 - Adds odor profiles for odor strength, masking odors, false odor sources, and familiar odor tags.
 - Adds a GM-only Scent Context manager for scene defaults, token odor profile context, masking odors, false odors, odor tags, and GM-marked Scent relevance.
+- Adds GM-authored scene Scent trails, a Trail Manager, Scent tracking DC previews, and optional Survival roll prompts.
 - Documents the v1 RAW coverage target and splits runtime behavior into focused modules for safer future development.
 
 ## Usage
@@ -55,10 +56,14 @@ game.d35eScentSense.identifyFamiliarOdor(sourceToken.actor, { odorTags: ["wolf"]
 game.d35eScentSense.setScentContextFlags(token.document, { odorStrength: "strong" });
 game.d35eScentSense.setOdorProfileFlags(token.document, { falseOdor: true, odorTags: "wolf, smoke" });
 game.d35eScentSense.openContextManager();
+game.d35eScentSense.openTrailManager();
+game.d35eScentSense.createScentTrail(canvas.scene, { sourceToken: token });
+game.d35eScentSense.getScentTrailDc(trail, trackerToken);
+game.d35eScentSense.rollTrackByScent(trackerToken, trail.id);
 game.d35eScentSense.refresh({ persist: true });
 ```
 
-The rules helper is also available at `game.d35eScentSense.rules` and `globalThis.d35eScentSenseRules`. Context flag normalization is available at `game.d35eScentSense.context` and `globalThis.d35eScentSenseContext`. Odor profile helpers are available at `game.d35eScentSense.odorProfile` and `globalThis.d35eScentSenseOdorProfile`. Detection-state helpers are available at `game.d35eScentSense.state` and `globalThis.d35eScentSenseState`.
+The rules helper is also available at `game.d35eScentSense.rules` and `globalThis.d35eScentSenseRules`. Context flag normalization is available at `game.d35eScentSense.context` and `globalThis.d35eScentSenseContext`. Odor profile helpers are available at `game.d35eScentSense.odorProfile` and `globalThis.d35eScentSenseOdorProfile`. Detection-state helpers are available at `game.d35eScentSense.state` and `globalThis.d35eScentSenseState`. Trail helpers are available at `game.d35eScentSense.trails` and `globalThis.d35eScentSenseTrails`.
 
 Lightweight Scent context can be supplied through API options or flags on the target token, target actor, or scene:
 
@@ -73,6 +78,8 @@ await token.document.setFlag("d35e-scent-sense", "odorTags", ["wolf", "smoke"]);
 Supported context values are `normal`, `upwind`, and `downwind` for wind; `normal`, `strong`, and `overpowering` for odor strength; booleans for masking and false odors; and comma-separated or array odor tags for familiar-odor helpers. Tracking helpers compute RAW-derived DCs only; they do not roll Survival or replace GM adjudication.
 
 GMs can also open **Scent Context** from Token Controls to edit scene defaults and current-scene token flags. Selecting `inherit` clears the module flag and returns that value to the normal precedence chain. Familiar odor matching is GM-facing helper data only; the module does not automatically identify a hidden creature for players.
+
+GMs can open **Scent Trails** from Token Controls to create scene-level trail records from current-scene tokens, preview tracking DCs for a selected scent-capable tracker, and create a redacted Survival prompt. Trails are not generated automatically by movement; they are GM/API-authored records stored on the scene under this module's flags.
 
 ## Development Roadmap
 
@@ -96,4 +103,4 @@ Run the local validation suite before publishing or packaging:
 npm test
 ```
 
-The checks verify manifest structure, required legal files, script syntax, RAW helper behavior, odor profile behavior, and public-surface cleanliness.
+The checks verify manifest structure, required legal files, script syntax, RAW helper behavior, odor profile behavior, trail behavior, and public-surface cleanliness.

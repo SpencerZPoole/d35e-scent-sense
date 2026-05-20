@@ -11,6 +11,7 @@
   const DEFAULT_SCENT_RANGE = 30;
   const PINPOINT_RANGE = 5;
   const CONTEXT_MANAGER_TEMPLATE = `modules/${MODULE_ID}/templates/scent-context-manager.hbs`;
+  const TRAIL_MANAGER_TEMPLATE = `modules/${MODULE_ID}/templates/scent-trail-manager.hbs`;
   const HOOKS_REGISTERED = Symbol.for(`${MODULE_ID}.hooksRegistered`);
   const SETTINGS_REGISTERED = Symbol.for(`${MODULE_ID}.settingsRegistered`);
   const BOOTSTRAPPED = Symbol.for(`${MODULE_ID}.bootstrapped`);
@@ -115,6 +116,10 @@
     return globalThis.d35eScentSenseOdorProfile;
   }
 
+  function getScentTrailsApi() {
+    return globalThis.d35eScentSenseTrails;
+  }
+
   function firstDefined(...values) {
     return values.find((value) => value !== undefined && value !== null && value !== "");
   }
@@ -195,7 +200,23 @@
       template: CONTEXT_MANAGER_TEMPLATE,
     });
 
-    moduleRuntimes = { alerts, contextManager: contextManagerRuntime, detection, integration, overlay };
+    const trailManagerRuntime = globalThis.d35eScentSenseTrailManager.create({
+      canTrackByScent,
+      createScentTrail,
+      deleteScentTrail,
+      format,
+      getScentRange,
+      getScentTrailDc,
+      getScentTrails,
+      localize,
+      moduleId: MODULE_ID,
+      rollTrackByScent,
+      roundDistance,
+      template: TRAIL_MANAGER_TEMPLATE,
+      updateScentTrail,
+    });
+
+    moduleRuntimes = { alerts, contextManager: contextManagerRuntime, detection, integration, overlay, trailManager: trailManagerRuntime };
     return moduleRuntimes;
   }
 
@@ -522,6 +543,215 @@
     return getScentRules()?.canTrackByScent?.(actor, { hasScent: hasScent(actor) }) ?? false;
   }
 
+  function getScentTrails(scene = canvas?.scene, options = {}) {
+    if (!scene) return [];
+    return getScentTrailsApi()?.getSceneTrails?.(scene, { worldTime: options.worldTime ?? game.time?.worldTime ?? 0 }) ?? [];
+  }
+
+  function getSceneToken(scene, tokenId) {
+    if (!tokenId) return null;
+    if (scene?.id && scene.id === canvas?.scene?.id) {
+      const liveToken = canvas?.tokens?.placeables?.find((token) => token.id === tokenId);
+      if (liveToken) return liveToken;
+    }
+
+    const tokenDocument = scene?.tokens?.get?.(tokenId) ?? scene?.tokens?.find?.((token) => token.id === tokenId);
+    if (!tokenDocument) return null;
+    return { id: tokenDocument.id, name: tokenDocument.name, actor: tokenDocument.actor, document: tokenDocument };
+  }
+
+  function findScentTrail(scene, trailId) {
+    return getScentTrails(scene).find((trail) => trail.id === trailId) ?? null;
+  }
+
+  function buildTrailSourceData(data = {}, scene = canvas?.scene) {
+    const sourceToken = data.sourceToken ?? getSceneToken(scene, data.sourceTokenId);
+    const sourceDocument = sourceToken?.document ?? sourceToken;
+    const sourceActor = sourceToken?.actor ?? sourceDocument?.actor ?? null;
+    const sourceName = firstDefined(sourceToken?.name, sourceDocument?.name, data.sourceName, data.sourceActorName, "");
+
+    return {
+      sourceTokenId: firstDefined(sourceToken?.id, sourceDocument?.id, data.sourceTokenId, ""),
+      sourceActorId: firstDefined(sourceActor?.id, data.sourceActorId, ""),
+      sourceName,
+      odorProfile: data.odorProfile ?? (sourceToken ? getOdorProfile(sourceToken, { scene }).profile : data.odorProfile),
+    };
+  }
+
+  async function persistScentTrails(scene, trails) {
+    if (game.user?.isGM !== true) return { updated: false, reason: "not-gm", trails: getScentTrails(scene) };
+    if (!scene?.setFlag) return { updated: false, reason: "invalid-scene", trails: [] };
+
+    const trailApi = getScentTrailsApi();
+    const normalizedTrails = trailApi?.normalizeTrails?.(trails, { worldTime: game.time?.worldTime ?? 0 }) ?? [];
+    await scene.setFlag(MODULE_ID, trailApi?.constants?.TRAIL_FLAG ?? "scentTrails", normalizedTrails);
+    return { updated: true, trails: normalizedTrails };
+  }
+
+  async function createScentTrail(scene = canvas?.scene, data = {}) {
+    if (game.user?.isGM !== true) return { created: false, reason: "not-gm", trail: null };
+    if (!scene?.setFlag) return { created: false, reason: "invalid-scene", trail: null };
+
+    const trailApi = getScentTrailsApi();
+    const worldTime = game.time?.worldTime ?? 0;
+    const sourceData = buildTrailSourceData(data, scene);
+    const trail = trailApi.normalizeTrail({ ...data, ...sourceData }, { idFactory: randomId, worldTime });
+    const trails = trailApi.upsertTrail(getScentTrails(scene), trail, { worldTime });
+    await persistScentTrails(scene, trails);
+    return { created: true, trail };
+  }
+
+  async function updateScentTrail(scene = canvas?.scene, trailId, data = {}) {
+    if (game.user?.isGM !== true) return { updated: false, reason: "not-gm", trail: null };
+    if (!scene?.setFlag) return { updated: false, reason: "invalid-scene", trail: null };
+
+    const trailApi = getScentTrailsApi();
+    const trails = getScentTrails(scene);
+    const current = trails.find((trail) => trail.id === trailId);
+    if (!current) return { updated: false, reason: "missing-trail", trail: null };
+
+    const worldTime = game.time?.worldTime ?? current.updatedWorldTime;
+    const sourceData = data.sourceToken || data.sourceTokenId ? buildTrailSourceData(data, scene) : {};
+    const trail = trailApi.normalizeTrail({
+      ...current,
+      ...data,
+      ...sourceData,
+      id: current.id,
+      createdWorldTime: current.createdWorldTime,
+      updatedWorldTime: worldTime,
+    }, { worldTime });
+    await persistScentTrails(scene, trailApi.upsertTrail(trails, trail, { worldTime }));
+    return { updated: true, trail };
+  }
+
+  async function deleteScentTrail(scene = canvas?.scene, trailId) {
+    if (game.user?.isGM !== true) return { deleted: false, reason: "not-gm" };
+    if (!scene?.setFlag) return { deleted: false, reason: "invalid-scene" };
+
+    const trailApi = getScentTrailsApi();
+    const trails = getScentTrails(scene);
+    const remaining = trailApi.deleteTrail(trails, trailId);
+    if (remaining.length === trails.length) return { deleted: false, reason: "missing-trail" };
+
+    await persistScentTrails(scene, remaining);
+    return { deleted: true };
+  }
+
+  function getScentTrailDc(trailOrId, tracker, options = {}) {
+    const scene = options.scene ?? tracker?.scene ?? tracker?.document?.parent ?? canvas?.scene;
+    const trail = typeof trailOrId === "string" ? findScentTrail(scene, trailOrId) : trailOrId;
+    if (!trail) return { trackable: false, dc: null, reason: "missing-trail" };
+
+    return getScentTrailsApi()?.getScentTrailDc?.(trail, tracker, {
+      ...options,
+      canTrackByScent: options.canTrackByScent ?? canTrackByScent,
+      rules: options.rules ?? getScentRules(),
+      worldTime: options.worldTime ?? game.time?.worldTime ?? 0,
+    }) ?? { trackable: false, dc: null, reason: "trails-unavailable" };
+  }
+
+  async function createWhisper(userIds, content) {
+    const recipients = Array.from(new Set(userIds.filter(Boolean)));
+    if (recipients.length === 0 || !globalThis.ChatMessage?.create) return null;
+
+    return ChatMessage.create({
+      user: game.user.id,
+      speaker: ChatMessage.getSpeaker({ alias: "Scent" }),
+      whisper: recipients,
+      content,
+    });
+  }
+
+  function getTrackingReasonLabel(reason) {
+    return localize(`D35EScent.TrailManager.Reason.${reason ?? "unknown"}`);
+  }
+
+  function buildTrackingPromptContent(data, { gm = false } = {}) {
+    const context = format("D35EScent.Trail.RollContext", {
+      age: data.trailAgeHours,
+      water: localize(`D35EScent.TrailManager.Water.${data.waterState === "flowingWater" ? "FlowingWater" : data.waterState === "water" ? "Water" : "None"}`),
+      competing: data.powerfulCompetingOdor ? localize("D35EScent.TrailManager.Yes") : localize("D35EScent.TrailManager.No"),
+      modifier: data.odorDcModifier,
+    });
+    const header = data.trackable
+      ? format("D35EScent.Trail.RollPrompt", { tracker: data.trackerName, dc: data.dc })
+      : format("D35EScent.Trail.RollUnavailable", { tracker: data.trackerName, reason: getTrackingReasonLabel(data.reason) });
+
+    let content = `<p>${escapeHtml(header)}</p><p>${escapeHtml(context)}</p>`;
+    if (gm) {
+      content += `<p>${escapeHtml(format("D35EScent.Trail.GmRollContext", {
+        trail: data.trailLabel,
+        source: data.sourceName || localize("D35EScent.TrailManager.UnknownSource"),
+        notes: [data.sizeNotes, data.countNotes, data.notes].filter(Boolean).join("; ") || localize("D35EScent.TrailManager.None"),
+      }))}</p>`;
+    }
+
+    return content;
+  }
+
+  async function tryNativeSurvivalRoll(actor, dcResult, options = {}) {
+    if (options.nativeRoll === false) return null;
+    if (typeof options.rollFunction === "function") {
+      return { rolled: true, method: "custom", result: await options.rollFunction({ actor, dcResult, options }) };
+    }
+
+    if (typeof actor?.rollSkill !== "function") return null;
+
+    try {
+      return {
+        rolled: true,
+        method: "actor.rollSkill",
+        result: await actor.rollSkill(options.skillId ?? "sur", { dc: dcResult.dc, event: options.event }),
+      };
+    } catch (error) {
+      console.warn(`${MODULE_ID} | Native Survival roll failed; creating tracking prompt instead.`, error);
+      return null;
+    }
+  }
+
+  async function rollTrackByScent(trackerToken, trailId, options = {}) {
+    const actor = trackerToken?.actor ?? trackerToken?.document?.actor;
+    const allowed = game.user?.isGM === true || actor?.testUserPermission?.(game.user, "OWNER") === true;
+    if (!allowed) return { rolled: false, promptCreated: false, reason: "not-authorized" };
+
+    const scene = options.scene ?? trackerToken?.scene ?? trackerToken?.document?.parent ?? canvas?.scene;
+    const trail = typeof trailId === "string" ? findScentTrail(scene, trailId) : trailId;
+    if (!trail) return { rolled: false, promptCreated: false, reason: "missing-trail" };
+
+    const dcResult = getScentTrailDc(trail, trackerToken, { ...options, scene, requireTracker: true });
+    if (dcResult.trackable !== true) {
+      return { rolled: false, promptCreated: false, reason: dcResult.reason, dc: dcResult.dc, dcResult };
+    }
+
+    const nativeRoll = await tryNativeSurvivalRoll(actor, dcResult, options);
+    if (nativeRoll?.rolled === true) return { ...nativeRoll, promptCreated: false, dc: dcResult.dc, dcResult };
+
+    const promptData = getScentTrailsApi().buildRollPromptData(trail, trackerToken, dcResult, {
+      worldTime: options.worldTime ?? game.time?.worldTime ?? 0,
+      revealTrailLabel: options.revealTrailLabel === true,
+    });
+    const gmIds = ensureRuntimes().alerts.getActiveGmIds();
+    const ownerIds = options.includeOwners === false
+      ? []
+      : ensureRuntimes().alerts.getActiveOwnerRecipients(trackerToken).filter((userId) => !game.users?.get?.(userId)?.isGM);
+    const messages = [];
+
+    const gmMessage = await createWhisper(gmIds, buildTrackingPromptContent(promptData.gm, { gm: true }));
+    if (gmMessage) messages.push(gmMessage.id);
+
+    const ownerMessage = await createWhisper(ownerIds, buildTrackingPromptContent(promptData.player, { gm: false }));
+    if (ownerMessage) messages.push(ownerMessage.id);
+
+    return {
+      rolled: false,
+      promptCreated: messages.length > 0,
+      reason: "not-rolled",
+      dc: dcResult.dc,
+      dcResult,
+      messageIds: messages,
+    };
+  }
+
   async function setScentContextFlags(document, values = {}, options = {}) {
     if (game.user?.isGM !== true) return { updated: false, reason: "not-gm", set: [], unset: [] };
     if (!document?.setFlag || !document?.unsetFlag) return { updated: false, reason: "invalid-document", set: [], unset: [] };
@@ -776,6 +1006,14 @@
     return ensureRuntimes().contextManager.registerContextManagerTool(controls);
   }
 
+  function openTrailManager(options = {}) {
+    return ensureRuntimes().trailManager.openTrailManager(options);
+  }
+
+  function registerTrailManagerTool(controls) {
+    return ensureRuntimes().trailManager.registerTrailManagerTool(controls);
+  }
+
   async function refresh(options = {}) {
     registerSettings();
     registerScentSense();
@@ -838,6 +1076,7 @@
       if (scene?.id === canvas?.scene?.id) queueScan();
     });
     Hooks.on("getSceneControlButtons", registerContextManagerTool);
+    Hooks.on("getSceneControlButtons", registerTrailManagerTool);
     Hooks.on("renderTokenHUD", renderTokenHudToggle);
     registerChatMessageHook();
     Hooks.on("userConnected", queueScan);
@@ -856,6 +1095,8 @@
         PINPOINT_RANGE,
       },
       canTrackByScent,
+      createScentTrail,
+      deleteScentTrail,
       evaluateScentDetection,
       evaluateScentState,
       getEffectiveScentRange,
@@ -866,18 +1107,24 @@
       getContextApi,
       getScentRules,
       getScentStateApi,
+      getScentTrailDc,
+      getScentTrails,
+      getScentTrailsApi,
       getTrackingByScentDc,
       hasScent,
       identifyFamiliarOdor,
       isOverlayVisible,
       openContextManager,
+      openTrailManager,
       refresh,
       resetNotificationState,
+      rollTrackByScent,
       scan,
       setOdorProfileFlags,
       setScentContextFlags,
       setOverlayVisible,
       syncActorTokens,
+      updateScentTrail,
     });
 
     game.d35eScentSense = api;

@@ -10,7 +10,7 @@ References checked:
 
 ## Current Coverage
 
-| Rule Area | v0.6.0 Status | Notes |
+| Rule Area | v0.7.0 Status | Notes |
 | --- | --- | --- |
 | Scent sense registration | Automated | Registers `scent` as a D35E sense label when the D35E system is active. |
 | Default detection range | Automated | Uses `30 ft` as the module default helper value and reads configured actor/item Scent ranges when present. |
@@ -22,12 +22,12 @@ References checked:
 | Pinpoint within 5 ft | Automated alert | The module identifies the pinpoint band and shows owner/GM cues. |
 | Track feat requirement | Automated helper | `canTrackByScent` requires Scent plus a Track feat item. |
 | Tracking DC by Scent | Automated helper | Helper computes fresh-trail, cold-trail, competing-odor, odor modifier, and water-state values. |
-| Survival roll workflow | Not yet automated | Planned for `v0.7.0`. |
-| Persistent trails | Not yet automated | Planned for `v0.7.0`. |
+| Survival roll workflow | GM-assisted prompt | Trail helper computes the DC and can create a redacted GM/owner prompt; native skill rolling is best-effort when the actor exposes a compatible method. |
+| Persistent trails | GM-authored scene records | The Trail Manager and API store scene-level trails under module-owned flags; movement does not automatically create trails. |
 | Familiar odor identification | GM-facing helper | Odor tags and familiar tag matching are exposed through API helpers and the GM context manager; player identity is not revealed automatically. |
-| Water and water-breathing UI | Helper only | Rule helper exists; expanded GM-facing trail controls are planned for `v0.7.0`. |
+| Water and water-breathing UI | GM-facing trail controls | Trail records include water state and preview DC impact for selected trackers. |
 | False/powerful odor sources | GM-facing helper | False odor flags and strong/overpowering odor profile fields are available for GM context and preview details. |
-| Surface and visibility modifiers while scent-tracking | Helper boundary | Scent tracking ignores those categories; explicit Trail Manager support is planned for `v0.7.0`. |
+| Surface and visibility modifiers while scent-tracking | Explicitly ignored for Scent trail DCs | Trail DC helpers model Scent-specific age, water, competing odor, and odor modifier inputs without applying normal surface or visibility categories. |
 
 ## V1 Acceptance Target
 

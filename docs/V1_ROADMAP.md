@@ -26,10 +26,11 @@ This roadmap turns the current Scent helper into a stable `v1.0.0` module with d
 ## v0.7.0 Scent Tracking
 
 - Store scene-level trail records under module-owned scene flags.
-- Track source identity, age/world time, water state, competing odor, odor modifier, and optional size/count notes.
+- Track source identity, age/world time, water state, competing odor, odor modifier, optional size/count notes, and an odor profile snapshot.
 - Add a GM Trail Manager.
 - Add optional owner/GM Survival roll prompts for tracking by Scent.
 - Add `openTrailManager`, trail CRUD helpers, `getScentTrailDc`, and `rollTrackByScent`.
+- Keep trail creation GM/API-authored; automatic movement trails remain out of scope.
 
 ## v0.8.0 D35E Integration Hardening
 

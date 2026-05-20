@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.7.0 - 2026-05-20
+
+- Added a pure Scent trail helper layer for GM-authored scene trails, age calculation, Scent tracking DC previews, water-state handling, Track/Scent eligibility, and prompt redaction.
+- Added `game.d35eScentSense.trails`, `openTrailManager`, `createScentTrail`, `updateScentTrail`, `deleteScentTrail`, `getScentTrailDc`, and `rollTrackByScent`.
+- Added a GM-only Scent Trails manager in Token Controls for scene trail records and optional Survival roll prompts.
+- Updated validation, tests, documentation, and release metadata for the tracking layer.
+
 ## 0.6.3 - 2026-05-20
 
 - Preserved false odor and odor tag metadata on detection results after RAW range evaluation normalizes wind, odor strength, and masking context.

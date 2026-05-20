@@ -103,3 +103,117 @@
     grid-template-columns: repeat(2, minmax(140px, 1fr));
   }
 }
+
+.d35e-scent-trail-manager {
+  min-width: 780px;
+}
+
+.d35e-scent-trail-manager h2 {
+  margin: 0;
+  font-size: 1.1rem;
+  line-height: 1.3;
+}
+
+.d35e-scent-trail-manager select,
+.d35e-scent-trail-manager input,
+.d35e-scent-trail-manager button {
+  min-height: 30px;
+}
+
+.d35e-scent-trail-manager__scene {
+  display: grid;
+  gap: 10px;
+  padding: 8px 0 10px;
+}
+
+.d35e-scent-trail-manager__heading {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.d35e-scent-trail-manager__heading span,
+.d35e-scent-trail-manager td small {
+  color: var(--color-text-light-6);
+}
+
+.d35e-scent-trail-manager__create {
+  display: grid;
+  grid-template-columns: minmax(150px, 1.2fr) minmax(150px, 1.2fr) repeat(3, minmax(110px, 0.8fr)) repeat(3, minmax(130px, 1fr)) auto;
+  gap: 8px;
+  align-items: end;
+}
+
+.d35e-scent-trail-manager__create label,
+.d35e-scent-trail-manager__tracker label {
+  display: grid;
+  gap: 4px;
+}
+
+.d35e-scent-trail-manager__tracker {
+  max-width: 360px;
+}
+
+.d35e-scent-trail-manager__trails {
+  max-height: 520px;
+  overflow: auto;
+  border-top: 1px solid var(--color-border-light-tertiary);
+}
+
+.d35e-scent-trail-manager table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.d35e-scent-trail-manager th,
+.d35e-scent-trail-manager td {
+  padding: 6px;
+  vertical-align: top;
+  border-bottom: 1px solid var(--color-border-light-tertiary);
+}
+
+.d35e-scent-trail-manager th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  text-align: left;
+  background: var(--color-bg, var(--color-cool-5, #f2f2f2));
+}
+
+.d35e-scent-trail-manager td input[type="text"] {
+  min-width: 120px;
+}
+
+.d35e-scent-trail-manager td input[type="number"] {
+  width: 70px;
+}
+
+.d35e-scent-trail-manager td strong,
+.d35e-scent-trail-manager td small {
+  display: block;
+}
+
+.d35e-scent-trail-manager__active,
+.d35e-scent-trail-manager__actions {
+  text-align: center;
+}
+
+.d35e-scent-trail-manager__active input {
+  width: 18px;
+  height: 18px;
+}
+
+.d35e-scent-trail-manager__actions {
+  white-space: nowrap;
+}
+
+@media (max-width: 1100px) {
+  .d35e-scent-trail-manager {
+    min-width: 0;
+  }
+
+  .d35e-scent-trail-manager__create {
+    grid-template-columns: repeat(2, minmax(140px, 1fr));
+  }
+}

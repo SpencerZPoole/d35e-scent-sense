@@ -11,12 +11,14 @@ Supporting runtime modules own the specialized behavior:
 - `scent-rules.js`: pure SRD-derived Scent calculations and tracking helpers.
 - `scent-context.js`: pure context flag normalization and precedence.
 - `scent-odor-profile.js`: pure odor profile normalization, familiar odor tag matching, and profile flag planning.
+- `scent-trails.js`: pure trail record normalization, age/DC helpers, and prompt redaction.
 - `scent-state.js`: pure detection-state normalization for presence, direction request/reveal status, and pinpoint.
 - `scent-detection.js`: Foundry-aware target filtering, distance measurement, and wall blocking.
 - `scent-overlay.js`: local Scent rings, pinpoint cues, and Token HUD overlay toggles.
 - `scent-alerts.js`: sockets, owner alerts, GM whispers, direction requests, and pinpoint notifications.
 - `scent-d35e-integration.js`: D35E sense registration, detection mode registration, token detection mode syncing, and refresh patching.
 - `scent-context-manager.js`: GM-only ApplicationV2 context manager and Token Controls tool.
+- `scent-trail-manager.js`: GM-only ApplicationV2 trail manager, DC previews, and roll prompt actions.
 - `scent-api.js`: public API object construction for `game.d35eScentSense`.
 
 ## Design Rules
@@ -25,11 +27,11 @@ Supporting runtime modules own the specialized behavior:
 - Foundry-specific code is grouped by responsibility instead of accumulated in the bootstrap script.
 - Player-facing alerts must not reveal hidden target identity unless the GM has already adjudicated it.
 - GM tools may write module-owned scene and token flags; actor flags are read as inherited context but not edited by the context manager.
+- Trail records are GM/API-authored scene data. Runtime scans do not automatically create movement trails.
 - Release artifacts must not include private world data, compendia, media assets, fonts, sourcebook prose, or local machine paths.
 
 ## Future Architecture Work
 
 The next major architecture changes should continue adding stateful service boundaries without changing existing APIs:
 
-- A trail service for scene-level Scent tracking records and Survival roll prompts.
 - A migration service for module-owned flags and future schema changes.
