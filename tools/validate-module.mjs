@@ -1,0 +1,92 @@
+import fs from "node:fs";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+
+const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
+
+const requiredFiles = [
+  "module.json",
+  "package.json",
+  "README.md",
+  "LICENSE.md",
+  "OGL-1.0a.txt",
+  "CHANGELOG.md",
+  "CONTRIBUTING.md",
+  "SECURITY.md",
+  "lang/en.json",
+  "scripts/d35e-scent-sense.js",
+  "tools/check-public-surface.mjs",
+  "tools/validate-module.mjs",
+];
+
+const errors = [];
+const expectedManifestUrl = "https://github.com/SpencerZPoole/d35e-scent-sense/releases/latest/download/module.json";
+const expectedDownloadUrl = "https://github.com/SpencerZPoole/d35e-scent-sense/releases/download/v0.1.0/d35e-scent-sense-v0.1.0.zip";
+
+function fail(message) {
+  errors.push(message);
+}
+
+function readJson(relativePath) {
+  const fullPath = path.join(root, relativePath);
+  try {
+    return JSON.parse(fs.readFileSync(fullPath, "utf8"));
+  } catch (error) {
+    fail(`${relativePath} is not valid JSON: ${error.message}`);
+    return null;
+  }
+}
+
+for (const relativePath of requiredFiles) {
+  if (!fs.existsSync(path.join(root, relativePath))) {
+    fail(`Missing required file: ${relativePath}`);
+  }
+}
+
+const manifest = readJson("module.json");
+const packageJson = readJson("package.json");
+readJson("lang/en.json");
+
+if (manifest) {
+  if (manifest.id !== "d35e-scent-sense") fail("module.json id must be d35e-scent-sense");
+  if (manifest.title !== "D35E Scent Sense") fail("module.json title must be D35E Scent Sense");
+  if (manifest.version !== "0.1.0") fail("module.json version must be 0.1.0");
+  if (manifest.license !== "MIT") fail("module.json license must be MIT");
+  if (typeof manifest.url !== "string" || !manifest.url.includes("d35e-scent-sense")) fail("module.json url is missing or incorrect");
+  if (manifest.manifest !== expectedManifestUrl) fail("module.json manifest URL is missing or incorrect");
+  if (manifest.download !== expectedDownloadUrl) fail("module.json download URL is missing or incorrect");
+  if (!Array.isArray(manifest.authors) || manifest.authors[0]?.name !== "Spencer Poole") fail("module.json author must be Spencer Poole");
+  if (manifest.compatibility?.minimum !== "14") fail("module.json Foundry minimum compatibility must be 14");
+  if (manifest.compatibility?.verified !== "14.361") fail("module.json Foundry verified compatibility must be 14.361");
+
+  const system = manifest.relationships?.systems?.find((entry) => entry.id === "D35E");
+  if (!system) fail("module.json must declare D35E system relationship");
+  if (system?.compatibility?.minimum !== "3.0.2") fail("D35E minimum compatibility must be 3.0.2");
+  if (system?.compatibility?.verified !== "3.0.2") fail("D35E verified compatibility must be 3.0.2");
+
+  for (const scriptPath of manifest.scripts ?? []) {
+    if (!fs.existsSync(path.join(root, scriptPath))) fail(`Manifest script path does not exist: ${scriptPath}`);
+  }
+
+  for (const language of manifest.languages ?? []) {
+    if (!fs.existsSync(path.join(root, language.path))) fail(`Manifest language path does not exist: ${language.path}`);
+  }
+}
+
+if (packageJson) {
+  if (packageJson.name !== "d35e-scent-sense") fail("package.json name must be d35e-scent-sense");
+  if (packageJson.version !== "0.1.0") fail("package.json version must be 0.1.0");
+  if (packageJson.license !== "MIT") fail("package.json license must be MIT");
+  if (packageJson.private !== true) fail("package.json should be private to prevent accidental npm publication");
+  for (const scriptName of ["check:js", "check:public", "validate", "test"]) {
+    if (!packageJson.scripts?.[scriptName]) fail(`package.json missing script: ${scriptName}`);
+  }
+}
+
+if (errors.length > 0) {
+  console.error("Module validation failed:");
+  for (const error of errors) console.error(`- ${error}`);
+  process.exit(1);
+}
+
+console.log("Module validation passed.");

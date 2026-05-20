@@ -1,0 +1,22 @@
+{
+  "name": "d35e-scent-sense",
+  "version": "0.1.0",
+  "description": "Conservative 3.5e SRD Scent support for the D35E Foundry system.",
+  "private": true,
+  "type": "module",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/SpencerZPoole/d35e-scent-sense.git"
+  },
+  "bugs": {
+    "url": "https://github.com/SpencerZPoole/d35e-scent-sense/issues"
+  },
+  "homepage": "https://github.com/SpencerZPoole/d35e-scent-sense#readme",
+  "scripts": {
+    "check:js": "node --check scripts/d35e-scent-sense.js",
+    "check:public": "node tools/check-public-surface.mjs",
+    "validate": "node tools/validate-module.mjs && npm run check:js && npm run check:public",
+    "test": "npm run validate"
+  }
+}
