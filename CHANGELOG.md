@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.3.0 - 2026-05-20
+
+- Added a GM-only Scent Context manager in Token Controls for scene defaults, token odor context, masking odors, and GM-marked Scent relevance.
+- Added context helper APIs for opening the manager, reading effective context, and setting module context flags.
+- Added a pure context helper script with Node tests for flag precedence, normalization, and inherit/unset behavior.
+- Added module stylesheet and template validation coverage for the new manager.
+
 ## 0.2.0 - 2026-05-20
 
 - Added a pure RAW-aware Scent rules helper layer for wind, odor strength, masking odors, pinpoint detection, and tracking-by-scent DCs.

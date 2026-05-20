@@ -1,0 +1,111 @@
+<div class="d35e-scent-context-manager__body">
+  <section class="d35e-scent-context-manager__scene">
+    <div class="d35e-scent-context-manager__heading">
+      <h2>{{title}}</h2>
+      <span>{{sceneName}}</span>
+    </div>
+
+    <div class="d35e-scent-context-manager__controls">
+      <label>
+        <span>{{localize "D35EScent.ContextManager.Wind.Label"}}</span>
+        <select name="scene.windBand">
+          {{selectOptions options.wind selected=scene.windBand valueAttr="value" labelAttr="label"}}
+        </select>
+      </label>
+
+      <label>
+        <span>{{localize "D35EScent.ContextManager.Odor.Label"}}</span>
+        <select name="scene.odorStrength">
+          {{selectOptions options.odor selected=scene.odorStrength valueAttr="value" labelAttr="label"}}
+        </select>
+      </label>
+
+      <label>
+        <span>{{localize "D35EScent.ContextManager.Masking.Label"}}</span>
+        <select name="scene.maskingOdor">
+          {{selectOptions options.masking selected=scene.maskingOdor valueAttr="value" labelAttr="label"}}
+        </select>
+      </label>
+
+      <label class="d35e-scent-context-manager__source">
+        <span>{{localize "D35EScent.ContextManager.SourcePreview"}}</span>
+        <select name="sourceTokenId">
+          {{selectOptions sourceOptions selected=sourceTokenId valueAttr="value" labelAttr="label"}}
+        </select>
+      </label>
+
+      <button type="button" data-action="clearSceneContext">
+        <i class="fa-solid fa-rotate-left"></i>
+        {{localize "D35EScent.ContextManager.ClearScene"}}
+      </button>
+    </div>
+  </section>
+
+  <section class="d35e-scent-context-manager__tokens">
+    {{#if hasTokens}}
+      <table>
+        <thead>
+          <tr>
+            <th>{{localize "D35EScent.ContextManager.Token"}}</th>
+            <th>{{localize "D35EScent.ContextManager.SourceColumn"}}</th>
+            <th>{{localize "D35EScent.ContextManager.Wind.Label"}}</th>
+            <th>{{localize "D35EScent.ContextManager.Odor.Label"}}</th>
+            <th>{{localize "D35EScent.ContextManager.Masking.Label"}}</th>
+            <th>{{localize "D35EScent.ContextManager.GmMarked"}}</th>
+            <th>{{localize "D35EScent.ContextManager.Effective"}}</th>
+            <th>{{localize "D35EScent.ContextManager.Preview.Label"}}</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          {{#each tokens}}
+            <tr data-scent-token-id="{{id}}">
+              <td>
+                <strong>{{name}}</strong>
+                <span>{{actorName}}</span>
+              </td>
+              <td>{{sourceStatus}}</td>
+              <td>
+                <select data-field="windBand">
+                  {{selectOptions ../options.wind selected=windBand valueAttr="value" labelAttr="label"}}
+                </select>
+              </td>
+              <td>
+                <select data-field="odorStrength">
+                  {{selectOptions ../options.odor selected=odorStrength valueAttr="value" labelAttr="label"}}
+                </select>
+              </td>
+              <td>
+                <select data-field="maskingOdor">
+                  {{selectOptions ../options.masking selected=maskingOdor valueAttr="value" labelAttr="label"}}
+                </select>
+              </td>
+              <td class="d35e-scent-context-manager__mark">
+                <input type="checkbox" data-field="scentRelevant" {{#if scentRelevant}}checked{{/if}}>
+              </td>
+              <td>
+                <span>{{effectiveWind}} / {{effectiveOdor}} / {{effectiveMasking}}</span>
+                <small>{{sourceSummary}}</small>
+              </td>
+              <td>
+                {{#if preview}}
+                  <span>{{preview.label}}</span>
+                  <small>{{preview.distance}} ft / {{preview.effectiveRange}} ft</small>
+                {{else}}
+                  <span>{{localize "D35EScent.ContextManager.NoPreview"}}</span>
+                {{/if}}
+              </td>
+              <td>
+                <button type="button" data-action="clearTokenContext" title="{{localize 'D35EScent.ContextManager.ClearToken'}}">
+                  <i class="fa-solid fa-rotate-left"></i>
+                </button>
+              </td>
+            </tr>
+          {{/each}}
+        </tbody>
+      </table>
+    {{else}}
+      <p>{{localize "D35EScent.ContextManager.NoTokens"}}</p>
+    {{/if}}
+  </section>
+</div>

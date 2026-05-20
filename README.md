@@ -8,11 +8,11 @@ This repository contains module code, public-safe documentation, and validation 
 
 - Foundry Virtual Tabletop: minimum `14`, verified `14.361`
 - D35E system: minimum `3.0.2`, verified `3.0.2`
-- Module version: `0.2.0`
+- Module version: `0.3.0`
 
 ## Release Status
 
-This repository is release-manifest-ready for version `0.2.0`.
+This repository is release-manifest-ready for version `0.3.0`.
 
 Install through this manifest URL:
 
@@ -31,6 +31,7 @@ For development testing, copy or clone this folder into your Foundry `Data/modul
 - Sends owner and GM alerts for presence, direction requests, and pinpoint events.
 - Keeps GM adjudication in the loop for direction and exact-location calls.
 - Provides RAW-aware helper calculations for wind, odor strength, masking odors, and tracking by Scent.
+- Adds a GM-only Scent Context manager for scene defaults, token odor context, masking odors, and GM-marked Scent relevance.
 
 ## Usage
 
@@ -44,10 +45,13 @@ game.d35eScentSense.hasScent(actor);
 game.d35eScentSense.getEffectiveScentRange(sourceToken, targetToken);
 game.d35eScentSense.evaluateScentDetection(sourceToken, targetToken);
 game.d35eScentSense.getTrackingByScentDc({ trailAgeHours: 2 });
+game.d35eScentSense.getScentContext(sourceToken, targetToken);
+game.d35eScentSense.setScentContextFlags(token.document, { odorStrength: "strong" });
+game.d35eScentSense.openContextManager();
 game.d35eScentSense.refresh({ persist: true });
 ```
 
-The rules helper is also available at `game.d35eScentSense.rules` and `globalThis.d35eScentSenseRules`.
+The rules helper is also available at `game.d35eScentSense.rules` and `globalThis.d35eScentSenseRules`. Context flag normalization is available at `game.d35eScentSense.context` and `globalThis.d35eScentSenseContext`.
 
 Lightweight Scent context can be supplied through API options or flags on the target token, target actor, or scene:
 
@@ -58,6 +62,8 @@ await token.document.setFlag("d35e-scent-sense", "maskingOdor", true);
 ```
 
 Supported context values are `normal`, `upwind`, and `downwind` for wind; `normal`, `strong`, and `overpowering` for odor strength; and a boolean for masking odor. Tracking helpers compute RAW-derived DCs only; they do not roll Survival or replace GM adjudication.
+
+GMs can also open **Scent Context** from Token Controls to edit scene defaults and current-scene token flags. Selecting `inherit` clears the module flag and returns that value to the normal precedence chain.
 
 ## Content And License Boundary
 

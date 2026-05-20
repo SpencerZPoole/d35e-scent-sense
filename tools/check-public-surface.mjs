@@ -49,6 +49,7 @@ const mediaExtensions = new Set([
 
 const textExtensions = new Set([
   ".css",
+  ".hbs",
   ".html",
   ".js",
   ".json",
