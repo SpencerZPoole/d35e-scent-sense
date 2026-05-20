@@ -14,14 +14,16 @@ const requiredFiles = [
   "CONTRIBUTING.md",
   "SECURITY.md",
   "lang/en.json",
+  "scripts/scent-rules.js",
   "scripts/d35e-scent-sense.js",
   "tools/check-public-surface.mjs",
+  "tools/test-scent-rules.mjs",
   "tools/validate-module.mjs",
 ];
 
 const errors = [];
 const expectedManifestUrl = "https://github.com/SpencerZPoole/d35e-scent-sense/releases/latest/download/module.json";
-const expectedDownloadUrl = "https://github.com/SpencerZPoole/d35e-scent-sense/releases/download/v0.1.1/d35e-scent-sense-v0.1.1.zip";
+const expectedDownloadUrl = "https://github.com/SpencerZPoole/d35e-scent-sense/releases/download/v0.2.0/d35e-scent-sense-v0.2.0.zip";
 
 function fail(message) {
   errors.push(message);
@@ -50,7 +52,7 @@ readJson("lang/en.json");
 if (manifest) {
   if (manifest.id !== "d35e-scent-sense") fail("module.json id must be d35e-scent-sense");
   if (manifest.title !== "D35E Scent Sense") fail("module.json title must be D35E Scent Sense");
-  if (manifest.version !== "0.1.1") fail("module.json version must be 0.1.1");
+  if (manifest.version !== "0.2.0") fail("module.json version must be 0.2.0");
   if (manifest.license !== "LICENSE.md") fail("module.json license must point to LICENSE.md");
   if (typeof manifest.url !== "string" || !manifest.url.includes("d35e-scent-sense")) fail("module.json url is missing or incorrect");
   if (manifest.manifest !== expectedManifestUrl) fail("module.json manifest URL is missing or incorrect");
@@ -63,6 +65,7 @@ if (manifest) {
   if (!system) fail("module.json must declare D35E system relationship");
   if (system?.compatibility?.minimum !== "3.0.2") fail("D35E minimum compatibility must be 3.0.2");
   if (system?.compatibility?.verified !== "3.0.2") fail("D35E verified compatibility must be 3.0.2");
+  if (manifest.scripts?.[0] !== "scripts/scent-rules.js") fail("module.json must load scripts/scent-rules.js before the main module script");
 
   for (const scriptPath of manifest.scripts ?? []) {
     const fullScriptPath = path.join(root, scriptPath);
@@ -84,10 +87,10 @@ if (manifest) {
 
 if (packageJson) {
   if (packageJson.name !== "d35e-scent-sense") fail("package.json name must be d35e-scent-sense");
-  if (packageJson.version !== "0.1.1") fail("package.json version must be 0.1.1");
+  if (packageJson.version !== "0.2.0") fail("package.json version must be 0.2.0");
   if (packageJson.license !== "MIT") fail("package.json license must be MIT");
   if (packageJson.private !== true) fail("package.json should be private to prevent accidental npm publication");
-  for (const scriptName of ["check:js", "check:public", "validate", "test"]) {
+  for (const scriptName of ["check:js", "check:public", "test:rules", "validate", "test"]) {
     if (!packageJson.scripts?.[scriptName]) fail(`package.json missing script: ${scriptName}`);
   }
 }

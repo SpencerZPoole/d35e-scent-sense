@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.2.0 - 2026-05-20
+
+- Added a pure RAW-aware Scent rules helper layer for wind, odor strength, masking odors, pinpoint detection, and tracking-by-scent DCs.
+- Added public API helpers under `game.d35eScentSense.rules` and direct convenience methods for effective range, detection evaluation, and tracking DCs.
+- Added lightweight token, actor, and scene flag support for Scent context without adding new UI.
+- Added an `allCreatures` alert scope for broader non-hostile Scent adjudication.
+- Added pure Node tests for the new Scent rules helpers.
+
 ## 0.1.1 - 2026-05-20
 
 - Added the required Foundry module socket manifest flag for owner/GM alert messaging.

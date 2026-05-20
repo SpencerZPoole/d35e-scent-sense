@@ -13,8 +13,9 @@ This audit covers the public release copy of `d35e-scent-sense`. The live Foundr
 - Public metadata uses `3.5e SRD` and `D35E Foundry system` wording.
 - Original code and documentation are covered by `LICENSE.md`.
 - SRD-derived Scent mechanics are identified under `OGL-1.0a.txt`.
-- The manifest includes release `manifest` and `download` URLs for tag `v0.1.1`.
+- The manifest includes release `manifest` and `download` URLs for tag `v0.2.0`.
 - The manifest enables the package socket namespace required by owner/GM Scent alerts.
+- The rules helper layer covers wind range, odor strength, masking odor, pinpoint, and tracking-by-scent DC calculations without copying source prose.
 
 ## Remaining Human Review
 

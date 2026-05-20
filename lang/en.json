@@ -5,6 +5,7 @@
   "D35EScent.Settings.TriggerScope.Hint": "Choose which hostile tokens can trigger Scent presence alerts.",
   "D35EScent.Settings.TriggerScope.UnknownHostiles": "Unknown hostiles",
   "D35EScent.Settings.TriggerScope.AllHostiles": "All hostiles",
+  "D35EScent.Settings.TriggerScope.AllCreatures": "All creatures",
   "D35EScent.Settings.TriggerScope.GmMarked": "GM-marked hostiles",
   "D35EScent.Settings.RespectWalls.Name": "Respect Walls",
   "D35EScent.Settings.RespectWalls.Hint": "Block automated Scent alerts through walls and closed barriers. The GM can still adjudicate exceptions manually.",
@@ -26,6 +27,7 @@
   "D35EScent.Alert.Ignore": "Ignore",
   "D35EScent.Alert.GmDirectionRequest": "{actor} is spending a move action to note the direction of a scent detected by the Scent extraordinary ability. Please tell the player the direction of the scent.",
   "D35EScent.Alert.GmDirectionDetail": "Scent direction request: {actor} detected {target} at approximately {distance} ft in scene {scene}.",
+  "D35EScent.Alert.GmContextDetail": "Scent context: effective range {range} ft; wind {wind}; odor {odor}; masking odor {masking}.",
   "D35EScent.Alert.GmPinpoint": "Scent pinpoint: {actor} is within 5 ft of {target} in scene {scene}. Tell the player the exact square/location.",
   "D35EScent.HUD.ToggleOverlay": "Toggle Scent Ring"
 }

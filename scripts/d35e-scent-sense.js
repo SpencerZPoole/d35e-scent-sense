@@ -107,6 +107,64 @@
     }
   }
 
+  function getScentRules() {
+    return globalThis.d35eScentSenseRules;
+  }
+
+  function firstDefined(...values) {
+    return values.find((value) => value !== undefined && value !== null && value !== "");
+  }
+
+  function readFlag(document, key) {
+    try {
+      return document?.getFlag?.(MODULE_ID, key);
+    } catch (_error) {
+      return undefined;
+    }
+  }
+
+  function getTargetDocument(targetToken) {
+    return targetToken?.document ?? targetToken;
+  }
+
+  function buildScentContext(sourceToken, targetToken, options = {}) {
+    const rules = getScentRules();
+    const explicit = options.context ?? options;
+    const targetDocument = getTargetDocument(targetToken);
+    const targetActor = targetToken?.actor ?? targetDocument?.actor;
+    const scene = options.scene ?? targetDocument?.parent ?? canvas?.scene;
+
+    const context = {
+      windBand: firstDefined(
+        explicit.windBand,
+        explicit.wind,
+        readFlag(targetDocument, "windBand"),
+        readFlag(targetActor, "windBand"),
+        readFlag(scene, "windBand")
+      ),
+      odorStrength: firstDefined(
+        explicit.odorStrength,
+        explicit.odor,
+        readFlag(targetDocument, "odorStrength"),
+        readFlag(targetActor, "odorStrength"),
+        readFlag(scene, "odorStrength")
+      ),
+      maskingOdor: firstDefined(
+        explicit.maskingOdor,
+        explicit.maskedByOdor,
+        readFlag(targetDocument, "maskingOdor"),
+        readFlag(targetActor, "maskingOdor"),
+        readFlag(scene, "maskingOdor")
+      ),
+    };
+
+    return rules?.normalizeContext?.(context) ?? {
+      windBand: "normal",
+      odorStrength: "normal",
+      maskingOdor: false,
+    };
+  }
+
   function registerSettings() {
     if (globalThis[SETTINGS_REGISTERED] === true) return;
 
@@ -120,6 +178,7 @@
       choices: {
         unknownHostiles: "D35EScent.Settings.TriggerScope.UnknownHostiles",
         allHostiles: "D35EScent.Settings.TriggerScope.AllHostiles",
+        allCreatures: "D35EScent.Settings.TriggerScope.AllCreatures",
         gmMarked: "D35EScent.Settings.TriggerScope.GmMarked",
       },
       onChange: () => resetNotificationState({ scan: true }),
@@ -225,6 +284,52 @@
 
   function hasScent(actor) {
     return getScentRange(actor) > 0;
+  }
+
+  function getTokenActor(tokenOrDocument) {
+    return tokenOrDocument?.actor ?? tokenOrDocument?.document?.actor ?? null;
+  }
+
+  function getEffectiveScentRange(sourceToken, targetToken, options = {}) {
+    const rules = getScentRules();
+    const baseRange = options.baseRange !== undefined ? positiveNumber(options.baseRange, 0) : getScentRange(getTokenActor(sourceToken));
+    const context = buildScentContext(sourceToken, targetToken, options);
+    return rules?.calculateEffectiveRange?.(baseRange, context) ?? baseRange;
+  }
+
+  function evaluateScentDetection(sourceToken, targetToken, options = {}) {
+    const rules = getScentRules();
+    const baseRange = options.baseRange !== undefined ? positiveNumber(options.baseRange, 0) : getScentRange(getTokenActor(sourceToken));
+    const distance = options.distance !== undefined ? Number(options.distance) : measureTokenDistance(sourceToken, targetToken);
+    const context = buildScentContext(sourceToken, targetToken, options);
+
+    if (rules?.evaluateDetection) {
+      return rules.evaluateDetection({ sourceToken, targetToken, baseRange, distance, context, pinpointRange: PINPOINT_RANGE });
+    }
+
+    const effectiveRange = context.maskingOdor ? 0 : baseRange;
+    const detectable = Number.isFinite(distance) && distance >= 0 && distance <= effectiveRange;
+    const pinpoint = detectable && distance <= Math.min(PINPOINT_RANGE, effectiveRange);
+    return {
+      detectable,
+      pinpoint,
+      band: detectable ? pinpoint ? RANGE_BANDS.PINPOINT : RANGE_BANDS.PRESENCE : null,
+      reason: detectable ? "detectable" : "out-of-range",
+      reasons: detectable ? [] : ["out-of-range"],
+      baseRange,
+      effectiveRange,
+      distance,
+      context,
+      pinpointRange: PINPOINT_RANGE,
+    };
+  }
+
+  function getTrackingByScentDc(options = {}) {
+    return getScentRules()?.getTrackingByScentDc?.(options) ?? { trackable: false, dc: null, reason: "rules-unavailable" };
+  }
+
+  function canTrackByScent(actor) {
+    return getScentRules()?.canTrackByScent?.(actor, { hasScent: hasScent(actor) }) ?? false;
   }
 
   function registerScentSense() {
@@ -632,6 +737,7 @@
 
   function targetMatchesTriggerScope(token) {
     const scope = getSetting(SETTINGS.TRIGGER_SCOPE);
+    if (scope === "allCreatures") return true;
     if (scope === "allHostiles") return true;
     if (scope === "gmMarked") return isGmMarkedTarget(token);
     return isUnknownTarget(token);
@@ -639,6 +745,16 @@
 
   function isScentOpponent(_sourceToken, targetToken) {
     return targetToken?.document?.disposition === CONST.TOKEN_DISPOSITIONS.HOSTILE;
+  }
+
+  function shouldEvaluateScentTarget(sourceToken, targetToken) {
+    if (!targetToken?.actor || targetToken.id === sourceToken?.id) return false;
+
+    if (getSetting(SETTINGS.TRIGGER_SCOPE) !== "allCreatures" && !isScentOpponent(sourceToken, targetToken)) {
+      return false;
+    }
+
+    return targetMatchesTriggerScope(targetToken);
   }
 
   function measureTokenDistance(sourceToken, targetToken) {
@@ -699,6 +815,17 @@
 
   function roundDistance(distance) {
     return Math.round(distance * 10) / 10;
+  }
+
+  function buildGmContextContent(detail) {
+    if (!detail?.context) return "";
+
+    return `<p>${escapeHtml(format("D35EScent.Alert.GmContextDetail", {
+      range: Number.isFinite(detail.effectiveRange) ? roundDistance(detail.effectiveRange) : "?",
+      wind: detail.context.windBand ?? "normal",
+      odor: detail.context.odorStrength ?? "normal",
+      masking: detail.context.maskingOdor === true ? "yes" : "no",
+    }))}</p>`;
   }
 
   function trimGmEventCache() {
@@ -821,6 +948,7 @@
         distance: roundDistance(detail.distance),
         scene: sceneName,
       }))}</p>`;
+      content += buildGmContextContent(detail);
     }
 
     await createGmWhisper(content);
@@ -849,7 +977,7 @@
     else if (payload.type === SOCKET_TYPES.PINPOINT_ALERT) await showPinpointAlert(payload);
   }
 
-  async function dispatchPresenceAlert({ scene, sourceToken, targetToken, distance, recipients }) {
+  async function dispatchPresenceAlert({ scene, sourceToken, targetToken, distance, recipients, detection }) {
     const eventId = randomId();
     cacheGmEvent(eventId, {
       eventId,
@@ -858,6 +986,8 @@
       sourceName: sourceToken.name,
       targetName: targetToken.name,
       distance,
+      effectiveRange: detection?.effectiveRange,
+      context: detection?.context,
       band: RANGE_BANDS.PRESENCE,
     });
 
@@ -873,17 +1003,20 @@
     });
   }
 
-  async function dispatchPinpointAlert({ scene, sourceToken, targetToken, distance, recipients }) {
+  async function dispatchPinpointAlert({ scene, sourceToken, targetToken, distance, recipients, detection }) {
     const eventId = randomId();
-    cacheGmEvent(eventId, {
+    const detail = {
       eventId,
       sceneId: scene.id,
       sceneName: scene.name,
       sourceName: sourceToken.name,
       targetName: targetToken.name,
       distance,
+      effectiveRange: detection?.effectiveRange,
+      context: detection?.context,
       band: RANGE_BANDS.PINPOINT,
-    });
+    };
+    cacheGmEvent(eventId, detail);
 
     await dispatchSocketMessage({
       type: SOCKET_TYPES.PINPOINT_ALERT,
@@ -904,7 +1037,7 @@
       actor: sourceToken.name,
       target: targetToken.name,
       scene: scene.name,
-    }))}</p>`);
+    }))}</p>${buildGmContextContent(detail)}`);
   }
 
   async function scanScene(scene = canvas?.scene) {
@@ -932,15 +1065,14 @@
       scentSources += 1;
 
       for (const targetToken of tokens) {
-        if (!targetToken?.actor || targetToken.id === sourceToken.id) continue;
-        if (!isScentOpponent(sourceToken, targetToken)) continue;
-        if (!targetMatchesTriggerScope(targetToken)) continue;
+        if (!shouldEvaluateScentTarget(sourceToken, targetToken)) continue;
 
         const distance = measureTokenDistance(sourceToken, targetToken);
-        if (!Number.isFinite(distance) || distance > range) continue;
+        const detection = evaluateScentDetection(sourceToken, targetToken, { baseRange: range, distance, scene });
+        if (!detection.detectable) continue;
         if (isWallBlocked(sourceToken, targetToken)) continue;
 
-        const band = distance <= Math.min(PINPOINT_RANGE, range) ? RANGE_BANDS.PINPOINT : RANGE_BANDS.PRESENCE;
+        const band = detection.band;
         if (band === RANGE_BANDS.PRESENCE && !enablePresence) continue;
         if (band === RANGE_BANDS.PINPOINT && !enablePinpoint) continue;
 
@@ -952,9 +1084,9 @@
 
         notificationState.add(stateKey);
         if (band === RANGE_BANDS.PINPOINT) {
-          await dispatchPinpointAlert({ scene, sourceToken, targetToken, distance, recipients });
+          await dispatchPinpointAlert({ scene, sourceToken, targetToken, distance, recipients, detection });
         } else {
-          await dispatchPresenceAlert({ scene, sourceToken, targetToken, distance, recipients });
+          await dispatchPresenceAlert({ scene, sourceToken, targetToken, distance, recipients, detection });
         }
         alerts += 1;
       }
@@ -1048,7 +1180,9 @@
     control.classList.add("control-icon");
     control.dataset.action = `${MODULE_ID}.toggleOverlay`;
     control.title = localize("D35EScent.HUD.ToggleOverlay");
-    control.innerHTML = `<i class="fas fa-wind"></i>`;
+    const icon = document.createElement("i");
+    icon.classList.add("fas", "fa-wind");
+    control.appendChild(icon);
     control.classList.toggle("active", isOverlayVisible(token));
     control.addEventListener("click", async (event) => {
       event.preventDefault();
@@ -1097,6 +1231,9 @@
       queueActorSync(item.actor);
       queueScan();
     });
+    Hooks.on("updateScene", (scene) => {
+      if (scene?.id === canvas?.scene?.id) queueScan();
+    });
     Hooks.on("renderTokenHUD", renderTokenHudToggle);
     Hooks.on("userConnected", queueScan);
     Hooks.on("updateCombat", queueScan);
@@ -1113,7 +1250,12 @@
         DEFAULT_SCENT_RANGE,
         PINPOINT_RANGE,
       },
+      rules: getScentRules(),
+      canTrackByScent,
+      evaluateScentDetection,
+      getEffectiveScentRange,
       getScentRange,
+      getTrackingByScentDc,
       hasScent,
       isOverlayVisible,
       refresh,

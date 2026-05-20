@@ -8,11 +8,11 @@ This repository contains module code, public-safe documentation, and validation 
 
 - Foundry Virtual Tabletop: minimum `14`, verified `14.361`
 - D35E system: minimum `3.0.2`, verified `3.0.2`
-- Module version: `0.1.1`
+- Module version: `0.2.0`
 
 ## Release Status
 
-This repository is release-manifest-ready for version `0.1.1`.
+This repository is release-manifest-ready for version `0.2.0`.
 
 Install through this manifest URL:
 
@@ -30,6 +30,7 @@ For development testing, copy or clone this folder into your Foundry `Data/modul
 - Adds owner/GM-local Scent range rings.
 - Sends owner and GM alerts for presence, direction requests, and pinpoint events.
 - Keeps GM adjudication in the loop for direction and exact-location calls.
+- Provides RAW-aware helper calculations for wind, odor strength, masking odors, and tracking by Scent.
 
 ## Usage
 
@@ -40,8 +41,23 @@ The module exposes `game.d35eScentSense` after initialization:
 ```js
 game.d35eScentSense.getScentRange(actor);
 game.d35eScentSense.hasScent(actor);
+game.d35eScentSense.getEffectiveScentRange(sourceToken, targetToken);
+game.d35eScentSense.evaluateScentDetection(sourceToken, targetToken);
+game.d35eScentSense.getTrackingByScentDc({ trailAgeHours: 2 });
 game.d35eScentSense.refresh({ persist: true });
 ```
+
+The rules helper is also available at `game.d35eScentSense.rules` and `globalThis.d35eScentSenseRules`.
+
+Lightweight Scent context can be supplied through API options or flags on the target token, target actor, or scene:
+
+```js
+await token.document.setFlag("d35e-scent-sense", "windBand", "upwind");
+await token.document.setFlag("d35e-scent-sense", "odorStrength", "strong");
+await token.document.setFlag("d35e-scent-sense", "maskingOdor", true);
+```
+
+Supported context values are `normal`, `upwind`, and `downwind` for wind; `normal`, `strong`, and `overpowering` for odor strength; and a boolean for masking odor. Tracking helpers compute RAW-derived DCs only; they do not roll Survival or replace GM adjudication.
 
 ## Content And License Boundary
 
@@ -57,4 +73,4 @@ Run the local validation suite before publishing or packaging:
 npm test
 ```
 
-The checks verify manifest structure, required legal files, script syntax, and public-surface cleanliness.
+The checks verify manifest structure, required legal files, script syntax, RAW helper behavior, and public-surface cleanliness.
