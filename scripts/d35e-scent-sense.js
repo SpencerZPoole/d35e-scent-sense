@@ -409,7 +409,6 @@
 
   function getScentRange(actor) {
     if (!actor || !["character", "npc"].includes(actor.type)) return 0;
-    if (actor.system?.noVisionOverride === true) return 0;
 
     const preparedRange = positiveNumber(
       foundry.utils.getProperty(actor, `system.attributes.senses.${SENSE_ID}`),

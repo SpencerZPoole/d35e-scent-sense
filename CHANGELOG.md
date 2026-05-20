@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.6.2 - 2026-05-20
+
+- Fixed Scent range discovery for D35E actors with `noVisionOverride` enabled; that D35E option controls token vision override behavior and should not suppress Scent.
+- Completed scratch-world product validation for item-granted Scent ranges, odor profiles, masking, context-manager controls, and scan execution.
+
 ## 0.6.1 - 2026-05-20
 
 - Fixed runtime Scent range discovery for D35E item collections so item-granted Scent ranges are read correctly in live worlds.
