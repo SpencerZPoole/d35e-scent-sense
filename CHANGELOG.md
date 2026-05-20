@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.8.1 - 2026-05-20
+
+- Fixed token detection-mode sync to include both linked and unlinked active tokens.
+- Added a regression test for Foundry's linked-token filter argument.
+- Rebuilt release assets after scratch-world runtime validation found the linked-only sync path.
+
 ## 0.8.0 - 2026-05-20
 
 - Added a focused D35E source helper for Scent range diagnostics across prepared actor senses, base actor senses, and eligible item senses.

@@ -1,6 +1,6 @@
 # D35E Integration Note
 
-This note documents how `d35e-scent-sense` integrates with the D35E Foundry system as of `v0.8.0`.
+This note documents how `d35e-scent-sense` integrates with the D35E Foundry system as of `v0.8.1`.
 
 ## Current Integration Points
 
@@ -8,6 +8,7 @@ This note documents how `d35e-scent-sense` integrates with the D35E Foundry syst
 - Registers `CONFIG.Canvas.detectionModes.scentPinpoint` for the module's 5 ft pinpoint overlay behavior.
 - Reads Scent range from D35E prepared actor senses, base actor sense data, and eligible item senses.
 - Reconciles token and prototype-token detection modes only for D35E character and npc actors.
+- Reconciles linked and unlinked active tokens.
 - Skips detection-mode writes when D35E `noVisionOverride` is enabled.
 
 ## Refresh Wrapper

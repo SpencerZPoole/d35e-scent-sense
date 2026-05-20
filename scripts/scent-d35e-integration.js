@@ -224,7 +224,7 @@
       if (game.user?.isGM) {
         await persistPrototypeScentDetection(actor);
 
-        for (const token of actor.getActiveTokens?.(true) ?? []) {
+        for (const token of actor.getActiveTokens?.(false) ?? []) {
           await persistTokenScentDetection(token.document);
         }
       }

@@ -113,4 +113,40 @@ const lootToken = {
 assert.equal(runtime.applyScentDetectionMode(lootToken), false);
 assert.equal(runtime.getActorSyncGuard(lootToken.actor).reason, "unsupported-actor");
 
+let getActiveTokensArgument = null;
+const tokenUpdates = [];
+const actorWithMixedTokens = {
+  id: "actor4",
+  name: "Mixed Tokens",
+  type: "character",
+  range: 30,
+  system: {},
+  prototypeToken: {
+    detectionModes: [],
+  },
+  update: async () => {},
+  getActiveTokens: (linked) => {
+    getActiveTokensArgument = linked;
+    return [
+      {
+        document: {
+          actor: { id: "actor4", name: "Mixed Tokens", type: "character", range: 30, system: {} },
+          detectionModes: [],
+          update: async (data) => tokenUpdates.push(data),
+        },
+      },
+      {
+        document: {
+          actor: { id: "actor4", name: "Mixed Tokens", type: "character", range: 30, system: {} },
+          detectionModes: [],
+          update: async (data) => tokenUpdates.push(data),
+        },
+      },
+    ];
+  },
+};
+await runtime.syncActorTokens(actorWithMixedTokens);
+assert.equal(getActiveTokensArgument, false, "syncActorTokens should include linked and unlinked tokens");
+assert.equal(tokenUpdates.length, 2, "syncActorTokens should update every active token document");
+
 console.log("D35E integration tests passed.");
