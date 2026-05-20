@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.7.1 - 2026-05-20
+
+- Removed the legacy `renderChatMessage` hook registration now that the module targets Foundry 14 and uses `renderChatMessageHTML`.
+- Kept `v0.7.0` Scent trail APIs and behavior unchanged while cleaning the live runtime warning surfaced during scratch-world validation.
+
 ## 0.7.0 - 2026-05-20
 
 - Added a pure Scent trail helper layer for GM-authored scene trails, age calculation, Scent tracking DC previews, water-state handling, Track/Scent eligibility, and prompt redaction.

@@ -392,7 +392,6 @@
     function registerChatMessageHook() {
       if (chatHookRegistered === true) return;
 
-      Hooks.on("renderChatMessage", (_message, html) => bindDirectionRevealButtons(html));
       Hooks.on("renderChatMessageHTML", (_message, html) => bindDirectionRevealButtons(html));
 
       chatHookRegistered = true;
