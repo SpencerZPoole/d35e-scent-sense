@@ -12,6 +12,8 @@ Supporting runtime modules own the specialized behavior:
 - `scent-context.js`: pure context flag normalization and precedence.
 - `scent-odor-profile.js`: pure odor profile normalization, familiar odor tag matching, and profile flag planning.
 - `scent-trails.js`: pure trail record normalization, age/DC helpers, and prompt redaction.
+- `scent-d35e-sources.js`: pure D35E Scent source discovery and range diagnostics.
+- `scent-migration.js`: pure migration planning for module-owned scene, token, and trail flags.
 - `scent-state.js`: pure detection-state normalization for presence, direction request/reveal status, and pinpoint.
 - `scent-detection.js`: Foundry-aware target filtering, distance measurement, and wall blocking.
 - `scent-overlay.js`: local Scent rings, pinpoint cues, and Token HUD overlay toggles.
@@ -34,4 +36,4 @@ Supporting runtime modules own the specialized behavior:
 
 The next major architecture changes should continue adding stateful service boundaries without changing existing APIs:
 
-- A migration service for module-owned flags and future schema changes.
+- Additional migration helpers for future schema changes.

@@ -34,10 +34,10 @@ This roadmap turns the current Scent helper into a stable `v1.0.0` module with d
 
 ## v0.8.0 D35E Integration Hardening
 
-- Normalize Scent range discovery across prepared actor data, item senses, active buffs, active auras, and token detection modes.
+- Normalize Scent range discovery across prepared actor data, base actor sense data, item senses, active buffs, active auras, and token detection modes.
 - Add migration helpers for module flags.
-- Reduce runtime patch risk where D35E exposes a cleaner integration path.
-- Prepare an upstream-ready integration note or PR proposal after the module behavior is stable.
+- Reduce runtime patch risk with narrower guards and integration diagnostics.
+- Prepare an upstream-ready integration note after the module behavior is stable.
 
 ## v0.9.0 Release Candidate
 

@@ -120,6 +120,14 @@
     return globalThis.d35eScentSenseTrails;
   }
 
+  function getD35ESourcesApi() {
+    return globalThis.d35eScentSenseD35ESources;
+  }
+
+  function getMigrationApi() {
+    return globalThis.d35eScentSenseMigration;
+  }
+
   function firstDefined(...values) {
     return values.find((value) => value !== undefined && value !== null && value !== "");
   }
@@ -172,6 +180,7 @@
       clone,
       detectionModeId: DETECTION_MODE_ID,
       getScentRange,
+      getScentRangeBreakdown,
       isD35E,
       moduleId: MODULE_ID,
       pinpointRange: PINPOINT_RANGE,
@@ -407,37 +416,23 @@
     globalThis[SETTINGS_REGISTERED] = true;
   }
 
-  function itemContributesScent(item) {
-    const fallbackRange = positiveNumber(foundry.utils.getProperty(item, "flags.world.d35eScentSenseRange"), 0);
-    const itemRange = positiveNumber(item.system?.senses?.[SENSE_ID], fallbackRange);
-    if (itemRange <= 0) return 0;
-
-    if (["aura", "buff"].includes(item.type)) return item.system?.active === true ? itemRange : 0;
-    if (item.system?.active === false) return 0;
-    return itemRange;
-  }
-
-  function getActorItemScentRange(actor) {
-    if (!actor?.items) return 0;
-
-    let range = 0;
-    for (const item of actor.items.values?.() ?? actor.items) {
-      range = Math.max(range, itemContributesScent(item));
-    }
-
-    return range;
-  }
-
   function getScentRange(actor) {
-    if (!actor || !["character", "npc"].includes(actor.type)) return 0;
+    return getD35ESourcesApi()?.getScentRange?.(actor, { senseId: SENSE_ID }) ?? 0;
+  }
 
-    const preparedRange = positiveNumber(
-      foundry.utils.getProperty(actor, `system.attributes.senses.${SENSE_ID}`),
-      positiveNumber(foundry.utils.getProperty(actor, `system.senses.${SENSE_ID}`), 0)
-    );
-    if (preparedRange > 0) return preparedRange;
-
-    return getActorItemScentRange(actor);
+  function getScentRangeBreakdown(actorOrToken, options = {}) {
+    return getD35ESourcesApi()?.getScentRangeBreakdown?.(actorOrToken, {
+      ...options,
+      detectionModeId: DETECTION_MODE_ID,
+      pinpointRange: PINPOINT_RANGE,
+      senseId: SENSE_ID,
+    }) ?? {
+      supported: false,
+      range: 0,
+      contributors: [],
+      ignored: [{ kind: "api", reason: "source-helper-unavailable" }],
+      tokenDetection: { available: false, synchronized: false, reason: "source-helper-unavailable" },
+    };
   }
 
   function hasScent(actor) {
@@ -813,6 +808,85 @@
     return { updated, set: setKeys, unset: unsetKeys };
   }
 
+  function getSceneTokenDocuments(scene = canvas?.scene) {
+    if (!scene?.tokens) return [];
+    if (typeof scene.tokens.values === "function") return Array.from(scene.tokens.values());
+    if (Array.isArray(scene.tokens)) return scene.tokens;
+    return Object.values(scene.tokens);
+  }
+
+  async function applyFlagReport(document, report) {
+    const setKeys = [];
+    const unsetKeys = [];
+    if (!document?.setFlag || !document?.unsetFlag) return { updated: false, reason: "invalid-document", set: setKeys, unset: unsetKeys };
+
+    for (const key of report.unset ?? []) {
+      await document.unsetFlag(MODULE_ID, key);
+      unsetKeys.push(key);
+    }
+
+    for (const [key, value] of Object.entries(report.set ?? {})) {
+      await document.setFlag(MODULE_ID, key, value);
+      setKeys.push(key);
+    }
+
+    return { updated: setKeys.length > 0 || unsetKeys.length > 0, set: setKeys, unset: unsetKeys };
+  }
+
+  async function migrateFlags(options = {}) {
+    if (game.user?.isGM !== true) return { migrated: false, reason: "not-gm" };
+
+    const scene = options.scene ?? canvas?.scene;
+    if (!scene) return { migrated: false, reason: "missing-scene" };
+
+    const dryRun = options.dryRun !== false;
+    const migrationApi = getMigrationApi();
+    const report = migrationApi?.planMigration?.({
+      scene,
+      tokens: options.tokens ?? getSceneTokenDocuments(scene),
+      contextApi: getContextApi(),
+      odorProfileApi: getOdorProfileApi(),
+      trailApi: getScentTrailsApi(),
+      moduleId: MODULE_ID,
+      worldTime: options.worldTime ?? game.time?.worldTime ?? 0,
+    }) ?? { changed: false, scene: {}, tokens: [], actors: [], reason: "migration-helper-unavailable" };
+
+    const result = {
+      migrated: false,
+      dryRun,
+      sceneId: scene.id ?? "",
+      sceneName: scene.name ?? "",
+      changed: report.changed === true,
+      report,
+      writes: [],
+    };
+
+    if (dryRun || !report.changed) return result;
+
+    const sceneWrite = await applyFlagReport(scene, report.scene ?? {});
+    result.writes.push({ type: "scene", id: scene.id ?? "", ...sceneWrite });
+
+    const tokenDocuments = getSceneTokenDocuments(scene);
+    for (const tokenReport of report.tokens ?? []) {
+      if (tokenReport.changed !== true) continue;
+      const token = tokenDocuments.find((entry) => entry.id === tokenReport.documentId);
+      if (!token) {
+        result.writes.push({ type: "token", id: tokenReport.documentId, updated: false, reason: "missing-token", set: [], unset: [] });
+        continue;
+      }
+
+      result.writes.push({ type: "token", id: token.id ?? "", ...(await applyFlagReport(token, tokenReport)) });
+    }
+
+    result.migrated = result.writes.some((write) => write.updated === true);
+    if (result.migrated && options.refresh !== false) {
+      resetNotificationState({ scan: true });
+      refreshOverlay();
+    }
+
+    return result;
+  }
+
   function registerScentSense() {
     return ensureRuntimes().integration.registerScentSense();
   }
@@ -827,6 +901,10 @@
 
   function queueActorSync(actor) {
     return ensureRuntimes().integration.queueActorSync(actor);
+  }
+
+  function getIntegrationStatus(actorOrToken = null) {
+    return ensureRuntimes().integration.getIntegrationStatus(actorOrToken);
   }
   const debouncedRefreshOverlay = foundry.utils.debounce(refreshOverlay, 50);
   const debouncedScan = foundry.utils.debounce(() => {
@@ -1104,7 +1182,11 @@
       getOdorProfileApi,
       getScentContext,
       getScentRange,
+      getScentRangeBreakdown,
       getContextApi,
+      getD35ESourcesApi,
+      getIntegrationStatus,
+      getMigrationApi,
       getScentRules,
       getScentStateApi,
       getScentTrailDc,
@@ -1114,6 +1196,7 @@
       hasScent,
       identifyFamiliarOdor,
       isOverlayVisible,
+      migrateFlags,
       openContextManager,
       openTrailManager,
       refresh,

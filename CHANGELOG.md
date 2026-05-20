@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.8.0 - 2026-05-20
+
+- Added a focused D35E source helper for Scent range diagnostics across prepared actor senses, base actor senses, and eligible item senses.
+- Hardened `scentPinpoint` detection-mode reconciliation for duplicate modes, unsupported actor types, unlinked tokens, and D35E `noVisionOverride`.
+- Added `game.d35eScentSense.getScentRangeBreakdown`, `migrateFlags`, and an integration-status diagnostic.
+- Added a GM-only dry-run-first flag migration helper for module-owned scene, token, and trail data.
+- Added D35E integration, migration tests, and an upstream-ready integration note.
+
 ## 0.7.1 - 2026-05-20
 
 - Removed the legacy `renderChatMessage` hook registration now that the module targets Foundry 14 and uses `renderChatMessageHTML`.

@@ -8,11 +8,11 @@ This repository contains module code, public-safe documentation, and validation 
 
 - Foundry Virtual Tabletop: minimum `14`, verified `14.361`
 - D35E system: minimum `3.0.2`, verified `3.0.2`
-- Module version: `0.7.1`
+- Module version: `0.8.0`
 
 ## Release Status
 
-This repository is release-manifest-ready for version `0.7.1`.
+This repository is release-manifest-ready for version `0.8.0`.
 
 Install through this manifest URL:
 
@@ -26,7 +26,8 @@ For development testing, copy or clone this folder into your Foundry `Data/modul
 
 - Registers `scent` as a D35E sense label when the D35E system is active.
 - Adds a Foundry detection mode for 5 ft Scent pinpoint handling.
-- Reads Scent range from actor senses or active item senses.
+- Reads Scent range from D35E prepared actor senses, base actor senses, and eligible item senses.
+- Provides Scent range source diagnostics and module-owned flag migration helpers.
 - Adds owner/GM-local Scent range rings.
 - Sends owner and GM alerts for presence, direction requests, and pinpoint events.
 - Keeps GM adjudication in the loop for direction and exact-location calls.
@@ -45,6 +46,7 @@ The module exposes `game.d35eScentSense` after initialization:
 
 ```js
 game.d35eScentSense.getScentRange(actor);
+game.d35eScentSense.getScentRangeBreakdown(actor);
 game.d35eScentSense.hasScent(actor);
 game.d35eScentSense.getEffectiveScentRange(sourceToken, targetToken);
 game.d35eScentSense.evaluateScentDetection(sourceToken, targetToken);
@@ -60,10 +62,13 @@ game.d35eScentSense.openTrailManager();
 game.d35eScentSense.createScentTrail(canvas.scene, { sourceToken: token });
 game.d35eScentSense.getScentTrailDc(trail, trackerToken);
 game.d35eScentSense.rollTrackByScent(trackerToken, trail.id);
+game.d35eScentSense.migrateFlags({ dryRun: true });
 game.d35eScentSense.refresh({ persist: true });
 ```
 
 The rules helper is also available at `game.d35eScentSense.rules` and `globalThis.d35eScentSenseRules`. Context flag normalization is available at `game.d35eScentSense.context` and `globalThis.d35eScentSenseContext`. Odor profile helpers are available at `game.d35eScentSense.odorProfile` and `globalThis.d35eScentSenseOdorProfile`. Detection-state helpers are available at `game.d35eScentSense.state` and `globalThis.d35eScentSenseState`. Trail helpers are available at `game.d35eScentSense.trails` and `globalThis.d35eScentSenseTrails`.
+
+`evaluateScentDetection` returns a compatibility object with `detectable`, `pinpoint`, `band`, `reason`, `reasons`, `baseRange`, `effectiveRange`, `distance`, `context`, `state`, `states`, `directionAvailable`, `directionRequested`, `directionRevealed`, `directionStatus`, `requiresGmDirection`, and `notificationBand`. `evaluateScentState` returns the same state metadata and should be preferred by consumers that need to distinguish presence, direction request, revealed direction, and pinpoint.
 
 Lightweight Scent context can be supplied through API options or flags on the target token, target actor, or scene:
 
@@ -87,6 +92,7 @@ The current release is a conservative Scent helper, not complete silent automati
 
 - `docs/RAW_COVERAGE_MATRIX.md` for current RAW coverage and gaps.
 - `docs/ARCHITECTURE.md` for the runtime split and design rules.
+- `docs/D35E_INTEGRATION_NOTE.md` for D35E integration boundaries.
 - `docs/V1_ROADMAP.md` for the path to stable `v1.0.0`.
 
 ## Content And License Boundary
@@ -103,4 +109,4 @@ Run the local validation suite before publishing or packaging:
 npm test
 ```
 
-The checks verify manifest structure, required legal files, script syntax, RAW helper behavior, odor profile behavior, trail behavior, and public-surface cleanliness.
+The checks verify manifest structure, required legal files, script syntax, RAW helper behavior, odor profile behavior, trail behavior, D35E integration helpers, migration helpers, and public-surface cleanliness.

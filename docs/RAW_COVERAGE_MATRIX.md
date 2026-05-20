@@ -10,10 +10,10 @@ References checked:
 
 ## Current Coverage
 
-| Rule Area | v0.7.0 Status | Notes |
+| Rule Area | v0.8.0 Status | Notes |
 | --- | --- | --- |
 | Scent sense registration | Automated | Registers `scent` as a D35E sense label when the D35E system is active. |
-| Default detection range | Automated | Uses `30 ft` as the module default helper value and reads configured actor/item Scent ranges when present. |
+| Default detection range | Automated | Uses `30 ft` as the module default helper value and reads configured D35E prepared actor, base actor, and eligible item Scent ranges when present. |
 | Upwind and downwind ranges | Automated helper | `scent-rules.js` computes normal, upwind, and downwind effective ranges. |
 | Strong and overpowering odors | Automated helper | Effective range multipliers are implemented and exposed through API/context/profile flags. |
 | Masking odor | Automated helper | Detection helper suppresses detection when masking odor is active; GM controls the context/profile. |
