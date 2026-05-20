@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.6.1 - 2026-05-20
+
+- Fixed runtime Scent range discovery for D35E item collections so item-granted Scent ranges are read correctly in live worlds.
+- Kept the `v0.6.0` odor profile API and GM context manager behavior unchanged.
+
 ## 0.6.0 - 2026-05-20
 
 - Added a pure odor-profile helper layer for odor strength, masking odors, false odor sources, and familiar odor tags.

@@ -400,7 +400,7 @@
     if (!actor?.items) return 0;
 
     let range = 0;
-    for (const item of actor.items) {
+    for (const item of actor.items.values?.() ?? actor.items) {
       range = Math.max(range, itemContributesScent(item));
     }
 
