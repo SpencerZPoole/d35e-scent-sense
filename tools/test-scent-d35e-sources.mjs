@@ -46,7 +46,13 @@ assert.ok(breakdown.ignored.some((entry) => entry.id === "fallback-ignored" && e
 assert.equal(sources.getScentRange(actor), 65);
 assert.equal(sources.getScentRangeBreakdown(makeActor({ type: "loot", prepared: 30 })).supported, false);
 assert.equal(sources.getScentRangeBreakdown({ actor, document: { detectionModes: [{ id: "scentPinpoint", enabled: true, range: 5 }] } }).tokenDetection.synchronized, true);
-assert.equal(sources.getScentRangeBreakdown(makeActor({ noVisionOverride: true, prepared: 30 })).tokenDetection.reason, "no-vision-override");
+const noVisionBreakdown = sources.getScentRangeBreakdown({
+  actor: makeActor({ noVisionOverride: true, prepared: 30 }),
+  document: { detectionModes: [{ id: "scentPinpoint", enabled: true, range: 5 }] },
+});
+assert.equal(noVisionBreakdown.noVisionOverride, true);
+assert.equal(noVisionBreakdown.tokenDetection.noVisionOverride, true);
+assert.equal(noVisionBreakdown.tokenDetection.synchronized, true);
 
 console.log("D35E source helper tests passed.");
 

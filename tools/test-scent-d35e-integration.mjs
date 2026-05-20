@@ -102,9 +102,9 @@ const noVisionToken = {
   actor: { id: "actor2", name: "Custom Vision", type: "character", range: 30, system: { noVisionOverride: true } },
   detectionModes: [],
 };
-assert.equal(runtime.applyScentDetectionMode(noVisionToken), false);
-assert.deepEqual(noVisionToken.detectionModes, []);
-assert.equal(runtime.getActorSyncGuard(noVisionToken.actor).reason, "no-vision-override");
+assert.equal(runtime.applyScentDetectionMode(noVisionToken), true);
+assert.deepEqual(noVisionToken.detectionModes, [{ id: "scentPinpoint", enabled: true, range: 5 }]);
+assert.equal(runtime.getActorSyncGuard(noVisionToken.actor).allowed, true);
 
 const lootToken = {
   actor: { id: "actor3", name: "Chest", type: "loot", range: 30, system: {} },

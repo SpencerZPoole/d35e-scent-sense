@@ -185,9 +185,10 @@
       range,
       contributors,
       ignored,
-      tokenDetection: noVisionOverride
-        ? { available: !!tokenDocument, synchronized: false, reason: "no-vision-override" }
-        : detectionModeStatus(tokenDocument, { ...options, range }),
+      tokenDetection: {
+        ...detectionModeStatus(tokenDocument, { ...options, range }),
+        noVisionOverride,
+      },
     };
   }
 

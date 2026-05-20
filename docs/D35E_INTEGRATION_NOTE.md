@@ -1,6 +1,6 @@
 # D35E Integration Note
 
-This note documents how `d35e-scent-sense` integrates with the D35E Foundry system as of `v0.8.1`.
+This note documents how `d35e-scent-sense` integrates with the D35E Foundry system as of `v0.8.2`.
 
 ## Current Integration Points
 
@@ -9,7 +9,7 @@ This note documents how `d35e-scent-sense` integrates with the D35E Foundry syst
 - Reads Scent range from D35E prepared actor senses, base actor sense data, and eligible item senses.
 - Reconciles token and prototype-token detection modes only for D35E character and npc actors.
 - Reconciles linked and unlinked active tokens.
-- Skips detection-mode writes when D35E `noVisionOverride` is enabled.
+- Reports D35E `noVisionOverride` in diagnostics without treating it as a Scent-disabled state.
 
 ## Refresh Wrapper
 
@@ -20,7 +20,7 @@ The wrapper is intentionally narrow:
 - It only installs in D35E worlds.
 - It is idempotent.
 - It only touches this module's `scentPinpoint` detection mode.
-- It respects unsupported actor types and `noVisionOverride`.
+- It respects unsupported actor types and leaves D35E sight automation boundaries alone.
 - Persistent writes are GM-only and tagged with module sync options to avoid actor update loops.
 
 ## Possible Upstream Hook

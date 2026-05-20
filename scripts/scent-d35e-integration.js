@@ -149,7 +149,6 @@
 
     function getActorSyncGuard(actor) {
       if (!actor || !["character", "npc"].includes(actor.type)) return { allowed: false, reason: "unsupported-actor" };
-      if (actor.system?.noVisionOverride === true) return { allowed: false, reason: "no-vision-override" };
       return { allowed: true, reason: "allowed" };
     }
 

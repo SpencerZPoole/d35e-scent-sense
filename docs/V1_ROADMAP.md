@@ -39,6 +39,7 @@ This roadmap turns the current Scent helper into a stable `v1.0.0` module with d
 - Reduce runtime patch risk with narrower guards and integration diagnostics.
 - Prepare an upstream-ready integration note after the module behavior is stable.
 - `v0.8.1` corrective release fixes linked/unlinked active-token reconciliation found during scratch-world validation.
+- `v0.8.2` corrective release fixes D35E `noVisionOverride` interpretation found during scratch-world validation.
 
 ## v0.9.0 Release Candidate
 

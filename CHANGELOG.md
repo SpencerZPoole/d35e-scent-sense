@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.8.2 - 2026-05-20
+
+- Fixed D35E `noVisionOverride` handling so it is reported diagnostically but does not suppress Scent range or `scentPinpoint` sync.
+- Kept unsupported actor-type guards intact while allowing character and npc actors with manually controlled token vision to use Scent.
+- Updated D35E integration/source tests for the live D35E flag behavior.
+
 ## 0.8.1 - 2026-05-20
 
 - Fixed token detection-mode sync to include both linked and unlinked active tokens.
