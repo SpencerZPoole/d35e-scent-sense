@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.0.0 - 2026-05-21
+
+- Promoted the release-candidate feature set to the stable public release.
+- Updated release metadata, validation expectations, documentation, and release audit for `v1.0.0`.
+- Preserved the `v0.9.0` public API and runtime behavior without adding new RAW automation.
+- Revalidated local checks, packaged assets, downloaded release artifacts, and scratch-world runtime behavior for the stable release.
+
 ## 0.9.0 - 2026-05-21
 
 - Added release-candidate documentation for the stable public API, user workflow, and release process.

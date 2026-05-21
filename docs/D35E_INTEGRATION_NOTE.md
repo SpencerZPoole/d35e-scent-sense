@@ -1,6 +1,6 @@
 # D35E Integration Note
 
-This note documents how `d35e-scent-sense` integrates with the D35E Foundry system as of `v0.9.0`.
+This note documents how `d35e-scent-sense` integrates with the D35E Foundry system as of `v1.0.0`.
 
 ## Current Integration Points
 
@@ -29,4 +29,4 @@ An upstream D35E integration point could let modules register a callback after t
 
 No upstream pull request is included in this release.
 
-`v0.9.0` adds release-candidate documentation, CI, and localization validation only; the D35E runtime integration behavior remains the `v0.8.2` behavior that passed scratch-world product testing.
+`v1.0.0` promotes the release-candidate feature set to a stable release; the D35E runtime integration behavior remains the `v0.8.2` behavior that passed scratch-world product testing.

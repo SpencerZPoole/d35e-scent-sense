@@ -1,6 +1,6 @@
 # API Reference
 
-This document freezes the public API intended to remain stable through `v1.0.0`. New helpers may be added later, but the names and result fields below should remain backward compatible unless a future major version says otherwise.
+This document records the stable public API for `v1.0.0`. New helpers may be added later, but the names and result fields below should remain backward compatible unless a future major version says otherwise.
 
 ## Entry Points
 

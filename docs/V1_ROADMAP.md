@@ -48,10 +48,11 @@ This roadmap turns the current Scent helper into a stable `v1.0.0` module with d
 - Improve localization coverage with a checked English key audit.
 - Add CI for `npm test`.
 - Run scratch-world Foundry validation, downloaded artifact validation, and local security scanning.
-- Status: in progress for `v0.9.0`; no runtime mechanics are intentionally changed from `v0.8.2`.
+- Status: completed in `v0.9.0`; no runtime mechanics were intentionally changed from `v0.8.2`.
 
 ## v1.0.0 Stable Release
 
 - Publish a release whose docs accurately state automated, GM-assisted, and manual-adjudication boundaries.
 - Ship fresh manifest and zip assets.
 - Keep the release public-safe: no private campaign data, compendia, bundled media, copied sourcebook prose, or local paths.
+- Status: stable promotion of the `v0.9.0` release candidate; no new RAW mechanics or public API changes.

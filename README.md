@@ -8,11 +8,11 @@ This repository contains module code, public-safe documentation, and validation 
 
 - Foundry Virtual Tabletop: minimum `14`, verified `14.361`
 - D35E system: minimum `3.0.2`, verified `3.0.2`
-- Module version: `0.9.0`
+- Module version: `1.0.0`
 
 ## Release Status
 
-This repository is release-manifest-ready for version `0.9.0`.
+This repository is release-manifest-ready for stable version `1.0.0`.
 
 Install through this manifest URL:
 
@@ -38,7 +38,7 @@ For development testing, copy or clone this folder into your Foundry `Data/modul
 - Adds GM-authored scene Scent trails, a Trail Manager, Scent tracking DC previews, and optional Survival roll prompts.
 - Documents the v1 RAW coverage target and splits runtime behavior into focused modules for safer future development.
 - Freezes the public API shape intended to remain stable through `v1.0.0`.
-- Adds localization coverage checks and continuous validation for release-candidate review.
+- Adds localization coverage checks and continuous validation for stable-release review.
 
 ## Usage
 
@@ -94,11 +94,11 @@ The current release is a conservative Scent helper, not complete silent automati
 
 - `docs/RAW_COVERAGE_MATRIX.md` for current RAW coverage and gaps.
 - `docs/ARCHITECTURE.md` for the runtime split and design rules.
-- `docs/API_REFERENCE.md` for the public API shape intended to remain stable through `v1.0.0`.
+- `docs/API_REFERENCE.md` for the stable public API shape.
 - `docs/USER_GUIDE.md` for installation and table-facing use.
 - `docs/D35E_INTEGRATION_NOTE.md` for D35E integration boundaries.
 - `docs/RELEASE_PROCESS.md` for release and validation gates.
-- `docs/V1_ROADMAP.md` for the path to stable `v1.0.0`.
+- `docs/V1_ROADMAP.md` for the milestone history behind stable `v1.0.0`.
 
 ## Content And License Boundary
 

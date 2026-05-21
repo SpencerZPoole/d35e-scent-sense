@@ -10,7 +10,7 @@ References checked:
 
 ## Current Coverage
 
-| Rule Area | v0.9.0 Status | Notes |
+| Rule Area | v1.0.0 Status | Notes |
 | --- | --- | --- |
 | Scent sense registration | Automated | Registers `scent` as a D35E sense label when the D35E system is active. |
 | Default detection range | Automated | Uses `30 ft` as the module default helper value and reads configured D35E prepared actor, base actor, and eligible item Scent ranges when present. |
@@ -29,15 +29,15 @@ References checked:
 | False/powerful odor sources | GM-facing helper | False odor flags and strong/overpowering odor profile fields are available for GM context and preview details. |
 | Surface and visibility modifiers while scent-tracking | Explicitly ignored for Scent trail DCs | Trail DC helpers model Scent-specific age, water, competing odor, and odor modifier inputs without applying normal surface or visibility categories. |
 
-## V1 Acceptance Target
+## V1 Stable Statement
 
-`v1.0.0` should be able to say:
+`v1.0.0` can say:
 
 - Automated detection covers range, wind, odor strength, masking odor, presence, direction requests, and 5 ft pinpoint.
 - GM tools cover scene and token scent context, false odor flags, and odor tags without editing actor flags unexpectedly.
 - Tracking support covers persistent trails, Scent-specific DCs, Track eligibility, and optional Survival roll prompts.
 - Public docs clearly identify which pieces are automated, which are GM-assisted, and which remain manual table adjudication.
 
-## Release Candidate Notes
+## Stable Release Notes
 
-`v0.9.0` does not add new RAW automation. It freezes the public API surface, adds user and release-process docs, adds localization validation, and prepares the module for stable-release review.
+`v1.0.0` does not add new RAW automation after the release-candidate line. It publishes the documented API, user workflow, release process, localization validation, and scratch-world-tested behavior as the stable public release.
