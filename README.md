@@ -8,11 +8,11 @@ This repository contains module code, public-safe documentation, and validation 
 
 - Foundry Virtual Tabletop: minimum `14`, verified `14.361`
 - D35E system: minimum `3.0.2`, verified `3.0.2`
-- Module version: `0.8.2`
+- Module version: `0.9.0`
 
 ## Release Status
 
-This repository is release-manifest-ready for version `0.8.2`.
+This repository is release-manifest-ready for version `0.9.0`.
 
 Install through this manifest URL:
 
@@ -37,6 +37,8 @@ For development testing, copy or clone this folder into your Foundry `Data/modul
 - Adds a GM-only Scent Context manager for scene defaults, token odor profile context, masking odors, false odors, odor tags, and GM-marked Scent relevance.
 - Adds GM-authored scene Scent trails, a Trail Manager, Scent tracking DC previews, and optional Survival roll prompts.
 - Documents the v1 RAW coverage target and splits runtime behavior into focused modules for safer future development.
+- Freezes the public API shape intended to remain stable through `v1.0.0`.
+- Adds localization coverage checks and continuous validation for release-candidate review.
 
 ## Usage
 
@@ -92,7 +94,10 @@ The current release is a conservative Scent helper, not complete silent automati
 
 - `docs/RAW_COVERAGE_MATRIX.md` for current RAW coverage and gaps.
 - `docs/ARCHITECTURE.md` for the runtime split and design rules.
+- `docs/API_REFERENCE.md` for the public API shape intended to remain stable through `v1.0.0`.
+- `docs/USER_GUIDE.md` for installation and table-facing use.
 - `docs/D35E_INTEGRATION_NOTE.md` for D35E integration boundaries.
+- `docs/RELEASE_PROCESS.md` for release and validation gates.
 - `docs/V1_ROADMAP.md` for the path to stable `v1.0.0`.
 
 ## Content And License Boundary
@@ -109,4 +114,4 @@ Run the local validation suite before publishing or packaging:
 npm test
 ```
 
-The checks verify manifest structure, required legal files, script syntax, RAW helper behavior, odor profile behavior, trail behavior, D35E integration helpers, migration helpers, and public-surface cleanliness.
+The checks verify manifest structure, required legal files, script syntax, localization coverage, RAW helper behavior, odor profile behavior, trail behavior, D35E integration helpers, migration helpers, and public-surface cleanliness.

@@ -43,11 +43,12 @@ This roadmap turns the current Scent helper into a stable `v1.0.0` module with d
 
 ## v0.9.0 Release Candidate
 
-- Freeze the public API for v1.
-- Finish user and maintainer docs.
-- Improve localization coverage.
+- Freeze the public API for v1 in `docs/API_REFERENCE.md`.
+- Finish user and maintainer docs with `docs/USER_GUIDE.md` and `docs/RELEASE_PROCESS.md`.
+- Improve localization coverage with a checked English key audit.
 - Add CI for `npm test`.
 - Run scratch-world Foundry validation, downloaded artifact validation, and local security scanning.
+- Status: in progress for `v0.9.0`; no runtime mechanics are intentionally changed from `v0.8.2`.
 
 ## v1.0.0 Stable Release
 

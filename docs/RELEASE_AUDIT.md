@@ -1,6 +1,6 @@
 # Release Readiness Audit
 
-Date: 2026-05-20
+Date: 2026-05-21
 
 ## Scope
 
@@ -13,7 +13,7 @@ This audit covers the public release copy of `d35e-scent-sense`.
 - Public metadata uses `3.5e SRD` and `D35E Foundry system` wording.
 - Original code and documentation are covered by `LICENSE.md`.
 - SRD-derived Scent mechanics are identified under `OGL-1.0a.txt`.
-- The manifest includes release `manifest` and `download` URLs for tag `v0.8.2`.
+- The manifest includes release `manifest` and `download` URLs for tag `v0.9.0`.
 - Corrective `v0.8.1` runtime validation caught and fixed a linked-token-only sync path so D35E Scent detection modes now reconcile linked and unlinked active tokens.
 - Corrective `v0.8.2` runtime validation caught and fixed `noVisionOverride` handling so manually controlled D35E token vision no longer suppresses Scent sync.
 - The manifest enables the package socket namespace required by owner/GM Scent alerts.
@@ -28,6 +28,9 @@ This audit covers the public release copy of `d35e-scent-sense`.
 - Runtime responsibilities are split across focused helper scripts before the main lifecycle script.
 - The detection-state layer distinguishes presence, direction availability, direction requests, GM-revealed direction, and pinpoint without writing ordinary scan state to world data.
 - RAW coverage, architecture, and v1 roadmap docs are present for publication review.
+- The public API reference, user guide, and release process docs are present for release-candidate review.
+- Localization coverage is checked by `tools/check-localization.mjs` and included in `npm test`.
+- GitHub Actions runs the same `npm test` validation suite on pushes and pull requests.
 
 ## Remaining Human Review
 

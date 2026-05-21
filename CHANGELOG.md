@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.9.0 - 2026-05-21
+
+- Added release-candidate documentation for the stable public API, user workflow, and release process.
+- Added GitHub Actions validation for `npm test`.
+- Added localization coverage validation and wired it into the normal test suite.
+- Updated release metadata and validation expectations for `v0.9.0`.
+- Kept runtime Scent mechanics unchanged after `v0.8.2` scratch-world product testing.
+
 ## 0.8.2 - 2026-05-20
 
 - Fixed D35E `noVisionOverride` handling so it is reported diagnostically but does not suppress Scent range or `scentPinpoint` sync.

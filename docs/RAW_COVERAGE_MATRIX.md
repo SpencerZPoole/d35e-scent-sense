@@ -10,7 +10,7 @@ References checked:
 
 ## Current Coverage
 
-| Rule Area | v0.8.2 Status | Notes |
+| Rule Area | v0.9.0 Status | Notes |
 | --- | --- | --- |
 | Scent sense registration | Automated | Registers `scent` as a D35E sense label when the D35E system is active. |
 | Default detection range | Automated | Uses `30 ft` as the module default helper value and reads configured D35E prepared actor, base actor, and eligible item Scent ranges when present. |
@@ -37,3 +37,7 @@ References checked:
 - GM tools cover scene and token scent context, false odor flags, and odor tags without editing actor flags unexpectedly.
 - Tracking support covers persistent trails, Scent-specific DCs, Track eligibility, and optional Survival roll prompts.
 - Public docs clearly identify which pieces are automated, which are GM-assisted, and which remain manual table adjudication.
+
+## Release Candidate Notes
+
+`v0.9.0` does not add new RAW automation. It freezes the public API surface, adds user and release-process docs, adds localization validation, and prepares the module for stable-release review.

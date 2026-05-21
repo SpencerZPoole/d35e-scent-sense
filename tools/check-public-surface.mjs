@@ -56,6 +56,8 @@ const textExtensions = new Set([
   ".md",
   ".mjs",
   ".txt",
+  ".yaml",
+  ".yml",
   "",
 ]);
 
