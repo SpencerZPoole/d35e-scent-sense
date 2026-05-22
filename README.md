@@ -116,8 +116,8 @@ npm test
 
 The checks verify manifest structure, required legal files, script syntax, localization coverage, RAW helper behavior, odor profile behavior, trail behavior, D35E integration helpers, migration helpers, and public-surface cleanliness.
 
-## Support
+## Donate
 
-If D35E Scent Sense helps your table or your module work, optional support is welcome: [paypal.me/mrpooley92](https://paypal.me/mrpooley92).
+If D35E Scent Sense helped your table or your module work, you can donate through [GitHub Sponsors](https://github.com/sponsors/SpencerZPoole) or [PayPal](https://paypal.me/mrpooley92). GitHub Sponsors is best for recurring sponsorships; PayPal works well for one-time donations.
 
 The module remains free, independent, and bound by the license boundaries documented above.
