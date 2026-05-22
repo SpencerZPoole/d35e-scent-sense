@@ -10,17 +10,27 @@ This repository contains module code, public-safe documentation, and validation 
 - D35E system: minimum `3.0.2`, verified `3.0.2`
 - Module version: `1.0.0`
 
-## Release Status
+## Install
 
-This repository is release-manifest-ready for stable version `1.0.0`.
-
-Install through this manifest URL:
+In Foundry, open **Add-on Modules > Install Module**, paste this into **Manifest URL**, and install:
 
 ```text
 https://github.com/SpencerZPoole/d35e-scent-sense/releases/latest/download/module.json
 ```
 
+This repository is release-manifest-ready for stable version `1.0.0`.
+
 For development testing, copy or clone this folder into your Foundry `Data/modules` directory, then enable **D35E Scent Sense** in a D35E world.
+
+## User Manual
+
+For installation steps, table setup, feature walkthroughs, diagnostics, and troubleshooting, see the full public manual:
+
+- [`docs/USER_MANUAL.md`](docs/USER_MANUAL.md)
+
+For a shorter first-use checklist, see:
+
+- [`docs/USER_GUIDE.md`](docs/USER_GUIDE.md)
 
 ## Features
 
@@ -95,7 +105,9 @@ The current release is a conservative Scent helper, not complete silent automati
 - `docs/RAW_COVERAGE_MATRIX.md` for current RAW coverage and gaps.
 - `docs/ARCHITECTURE.md` for the runtime split and design rules.
 - `docs/API_REFERENCE.md` for the stable public API shape.
-- `docs/USER_GUIDE.md` for installation and table-facing use.
+- `docs/USER_MANUAL.md` for the full public user manual.
+- `docs/USER_GUIDE.md` for the quick-start guide.
+- `docs/UX_IMPROVEMENT_PLAN.md` for future user-experience improvements.
 - `docs/D35E_INTEGRATION_NOTE.md` for D35E integration boundaries.
 - `docs/RELEASE_PROCESS.md` for release and validation gates.
 - `docs/V1_ROADMAP.md` for the milestone history behind stable `v1.0.0`.
