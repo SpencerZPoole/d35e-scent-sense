@@ -2,7 +2,7 @@
 
 `d35e-scent-sense` is a Foundry Virtual Tabletop module for the D35E system. It adds conservative 3.5e SRD Scent support for tokens and actors, including presence alerts, optional owner/GM range rings, and 5 ft pinpoint detection.
 
-This repository contains module code, public-safe documentation, and validation tooling only. It does not include copied rulebook prose, stat blocks, adventure text, setting lore, compendium data, artwork, audio, fonts, or private campaign material.
+This repository contains module code, public-safe documentation, package-page screenshots, and validation tooling only. It does not include copied rulebook prose, stat blocks, adventure text, setting lore, compendium data, non-documentation artwork, audio, fonts, or private campaign material.
 
 ## Compatibility
 

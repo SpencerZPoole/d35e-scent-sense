@@ -541,9 +541,10 @@ Original code and documentation are licensed under MIT. SRD-derived Scent
 mechanics are identified under `OGL-1.0a.txt`.
 
 This repository and release package contain module code, templates, styles,
-language strings, public-safe documentation, and validation tooling. They do not
-include copied rules prose, stat blocks, adventure text, setting lore, compendium
-data, artwork, audio, fonts, or private campaign material.
+language strings, public-safe documentation, package-page screenshots, and
+validation tooling. They do not include copied rules prose, stat blocks,
+adventure text, setting lore, compendium data, non-documentation artwork, audio,
+fonts, or private campaign material.
 
 This is an independent community module. It is not affiliated with Foundry
 Gaming LLC, the D35E system maintainers, or any tabletop publisher.

@@ -8,7 +8,8 @@ This audit covers the public release copy of `d35e-scent-sense`.
 
 ## Findings
 
-- No bundled media assets are present.
+- Public package-page screenshot assets are present under `docs/assets/foundry-page/`.
+- No non-documentation media assets are present.
 - No compendium packs, stat blocks, adventure text, setting lore, or private campaign data are present.
 - Public metadata uses `3.5e SRD` and `D35E Foundry system` wording.
 - Original code and documentation are covered by `LICENSE.md`.

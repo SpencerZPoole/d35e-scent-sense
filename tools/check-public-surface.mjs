@@ -63,6 +63,10 @@ const textExtensions = new Set([
 
 const errors = [];
 
+const allowedMediaPatterns = [
+  /^docs\/assets\/foundry-page\/[a-z0-9-]+\.png$/,
+];
+
 function toRelative(fullPath) {
   return path.relative(root, fullPath).replaceAll(path.sep, "/");
 }
@@ -80,6 +84,7 @@ function walk(directory) {
     const extension = path.extname(entry.name).toLowerCase();
 
     if (mediaExtensions.has(extension)) {
+      if (allowedMediaPatterns.some((pattern) => pattern.test(relativePath))) continue;
       errors.push(`${relativePath}: bundled media asset is not allowed in this public-safe package`);
       continue;
     }
