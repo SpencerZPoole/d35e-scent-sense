@@ -115,3 +115,9 @@ npm test
 ```
 
 The checks verify manifest structure, required legal files, script syntax, localization coverage, RAW helper behavior, odor profile behavior, trail behavior, D35E integration helpers, migration helpers, and public-surface cleanliness.
+
+## Support
+
+If D35E Scent Sense helps your table or your module work, optional support is welcome: [paypal.me/mrpooley92](https://paypal.me/mrpooley92).
+
+The module remains free, independent, and bound by the license boundaries documented above.
