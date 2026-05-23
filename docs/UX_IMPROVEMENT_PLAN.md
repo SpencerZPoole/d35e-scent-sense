@@ -117,7 +117,7 @@ local machine paths.
 
 ## Release Shape
 
-Treat these improvements as candidates for a future `v1.1.0` release after
+Treat these improvements as candidates for a future `v1.2.0` release after
 scratch-world product testing. Keep changes incremental and preserve the stable
 `v1.x` public API.
 

@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+## 1.1.1 - 2026-05-23
+
+- Replaced public package-page screenshots with live Foundry captures from a neutral scratch D35E world.
+- Added GitHub release packaging automation and Foundry Package Release API publishing support.
+- Updated release notes, release process docs, package-page description, validation tooling, and release audit for the live-screenshot release workflow.
+- Kept runtime Scent behavior and public APIs unchanged from `v1.1.0`.
+
 ## 1.1.0 - 2026-05-23
 
 - Redesigned the GM trail workflow around one Scent Menu plus a separate View Scent Trails toggle.

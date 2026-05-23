@@ -5,6 +5,7 @@ import { fileURLToPath } from "node:url";
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 
 const requiredFiles = [
+  "AGENTS.md",
   "module.json",
   "package.json",
   "README.md",
@@ -20,6 +21,7 @@ const requiredFiles = [
   "docs/RELEASE_PROCESS.md",
   "docs/USER_GUIDE.md",
   "docs/V1_ROADMAP.md",
+  ".github/workflows/release.yml",
   ".github/workflows/validate.yml",
   "lang/en.json",
   "scripts/scent-rules.js",
@@ -40,8 +42,10 @@ const requiredFiles = [
   "styles/d35e-scent-sense.css",
   "templates/scent-context-manager.hbs",
   "templates/scent-trail-manager.hbs",
+  "tools/build-release.mjs",
   "tools/check-public-surface.mjs",
   "tools/check-localization.mjs",
+  "tools/publish-foundry-release.mjs",
   "tools/test-scent-context.mjs",
   "tools/test-scent-odor-profile.mjs",
   "tools/test-scent-rules.mjs",
@@ -56,7 +60,6 @@ const requiredFiles = [
 
 const errors = [];
 const expectedManifestUrl = "https://github.com/SpencerZPoole/d35e-scent-sense/releases/latest/download/module.json";
-const expectedDownloadUrl = "https://github.com/SpencerZPoole/d35e-scent-sense/releases/download/v1.1.0/d35e-scent-sense-v1.1.0.zip";
 const expectedScripts = [
   "scripts/scent-rules.js",
   "scripts/scent-context.js",
@@ -98,11 +101,14 @@ for (const relativePath of requiredFiles) {
 const manifest = readJson("module.json");
 const packageJson = readJson("package.json");
 readJson("lang/en.json");
+const expectedVersion = packageJson?.version ?? manifest?.version;
+const expectedDownloadUrl = `https://github.com/SpencerZPoole/d35e-scent-sense/releases/download/v${expectedVersion}/d35e-scent-sense-v${expectedVersion}.zip`;
 
 if (manifest) {
   if (manifest.id !== "d35e-scent-sense") fail("module.json id must be d35e-scent-sense");
   if (manifest.title !== "D35E Scent Sense") fail("module.json title must be D35E Scent Sense");
-  if (manifest.version !== "1.1.0") fail("module.json version must be 1.1.0");
+  if (!expectedVersion) fail("package.json or module.json must declare a version");
+  if (manifest.version !== expectedVersion) fail(`module.json version must be ${expectedVersion}`);
   if (manifest.license !== "LICENSE.md") fail("module.json license must point to LICENSE.md");
   if (typeof manifest.url !== "string" || !manifest.url.includes("d35e-scent-sense")) fail("module.json url is missing or incorrect");
   if (manifest.manifest !== expectedManifestUrl) fail("module.json manifest URL is missing or incorrect");
@@ -143,10 +149,10 @@ if (manifest) {
 
 if (packageJson) {
   if (packageJson.name !== "d35e-scent-sense") fail("package.json name must be d35e-scent-sense");
-  if (packageJson.version !== "1.1.0") fail("package.json version must be 1.1.0");
+  if (packageJson.version !== manifest?.version) fail("package.json version must match module.json version");
   if (packageJson.license !== "MIT") fail("package.json license must be MIT");
   if (packageJson.private !== true) fail("package.json should be private to prevent accidental npm publication");
-  for (const scriptName of ["check:js", "check:localization", "check:public", "test:context", "test:odor-profile", "test:rules", "test:state", "test:trails", "test:trail-manager", "test:d35e-sources", "test:d35e-integration", "test:migration", "validate", "test"]) {
+  for (const scriptName of ["build:release", "check:js", "check:tools", "check:localization", "check:public", "publish:foundry", "publish:foundry:dry-run", "test:context", "test:odor-profile", "test:rules", "test:state", "test:trails", "test:trail-manager", "test:d35e-sources", "test:d35e-integration", "test:migration", "validate", "test"]) {
     if (!packageJson.scripts?.[scriptName]) fail(`package.json missing script: ${scriptName}`);
   }
 }

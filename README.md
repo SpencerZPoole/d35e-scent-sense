@@ -8,7 +8,7 @@ This repository contains module code, public-safe documentation, package-page sc
 
 - Foundry Virtual Tabletop: minimum `14`, verified `14.362`
 - D35E system: minimum `3.0.2`, verified `3.0.2`
-- Module version: `1.1.0`
+- Module version: `1.1.1`
 
 ## Install
 
@@ -18,7 +18,7 @@ In Foundry, open **Add-on Modules > Install Module**, paste this into **Manifest
 https://github.com/SpencerZPoole/d35e-scent-sense/releases/latest/download/module.json
 ```
 
-This repository is release-manifest-ready for stable version `1.1.0`.
+This repository is release-manifest-ready for stable version `1.1.1`.
 
 For development testing, copy or clone this folder into your Foundry `Data/modules` directory, then enable **D35E Scent Sense** in a D35E world.
 

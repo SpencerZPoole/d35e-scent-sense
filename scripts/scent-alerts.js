@@ -197,7 +197,7 @@
       await DialogV2.confirm({
         window: { title: localize("D35EScent.Alert.Title") },
         content: buildPinpointContent(),
-        yes: { label: "COMMON.Ok" },
+        yes: { label: localize("D35EScent.Alert.Ok") },
         no: { label: localize("D35EScent.Alert.Ignore") },
       });
     }

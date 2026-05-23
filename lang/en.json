@@ -24,6 +24,7 @@
   "D35EScent.Alert.PresencePrompt": "Spend a move action to note the direction of the scent?",
   "D35EScent.Alert.Pinpoint": "The source of the scent is within 5 feet. You can pinpoint its location.",
   "D35EScent.Alert.SpendMove": "Spend move action",
+  "D35EScent.Alert.Ok": "OK",
   "D35EScent.Alert.Ignore": "Ignore",
   "D35EScent.Alert.GmDirectionRequest": "{actor} is spending a move action to note the direction of a scent detected by the Scent extraordinary ability. Please tell the player the direction of the scent.",
   "D35EScent.Alert.GmDirectionDetail": "Scent direction request: {actor} detected {target} at approximately {distance} ft in scene {scene}.",

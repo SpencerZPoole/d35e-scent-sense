@@ -10,7 +10,7 @@ References checked:
 
 ## Current Coverage
 
-| Rule Area | v1.1.0 Status | Notes |
+| Rule Area | v1.1.1 Status | Notes |
 | --- | --- | --- |
 | Scent sense registration | Automated | Registers `scent` as a D35E sense label when the D35E system is active. |
 | Default detection range | Automated | Uses `30 ft` as the module default helper value and reads configured D35E prepared actor, base actor, and eligible item Scent ranges when present. |
@@ -31,7 +31,7 @@ References checked:
 
 ## V1 Stable Statement
 
-`v1.1.0` can say:
+`v1.1.1` can say:
 
 - Automated detection covers range, wind, odor strength, masking odor, presence, direction requests, and 5 ft pinpoint.
 - GM tools cover scene and token scent context, false odor flags, and odor tags without editing actor flags unexpectedly.
@@ -40,4 +40,4 @@ References checked:
 
 ## Stable Release Notes
 
-`v1.1.0` preserves the documented conservative RAW boundary while improving the Scent trail workflow with GM-created visual path recording, age-based fade states, and explicit GM/player visibility controls.
+`v1.1.1` preserves the documented conservative RAW boundary while improving the Scent trail workflow with GM-created visual path recording, age-based fade states, and explicit GM/player visibility controls.
