@@ -16,11 +16,11 @@ Supporting runtime modules own the specialized behavior:
 - `scent-migration.js`: pure migration planning for module-owned scene, token, and trail flags.
 - `scent-state.js`: pure detection-state normalization for presence, direction request/reveal status, and pinpoint.
 - `scent-detection.js`: Foundry-aware target filtering, distance measurement, and wall blocking.
-- `scent-overlay.js`: local Scent rings, pinpoint cues, and Token HUD overlay toggles.
+- `scent-overlay.js`: local Scent rings, pinpoint cues, Token HUD overlay toggles, and visual trail path rendering.
 - `scent-alerts.js`: sockets, owner alerts, GM whispers, direction requests, and pinpoint notifications.
 - `scent-d35e-integration.js`: D35E sense registration, detection mode registration, token detection mode syncing, and refresh patching.
-- `scent-context-manager.js`: GM-only ApplicationV2 context manager and Token Controls tool.
-- `scent-trail-manager.js`: GM-only ApplicationV2 trail manager, DC previews, and roll prompt actions.
+- `scent-context-manager.js`: GM-only ApplicationV2 context manager used by the Advanced Scent Context path.
+- `scent-trail-manager.js`: GM-only Scent Menu, active trail list, trail CRUD, View Scent Trails toolbar registration, DC previews, and roll prompt actions.
 - `scent-api.js`: public API object construction for `game.d35eScentSense`.
 
 ## Design Rules
@@ -29,7 +29,8 @@ Supporting runtime modules own the specialized behavior:
 - Foundry-specific code is grouped by responsibility instead of accumulated in the bootstrap script.
 - Player-facing alerts must not reveal hidden target identity unless the GM has already adjudicated it.
 - GM tools may write module-owned scene and token flags; actor flags are read as inherited context but not edited by the context manager.
-- Trail records are GM/API-authored scene data. Runtime scans do not automatically create movement trails.
+- Trail records are GM/API-authored scene data. Movement path segments are recorded only for active trails whose GM-controlled `recordMovement` flag is enabled.
+- Trail path visibility is client-local for the overlay toggle and GM-controlled for player access through each trail's `visibleToPlayers` flag.
 - Release artifacts must not include private world data, compendia, media assets, fonts, sourcebook prose, or local machine paths.
 
 ## Future Architecture Work

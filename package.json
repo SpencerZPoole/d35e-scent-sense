@@ -22,10 +22,11 @@
     "test:odor-profile": "node tools/test-scent-odor-profile.mjs",
     "test:state": "node tools/test-scent-state.mjs",
     "test:trails": "node tools/test-scent-trails.mjs",
+    "test:trail-manager": "node tools/test-scent-trail-manager.mjs",
     "test:d35e-sources": "node tools/test-scent-d35e-sources.mjs",
     "test:d35e-integration": "node tools/test-scent-d35e-integration.mjs",
     "test:migration": "node tools/test-scent-migration.mjs",
-    "validate": "node tools/validate-module.mjs && npm run check:js && npm run check:localization && npm run check:public && npm run test:rules && npm run test:context && npm run test:odor-profile && npm run test:state && npm run test:trails && npm run test:d35e-sources && npm run test:d35e-integration && npm run test:migration",
+    "validate": "node tools/validate-module.mjs && npm run check:js && npm run check:localization && npm run check:public && npm run test:rules && npm run test:context && npm run test:odor-profile && npm run test:state && npm run test:trails && npm run test:trail-manager && npm run test:d35e-sources && npm run test:d35e-integration && npm run test:migration",
     "test": "npm run validate"
   }
 }

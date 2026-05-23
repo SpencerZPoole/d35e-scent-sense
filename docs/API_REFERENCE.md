@@ -29,10 +29,12 @@ This document records the stable public API for `v1.0.0`. New helpers may be add
 - `getScentTrails(scene, options)`: returns normalized scene trail records.
 - `createScentTrail(scene, data)`, `updateScentTrail(scene, trailId, data)`, and `deleteScentTrail(scene, trailId)`: GM-only scene trail CRUD helpers.
 - `getScentTrailDc(trailOrId, tracker, options)`: returns tracking eligibility and DC details for one trail.
+- `getScentTrailDisplayState(segmentOrTrail, options)`: returns age, fade state, visibility, and opacity metadata for trail display.
 - `rollTrackByScent(trackerToken, trailId, options)`: attempts a compatible native Survival roll or creates a redacted prompt.
-- `openContextManager(options)` and `openTrailManager(options)`: GM-only ApplicationV2 tools.
+- `openContextManager(options)` and `openTrailManager(options)`: GM-only ApplicationV2 tools. The primary toolbar entry is the unified Scent Menu; Advanced Scent Context remains available through that menu and the API.
 - `migrateFlags(options)`: GM-only migration helper; dry-run by default.
-- `syncActorTokens(actor)`, `refresh(options)`, `scan(options)`, `resetNotificationState(options)`, `isOverlayVisible(actorOrToken)`, and `setOverlayVisible(actorOrToken, visible)`: runtime integration and local presentation helpers.
+- `syncActorTokens(actor)`, `refresh(options)`, `scan(options)`, `resetNotificationState(options)`, `isOverlayVisible(actorOrToken)`, and `setOverlayVisible(actorOrToken, visible)`: runtime integration and local Scent-ring presentation helpers.
+- `isTrailOverlayVisible()`, `setTrailOverlayVisible(visible)`, and `toggleTrailOverlay()`: client-local trail path preview state helpers used by both the Scent Menu preview button and View Scent Trails toolbar toggle.
 
 ## Detection Result Shape
 
@@ -48,3 +50,5 @@ Valid `state` values are `none`, `presence`, `directionAvailable`, `directionReq
 ## Flag Boundary
 
 The module reads scene, token, and actor flags for context inheritance, but the GM managers write only scene and token flags. `migrateFlags` normalizes module-owned scene, token, and trail data; it reports actor flag anomalies without editing actors.
+
+Trail records are scene flags. Normalized records include `active`, `recordMovement`, `visibleToPlayers`, `sourceTokenId`, `createdWorldTime`, `updatedWorldTime`, water/odor/DC fields, notes, an odor profile snapshot, and `pathSegments`. Path segments store `trailId`, `sourceTokenId`, `sceneId`, `createdWorldTime`, `start`, and `end` canvas coordinates.

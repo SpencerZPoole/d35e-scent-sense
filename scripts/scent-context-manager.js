@@ -372,7 +372,6 @@
         icon: "fa-solid fa-wind",
         button: true,
         visible: true,
-        onClick: () => openContextManager(),
         onChange: () => openContextManager(),
       };
 

@@ -153,6 +153,8 @@
       clone,
       getSetting,
       getScentRange,
+      getScentTrailDisplayState,
+      getScentTrails,
       hasScent,
       localize,
       moduleId: MODULE_ID,
@@ -217,11 +219,15 @@
       getScentRange,
       getScentTrailDc,
       getScentTrails,
+      isTrailOverlayVisible,
       localize,
       moduleId: MODULE_ID,
+      openContextManager,
       rollTrackByScent,
       roundDistance,
+      setTrailOverlayVisible,
       template: TRAIL_MANAGER_TEMPLATE,
+      toggleTrailOverlay,
       updateScentTrail,
     });
 
@@ -266,7 +272,8 @@
 
     if (contextApi?.getScentContext) {
       const scentContext = contextApi.getScentContext({ explicit, targetDocument, targetActor, scene });
-      const odorProfile = getOdorProfileApi()?.getOdorProfile?.({ explicit, targetDocument, targetActor, scene });
+      const odorProfileExplicit = options.odorProfile ?? explicit;
+      const odorProfile = getOdorProfileApi()?.getOdorProfile?.({ explicit: odorProfileExplicit, targetDocument, targetActor, scene });
       if (!odorProfile) return scentContext;
 
       return {
@@ -645,6 +652,13 @@
     }) ?? { trackable: false, dc: null, reason: "trails-unavailable" };
   }
 
+  function getScentTrailDisplayState(segmentOrTrail, options = {}) {
+    return getScentTrailsApi()?.getTrailDisplayState?.(segmentOrTrail, {
+      ...options,
+      worldTime: options.worldTime ?? game.time?.worldTime ?? 0,
+    }) ?? { visible: true, ageHours: 0, opacity: 0.75, state: "fresh" };
+  }
+
   async function createWhisper(userIds, content) {
     const recipients = Array.from(new Set(userIds.filter(Boolean)));
     if (recipients.length === 0 || !globalThis.ChatMessage?.create) return null;
@@ -910,6 +924,80 @@
   const debouncedScan = foundry.utils.debounce(() => {
     scan().catch((error) => console.error(`${MODULE_ID} | Scent scan failed.`, error));
   }, 150);
+  const tokenPreviousCenters = new Map();
+
+  function resolveTokenMovementPosition(tokenDocument, changes = {}) {
+    const trailApi = getScentTrailsApi();
+    if (typeof trailApi?.resolveTokenMovementPosition === "function") {
+      return trailApi.resolveTokenMovementPosition(tokenDocument, changes);
+    }
+
+    const x = Number(changes.x ?? tokenDocument?.x ?? 0);
+    const y = Number(changes.y ?? tokenDocument?.y ?? 0);
+    return {
+      x: Number.isFinite(x) ? x : 0,
+      y: Number.isFinite(y) ? y : 0,
+    };
+  }
+
+  function getTokenDocumentCenter(tokenDocument, scene = canvas?.scene, positionOverride = null) {
+    if (!tokenDocument) return null;
+    const gridSize = positiveNumber(canvas?.grid?.size, positiveNumber(canvas?.dimensions?.size, scene?.grid?.size ?? 100));
+    const width = positiveNumber(tokenDocument.width, 1);
+    const height = positiveNumber(tokenDocument.height, 1);
+    const position = positionOverride ?? resolveTokenMovementPosition(tokenDocument);
+    const x = Number(position.x) + (width * gridSize) / 2;
+    const y = Number(position.y) + (height * gridSize) / 2;
+    return Number.isFinite(x) && Number.isFinite(y) ? { x, y } : null;
+  }
+
+  function capturePreviousTokenCenter(tokenDocument, changes = {}) {
+    if (!tokenDocument?.id || (changes.x === undefined && changes.y === undefined)) return;
+    const scene = tokenDocument.parent ?? canvas?.scene;
+    const center = getTokenDocumentCenter(tokenDocument, scene);
+    if (!center) return;
+    tokenPreviousCenters.set(`${scene?.id ?? ""}:${tokenDocument.id}`, center);
+  }
+
+  async function recordScentTrailMovement(tokenDocument, changes = {}) {
+    if (game.user?.isGM !== true) return;
+    if (!tokenDocument?.id || (changes.x === undefined && changes.y === undefined)) return;
+
+    const scene = tokenDocument.parent ?? canvas?.scene;
+    if (!scene?.setFlag) return;
+
+    const key = `${scene?.id ?? ""}:${tokenDocument.id}`;
+    const start = tokenPreviousCenters.get(key);
+    tokenPreviousCenters.delete(key);
+    const end = getTokenDocumentCenter(tokenDocument, scene, resolveTokenMovementPosition(tokenDocument, changes));
+    if (!start || !end) return;
+
+    const trailApi = getScentTrailsApi();
+    if (!trailApi?.addTrailSegment) return;
+    if (trailApi.hasMeaningfulMovement?.(start, end, 2) === false) return;
+
+    const worldTime = game.time?.worldTime ?? 0;
+    let trails = getScentTrails(scene);
+    const sourceTrails = trails.filter((trail) => trail.active === true && trail.recordMovement === true && trail.sourceTokenId === tokenDocument.id);
+    if (sourceTrails.length === 0) return;
+
+    for (const trail of sourceTrails) {
+      trails = trailApi.addTrailSegment(trails, trail.id, {
+        id: randomId(),
+        sceneId: scene.id ?? "",
+        start,
+        end,
+        createdWorldTime: worldTime,
+      }, {
+        idFactory: randomId,
+        sceneId: scene.id ?? "",
+        worldTime,
+      });
+    }
+
+    await persistScentTrails(scene, trails);
+    refreshOverlay();
+  }
 
   function patchTokenDocumentRefresh() {
     return ensureRuntimes().integration.patchTokenDocumentRefresh();
@@ -921,6 +1009,18 @@
 
   async function setOverlayVisible(actorOrToken, visible) {
     return ensureRuntimes().overlay.setOverlayVisible(actorOrToken, visible);
+  }
+
+  function isTrailOverlayVisible() {
+    return ensureRuntimes().overlay.isTrailOverlayVisible();
+  }
+
+  function setTrailOverlayVisible(visible) {
+    return ensureRuntimes().overlay.setTrailOverlayVisible(visible);
+  }
+
+  function toggleTrailOverlay() {
+    return ensureRuntimes().overlay.toggleTrailOverlay();
   }
 
   function refreshOverlay() {
@@ -1125,6 +1225,7 @@
     });
     Hooks.on("controlToken", debouncedRefreshOverlay);
     Hooks.on("refreshToken", debouncedRefreshOverlay);
+    Hooks.on("preUpdateToken", capturePreviousTokenCenter);
     Hooks.on("createToken", () => {
       debouncedRefreshOverlay();
       queueScan();
@@ -1133,7 +1234,8 @@
       debouncedRefreshOverlay();
       queueScan();
     });
-    Hooks.on("updateToken", () => {
+    Hooks.on("updateToken", (tokenDocument, changes) => {
+      recordScentTrailMovement(tokenDocument, changes).catch((error) => console.error(`${MODULE_ID} | Failed to record Scent trail movement.`, error));
       debouncedRefreshOverlay();
       queueScan();
     });
@@ -1153,7 +1255,6 @@
     Hooks.on("updateScene", (scene) => {
       if (scene?.id === canvas?.scene?.id) queueScan();
     });
-    Hooks.on("getSceneControlButtons", registerContextManagerTool);
     Hooks.on("getSceneControlButtons", registerTrailManagerTool);
     Hooks.on("renderTokenHUD", renderTokenHudToggle);
     registerChatMessageHook();
@@ -1190,12 +1291,14 @@
       getScentRules,
       getScentStateApi,
       getScentTrailDc,
+      getScentTrailDisplayState,
       getScentTrails,
       getScentTrailsApi,
       getTrackingByScentDc,
       hasScent,
       identifyFamiliarOdor,
       isOverlayVisible,
+      isTrailOverlayVisible,
       migrateFlags,
       openContextManager,
       openTrailManager,
@@ -1206,7 +1309,9 @@
       setOdorProfileFlags,
       setScentContextFlags,
       setOverlayVisible,
+      setTrailOverlayVisible,
       syncActorTokens,
+      toggleTrailOverlay,
       updateScentTrail,
     });
 

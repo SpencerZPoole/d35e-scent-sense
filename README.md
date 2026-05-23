@@ -6,7 +6,7 @@ This repository contains module code, public-safe documentation, package-page sc
 
 ## Compatibility
 
-- Foundry Virtual Tabletop: minimum `14`, verified `14.361`
+- Foundry Virtual Tabletop: minimum `14`, verified `14.362`
 - D35E system: minimum `3.0.2`, verified `3.0.2`
 - Module version: `1.0.0`
 
@@ -44,8 +44,9 @@ For a shorter first-use checklist, see:
 - Tracks Scent detection state for presence, available direction requests, requested direction, GM-revealed direction, and 5 ft pinpoint.
 - Provides RAW-aware helper calculations for wind, odor strength, masking odors, and tracking by Scent.
 - Adds odor profiles for odor strength, masking odors, false odor sources, and familiar odor tags.
-- Adds a GM-only Scent Context manager for scene defaults, token odor profile context, masking odors, false odors, odor tags, and GM-marked Scent relevance.
-- Adds GM-authored scene Scent trails, a Trail Manager, Scent tracking DC previews, and optional Survival roll prompts.
+- Adds one GM Scent Menu for active trail review, trail creation, trail editing, tracking previews, and advanced Scent context access.
+- Adds a separate View Scent Trails token-control toggle for showing or hiding visual trail paths without opening the menu.
+- Adds path-aware scene Scent trails with GM-enabled movement recording, GM/player visibility controls, Scent tracking DC previews, and optional Survival roll prompts.
 - Documents the v1 RAW coverage target and splits runtime behavior into focused modules for safer future development.
 - Freezes the public API shape intended to remain stable through `v1.0.0`.
 - Adds localization coverage checks and continuous validation for stable-release review.
@@ -73,6 +74,9 @@ game.d35eScentSense.openContextManager();
 game.d35eScentSense.openTrailManager();
 game.d35eScentSense.createScentTrail(canvas.scene, { sourceToken: token });
 game.d35eScentSense.getScentTrailDc(trail, trackerToken);
+game.d35eScentSense.getScentTrailDisplayState(trail.pathSegments[0]);
+game.d35eScentSense.setTrailOverlayVisible(true);
+game.d35eScentSense.isTrailOverlayVisible();
 game.d35eScentSense.rollTrackByScent(trackerToken, trail.id);
 game.d35eScentSense.migrateFlags({ dryRun: true });
 game.d35eScentSense.refresh({ persist: true });
@@ -94,9 +98,9 @@ await token.document.setFlag("d35e-scent-sense", "odorTags", ["wolf", "smoke"]);
 
 Supported context values are `normal`, `upwind`, and `downwind` for wind; `normal`, `strong`, and `overpowering` for odor strength; booleans for masking and false odors; and comma-separated or array odor tags for familiar-odor helpers. Tracking helpers compute RAW-derived DCs only; they do not roll Survival or replace GM adjudication.
 
-GMs can also open **Scent Context** from Token Controls to edit scene defaults and current-scene token flags. Selecting `inherit` clears the module flag and returns that value to the normal precedence chain. Familiar odor matching is GM-facing helper data only; the module does not automatically identify a hidden creature for players.
+GMs can open **Scent Menu** from Token Controls and use **Advanced Scent Context** to edit scene defaults and current-scene token flags. Selecting `inherit` clears the module flag and returns that value to the normal precedence chain. Familiar odor matching is GM-facing helper data only; the module does not automatically identify a hidden creature for players.
 
-GMs can open **Scent Trails** from Token Controls to create scene-level trail records from current-scene tokens, preview tracking DCs for a selected scent-capable tracker, and create a redacted Survival prompt. Trails are not generated automatically by movement; they are GM/API-authored records stored on the scene under this module's flags.
+GMs can use **Scent Menu** to create or enable scene-level trail records from current-scene tokens, review active trails first, preview tracking DCs for a selected scent-capable tracker, and create a redacted Survival prompt. New trails record source-token movement by default after the GM creates them. **View Scent Trails** shows or hides trail path graphics; GMs see active trails by default, while players only see trails explicitly marked visible to players.
 
 ## Development Roadmap
 

@@ -5,6 +5,8 @@
     clone,
     getSetting,
     getScentRange,
+    getScentTrailDisplayState,
+    getScentTrails,
     hasScent,
     localize,
     moduleId,
@@ -12,7 +14,9 @@
     settings,
   } = {}) {
     let overlayContainer = null;
+    let trailContainer = null;
     let cueContainer = null;
+    let trailOverlayVisible = false;
 
     function getActorFromEntity(actorOrToken) {
       if (!actorOrToken) return null;
@@ -102,9 +106,65 @@
       return cueContainer;
     }
 
+    function getOrCreateTrailContainer() {
+      if (!canvas?.tokens) return null;
+      if (trailContainer?.parent) return trailContainer;
+
+      trailContainer = canvas.tokens.getChildByName?.(`${moduleId}.trailOverlay`) ?? new PIXI.Container();
+      trailContainer.name = `${moduleId}.trailOverlay`;
+      trailContainer.eventMode = "none";
+      trailContainer.interactive = false;
+      trailContainer.sortableChildren = false;
+
+      if (!trailContainer.parent) canvas.tokens.addChildAt(trailContainer, 0);
+      return trailContainer;
+    }
+
     function clearOverlay() {
       if (!overlayContainer) return;
       overlayContainer.removeChildren().forEach((child) => child.destroy({ children: true }));
+    }
+
+    function clearTrailOverlay() {
+      if (!trailContainer) return;
+      trailContainer.removeChildren().forEach((child) => child.destroy({ children: true }));
+    }
+
+    function canCurrentUserSeeTrail(trail) {
+      if (trail?.active !== true) return false;
+      if (game.user?.isGM === true) return true;
+      return trail?.visibleToPlayers === true;
+    }
+
+    function drawTrailSegment(container, trail, segment, worldTime) {
+      const display = getScentTrailDisplayState?.(segment, { worldTime }) ?? { visible: true, opacity: 0.7, state: "fresh" };
+      if (display.visible !== true) return;
+
+      const start = segment.start ?? {};
+      const end = segment.end ?? {};
+      if (![start.x, start.y, end.x, end.y].every(Number.isFinite)) return;
+
+      const graphic = new PIXI.Graphics();
+      graphic.lineStyle(display.state === "fresh" ? 5 : 4, trail.visibleToPlayers === true ? 0x78c257 : 0xc99a42, Math.max(0.12, Math.min(0.95, display.opacity)));
+      graphic.moveTo(start.x, start.y);
+      graphic.lineTo(end.x, end.y);
+      container.addChild(graphic);
+    }
+
+    function refreshTrailOverlay() {
+      const container = getOrCreateTrailContainer();
+      if (!container) return;
+      clearTrailOverlay();
+      if (trailOverlayVisible !== true) return;
+
+      const scene = canvas?.scene;
+      const trails = getScentTrails?.(scene) ?? [];
+      const worldTime = game.time?.worldTime ?? 0;
+
+      for (const trail of trails) {
+        if (!canCurrentUserSeeTrail(trail)) continue;
+        for (const segment of trail.pathSegments ?? []) drawTrailSegment(container, trail, segment, worldTime);
+      }
     }
 
     function refreshOverlay() {
@@ -128,6 +188,32 @@
         graphic.drawCircle(token.center.x, token.center.y, radius);
         container.addChild(graphic);
       }
+
+      refreshTrailOverlay();
+    }
+
+    function isTrailOverlayVisible() {
+      return trailOverlayVisible === true;
+    }
+
+    function syncTrailOverlayControl() {
+      const tool = document.querySelector?.(`[data-tool="${moduleId}-trail-view"]`);
+      if (!tool) return;
+      tool.classList.toggle("active", trailOverlayVisible === true);
+      tool.setAttribute("aria-pressed", String(trailOverlayVisible === true));
+    }
+
+    function setTrailOverlayVisible(visible) {
+      trailOverlayVisible = visible === true;
+      refreshOverlay();
+      ui.controls?.render?.(true);
+      syncTrailOverlayControl();
+      window.setTimeout(syncTrailOverlayControl, 0);
+      return trailOverlayVisible;
+    }
+
+    function toggleTrailOverlay() {
+      return setTrailOverlayVisible(!trailOverlayVisible);
     }
 
     function showLocalPinpointCue(point) {
@@ -181,10 +267,13 @@
 
     return Object.freeze({
       isOverlayVisible,
+      isTrailOverlayVisible,
       refreshOverlay,
       renderTokenHudToggle,
       setOverlayVisible,
+      setTrailOverlayVisible,
       showLocalPinpointCue,
+      toggleTrailOverlay,
     });
   }
 

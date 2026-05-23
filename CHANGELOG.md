@@ -1,5 +1,17 @@
 # Changelog
 
+## Unreleased
+
+- Redesigned the GM trail workflow around one Scent Menu plus a separate View Scent Trails toggle.
+- Added path-aware Scent trail records with movement recording, GM/player visibility controls, path segment storage, and age-based trail display states.
+- Fixed automatic trail movement recording to derive destination centers from Foundry token update coordinates when available.
+- Fixed View Scent Trails toolbar synchronization so the toolbar toggle and Scent Menu preview button share the same visible overlay state.
+- Fixed the Scent Menu toolbar callback path so opening and closing the menu does not make View Scent Trails open the menu.
+- Fixed explicit odor-profile masking in `evaluateScentDetection`.
+- Merged advanced context access into the Scent Menu and removed the separate Scent Context toolbar button.
+- Updated trail validation, localization, styles, public documentation, and release-surface wording for the new visual trail workflow.
+- Verified live behavior against Foundry VTT `14.362` and D35E `3.0.2`.
+
 ## 1.0.0 - 2026-05-21
 
 - Promoted the release-candidate feature set to the stable public release.

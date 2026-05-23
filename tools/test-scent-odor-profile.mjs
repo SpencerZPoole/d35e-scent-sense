@@ -47,6 +47,15 @@ assert.deepEqual(resolved.sources, {
   odorTags: "token",
 });
 
+const explicitMasking = odorProfile.getOdorProfile({
+  explicit: { maskingOdor: true },
+  targetDocument: makeDocument({ maskingOdor: false }),
+  targetActor: makeDocument(),
+  scene: makeDocument(),
+});
+assert.equal(explicitMasking.profile.maskingOdor, true, "explicit odor profile should override document flags");
+assert.equal(explicitMasking.sources.maskingOdor, "explicit");
+
 assert.deepEqual(
   odorProfile.getOdorProfile({ targetDocument: makeDocument(), targetActor: makeDocument(), scene: makeDocument() }).profile,
   { odorStrength: "normal", maskingOdor: false, falseOdor: false, odorTags: [] }

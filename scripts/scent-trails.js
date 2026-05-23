@@ -4,6 +4,8 @@
   const MODULE_ID = "d35e-scent-sense";
   const TRAIL_FLAG = "scentTrails";
   const SCHEMA_VERSION = 1;
+  const MAX_TRAIL_SEGMENTS = 240;
+  const TRAIL_FADE_HOURS = 72;
 
   const WATER_STATES = Object.freeze({
     NONE: "none",
@@ -79,6 +81,49 @@
     return text || fallback;
   }
 
+  function normalizePoint(value = {}) {
+    return {
+      x: finiteNumber(value.x, 0),
+      y: finiteNumber(value.y, 0),
+    };
+  }
+
+  function resolveTokenMovementPosition(tokenDocument = {}, changes = {}) {
+    return {
+      x: finiteNumber(changes.x ?? tokenDocument.x, 0),
+      y: finiteNumber(changes.y ?? tokenDocument.y, 0),
+    };
+  }
+
+  function hasMeaningfulMovement(start = {}, end = {}, threshold = 2) {
+    const startPoint = normalizePoint(start);
+    const endPoint = normalizePoint(end);
+    return Math.hypot(endPoint.x - startPoint.x, endPoint.y - startPoint.y) >= finiteNumber(threshold, 2);
+  }
+
+  function normalizePathSegment(segment = {}, options = {}) {
+    const worldTime = Math.max(0, finiteNumber(options.worldTime, 0));
+    const createdWorldTime = Math.max(0, finiteNumber(segment.createdWorldTime ?? segment.createdAt ?? worldTime, worldTime));
+
+    return {
+      id: normalizeId(segment.id ?? options.idFactory?.(), `segment-${createdWorldTime}`),
+      trailId: normalizeId(segment.trailId ?? options.trailId, ""),
+      sourceTokenId: normalizeId(segment.sourceTokenId ?? options.sourceTokenId, ""),
+      sceneId: normalizeId(segment.sceneId ?? options.sceneId, ""),
+      createdWorldTime,
+      start: normalizePoint(segment.start),
+      end: normalizePoint(segment.end),
+    };
+  }
+
+  function normalizePathSegments(value = [], options = {}) {
+    const segments = Array.isArray(value) ? value : Object.values(value ?? {});
+    return segments
+      .map((segment) => normalizePathSegment(segment, options))
+      .filter((segment) => segment.trailId && segment.sourceTokenId)
+      .slice(-MAX_TRAIL_SEGMENTS);
+  }
+
   function normalizeOdorProfile(profile = {}) {
     const externalNormalizer = globalThis.d35eScentSenseOdorProfile?.normalizeOdorProfile;
     if (externalNormalizer) return externalNormalizer(profile);
@@ -136,10 +181,19 @@
       waterState: normalizeWaterState(data.waterState),
       powerfulCompetingOdor: normalizeBoolean(data.powerfulCompetingOdor ?? data.competingOdor, false),
       odorDcModifier: integerNumber(data.odorDcModifier, 0),
+      recordMovement: normalizeBoolean(data.recordMovement ?? data.autoRecord, false),
+      visibleToPlayers: normalizeBoolean(data.visibleToPlayers ?? data.playerVisible, false),
       sizeNotes: normalizeText(data.sizeNotes, ""),
       countNotes: normalizeText(data.countNotes, ""),
       notes: normalizeText(data.notes, ""),
       odorProfile,
+      pathSegments: normalizePathSegments(data.pathSegments ?? data.segments, {
+        trailId: id,
+        sourceTokenId: normalizeId(data.sourceTokenId ?? data.tokenId, ""),
+        sceneId: normalizeId(data.sceneId ?? options.sceneId, ""),
+        worldTime,
+        idFactory: options.idFactory,
+      }),
     };
   }
 
@@ -174,10 +228,48 @@
     return normalizeTrails(trails).filter((trail) => trail.id !== id);
   }
 
+  function addTrailSegment(trails = [], trailId, segment = {}, options = {}) {
+    const id = normalizeId(trailId, "");
+    const normalizedTrails = normalizeTrails(trails, options);
+    return normalizedTrails.map((trail) => {
+      if (trail.id !== id) return trail;
+      const pathSegments = normalizePathSegments([
+        ...trail.pathSegments,
+        {
+          ...segment,
+          trailId: trail.id,
+          sourceTokenId: trail.sourceTokenId,
+        },
+      ], {
+        ...options,
+        trailId: trail.id,
+        sourceTokenId: trail.sourceTokenId,
+      });
+      return normalizeTrail({ ...trail, pathSegments, updatedWorldTime: options.worldTime ?? trail.updatedWorldTime }, options);
+    });
+  }
+
   function calculateTrailAgeHours(trail, options = {}) {
     const normalizedTrail = normalizeTrail(trail, options);
     const worldTime = Math.max(0, finiteNumber(options.worldTime, normalizedTrail.createdWorldTime));
     return Math.max(0, Math.floor((worldTime - normalizedTrail.createdWorldTime) / 3600));
+  }
+
+  function calculateSegmentAgeHours(segment, options = {}) {
+    const normalizedSegment = normalizePathSegment(segment, options);
+    const worldTime = Math.max(0, finiteNumber(options.worldTime, normalizedSegment.createdWorldTime));
+    return Math.max(0, Math.floor((worldTime - normalizedSegment.createdWorldTime) / 3600));
+  }
+
+  function getTrailDisplayState(segmentOrTrail, options = {}) {
+    const createdWorldTime = segmentOrTrail?.createdWorldTime ?? 0;
+    const ageHours = Math.max(0, Math.floor((Math.max(0, finiteNumber(options.worldTime, createdWorldTime)) - createdWorldTime) / 3600));
+    if (ageHours >= TRAIL_FADE_HOURS) return { visible: false, ageHours, opacity: 0, state: "faded" };
+    if (ageHours >= 48) return { visible: true, ageHours, opacity: 0.18, state: "old" };
+    if (ageHours >= 24) return { visible: true, ageHours, opacity: 0.32, state: "faint" };
+    if (ageHours >= 8) return { visible: true, ageHours, opacity: 0.5, state: "stale" };
+    if (ageHours >= 1) return { visible: true, ageHours, opacity: 0.72, state: "aging" };
+    return { visible: true, ageHours, opacity: 0.95, state: "fresh" };
   }
 
   function getTrackerActor(tracker) {
@@ -304,16 +396,25 @@
       MODULE_ID,
       TRAIL_FLAG,
       SCHEMA_VERSION,
+      MAX_TRAIL_SEGMENTS,
+      TRAIL_FADE_HOURS,
       WATER_STATES,
       DEFAULT_ODOR_PROFILE,
     }),
+    addTrailSegment,
     buildRollPromptData,
     calculateTrailAgeHours,
+    calculateSegmentAgeHours,
     deleteTrail,
     getSceneTrails,
     getScentTrailDc,
+    getTrailDisplayState,
+    hasMeaningfulMovement,
     normalizeBoolean,
     normalizeOdorProfile,
+    normalizePathSegment,
+    normalizePathSegments,
+    resolveTokenMovementPosition,
     normalizeTrails,
     normalizeTrail,
     normalizeWaterState,

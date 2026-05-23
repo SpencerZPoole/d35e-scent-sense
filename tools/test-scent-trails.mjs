@@ -10,6 +10,21 @@ await import(pathToFileURL(path.join(root, "scripts/scent-trails.js")).href);
 const trails = globalThis.d35eScentSenseTrails;
 assert.ok(trails, "scent trails API should be exposed on globalThis");
 
+assert.deepEqual(
+  trails.resolveTokenMovementPosition({ x: 10, y: 20 }, { x: 80, y: 90 }),
+  { x: 80, y: 90 }
+);
+assert.deepEqual(
+  trails.resolveTokenMovementPosition({ x: 10, y: 20 }, { x: 80 }),
+  { x: 80, y: 20 }
+);
+assert.deepEqual(
+  trails.resolveTokenMovementPosition({ x: 10, y: 20 }, { y: 90 }),
+  { x: 10, y: 90 }
+);
+assert.equal(trails.hasMeaningfulMovement({ x: 10, y: 20 }, { x: 11, y: 20 }, 2), false);
+assert.equal(trails.hasMeaningfulMovement({ x: 10, y: 20 }, { x: 80, y: 90 }, 2), true);
+
 const normalized = trails.normalizeTrail({
   id: "wolf-trail",
   label: "  Wolf   trail ",
@@ -44,6 +59,8 @@ assert.deepEqual(
     waterState: "flowingWater",
     powerfulCompetingOdor: true,
     odorDcModifier: 2,
+    recordMovement: false,
+    visibleToPlayers: false,
     sizeNotes: "Large",
     countNotes: "two",
     notes: "near old stones",
@@ -53,6 +70,7 @@ assert.deepEqual(
       falseOdor: true,
       odorTags: ["wolf", "smoke"],
     },
+    pathSegments: [],
   }
 );
 
@@ -72,6 +90,25 @@ const added = trails.upsertTrail(updated, {
 }, { worldTime: 7200 });
 assert.equal(added.length, 2);
 assert.equal(trails.deleteTrail(added, "wolf-trail").length, 1);
+
+const segmented = trails.addTrailSegment(added, "wolf-trail", {
+  id: "seg-1",
+  sourceTokenId: "tok1",
+  sceneId: "scene1",
+  createdWorldTime: 3600,
+  start: { x: 10, y: 20 },
+  end: { x: 110, y: 120 },
+}, { worldTime: 7200, sceneId: "scene1" });
+const segmentedTrail = segmented.find((trail) => trail.id === "wolf-trail");
+assert.equal(segmentedTrail.pathSegments.length, 1);
+assert.deepEqual(segmentedTrail.pathSegments[0].start, { x: 10, y: 20 });
+assert.deepEqual(trails.getTrailDisplayState(segmentedTrail.pathSegments[0], { worldTime: 7200 }), {
+  visible: true,
+  ageHours: 1,
+  opacity: 0.72,
+  state: "aging",
+});
+assert.equal(trails.getTrailDisplayState(segmentedTrail.pathSegments[0], { worldTime: 3600 + (72 * 3600) }).visible, false);
 
 assert.equal(
   trails.getScentTrailDc({ ...normalized, waterState: "none", powerfulCompetingOdor: false, odorDcModifier: 0 }, makeActor({ scent: 30, trackFeat: true }), { worldTime: 0 }).dc,
@@ -121,10 +158,13 @@ function pickTrail(trail) {
     waterState: trail.waterState,
     powerfulCompetingOdor: trail.powerfulCompetingOdor,
     odorDcModifier: trail.odorDcModifier,
+    recordMovement: trail.recordMovement,
+    visibleToPlayers: trail.visibleToPlayers,
     sizeNotes: trail.sizeNotes,
     countNotes: trail.countNotes,
     notes: trail.notes,
     odorProfile: trail.odorProfile,
+    pathSegments: trail.pathSegments,
   };
 }
 

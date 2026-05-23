@@ -47,6 +47,7 @@ const requiredFiles = [
   "tools/test-scent-rules.mjs",
   "tools/test-scent-state.mjs",
   "tools/test-scent-trails.mjs",
+  "tools/test-scent-trail-manager.mjs",
   "tools/test-scent-d35e-sources.mjs",
   "tools/test-scent-d35e-integration.mjs",
   "tools/test-scent-migration.mjs",
@@ -108,7 +109,7 @@ if (manifest) {
   if (manifest.download !== expectedDownloadUrl) fail("module.json download URL is missing or incorrect");
   if (!Array.isArray(manifest.authors) || manifest.authors[0]?.name !== "Spencer Poole") fail("module.json author must be Spencer Poole");
   if (manifest.compatibility?.minimum !== "14") fail("module.json Foundry minimum compatibility must be 14");
-  if (manifest.compatibility?.verified !== "14.361") fail("module.json Foundry verified compatibility must be 14.361");
+  if (manifest.compatibility?.verified !== "14.362") fail("module.json Foundry verified compatibility must be 14.362");
 
   const system = manifest.relationships?.systems?.find((entry) => entry.id === "D35E");
   if (!system) fail("module.json must declare D35E system relationship");
@@ -145,7 +146,7 @@ if (packageJson) {
   if (packageJson.version !== "1.0.0") fail("package.json version must be 1.0.0");
   if (packageJson.license !== "MIT") fail("package.json license must be MIT");
   if (packageJson.private !== true) fail("package.json should be private to prevent accidental npm publication");
-  for (const scriptName of ["check:js", "check:localization", "check:public", "test:context", "test:odor-profile", "test:rules", "test:state", "test:trails", "test:d35e-sources", "test:d35e-integration", "test:migration", "validate", "test"]) {
+  for (const scriptName of ["check:js", "check:localization", "check:public", "test:context", "test:odor-profile", "test:rules", "test:state", "test:trails", "test:trail-manager", "test:d35e-sources", "test:d35e-integration", "test:migration", "validate", "test"]) {
     if (!packageJson.scripts?.[scriptName]) fail(`package.json missing script: ${scriptName}`);
   }
 }

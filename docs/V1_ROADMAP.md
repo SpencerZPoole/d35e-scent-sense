@@ -30,7 +30,7 @@ This roadmap turns the current Scent helper into a stable `v1.0.0` module with d
 - Add a GM Trail Manager.
 - Add optional owner/GM Survival roll prompts for tracking by Scent.
 - Add `openTrailManager`, trail CRUD helpers, `getScentTrailDc`, and `rollTrackByScent`.
-- Keep trail creation GM/API-authored; automatic movement trails remain out of scope.
+- Keep `v0.7.0` trail creation GM/API-authored; automatic movement trails remain out of scope for that release.
 
 ## v0.8.0 D35E Integration Hardening
 
@@ -56,3 +56,10 @@ This roadmap turns the current Scent helper into a stable `v1.0.0` module with d
 - Ship fresh manifest and zip assets.
 - Keep the release public-safe: no private campaign data, compendia, bundled media, copied sourcebook prose, or local paths.
 - Status: stable promotion of the `v0.9.0` release candidate; no new RAW mechanics or public API changes.
+
+## Post-v1.0 Trail UX Stabilization
+
+- Replace the separate trail/context toolbar workflow with one GM Scent Menu plus a separate View Scent Trails overlay toggle.
+- Add path-aware trail records, GM-enabled source movement recording, age-based trail display states, and GM/player trail visibility controls.
+- Preserve existing trail CRUD and DC APIs while adding overlay state helpers and display-state helpers.
+- Validate the workflow in a live Foundry world before release packaging.

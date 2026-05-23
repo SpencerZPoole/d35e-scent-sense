@@ -14,7 +14,7 @@ The stable release already provides the core product surfaces:
 
 - Module settings for alert scope, wall respect, notifications, and rings.
 - Token HUD ring toggles for owned or GM-viewed Scent sources.
-- GM-only **Scent Context** and **Scent Trails** tools in Token Controls.
+- GM-only **Scent Menu** plus a separate **View Scent Trails** toggle in Token Controls.
 - Chat/dialog alerts for presence, direction requests, and pinpoint events.
 - Public API diagnostics such as `getScentRangeBreakdown` and dry-run migration.
 
@@ -30,9 +30,10 @@ new GM's first hour:
 - Install from the manifest URL and enable the module.
 - Add Scent to a test actor and confirm the ring/detection mode appears.
 - Trigger a presence alert, direction request, and pinpoint alert.
-- Open **Scent Context**, set scene defaults, add token overrides, then reset
-  them with `inherit`.
-- Create, preview, prompt, and delete a Scent trail.
+- Open **Scent Menu**, use **Advanced Scent Context**, set scene defaults, add
+  token overrides, then reset them with `inherit`.
+- Create, preview, prompt, show/hide, record movement for, and delete a Scent
+  trail.
 - Run `getScentRangeBreakdown` on a working token and on a deliberately broken
   setup.
 - Record every place where the next action is unclear, the label is too terse,
@@ -43,8 +44,8 @@ new GM's first hour:
 ### 1. First-Run GM Onboarding
 
 Add a GM-only first-run checklist that appears once per world or can be reopened
-from settings. It should link to the user manual, module settings, Scent Context,
-Scent Trails, and basic diagnostics.
+from settings. It should link to the user manual, module settings, Scent Menu,
+View Scent Trails, Advanced Scent Context, and basic diagnostics.
 
 Keep it concise. The goal is orientation, not an in-game manual wall.
 
@@ -63,7 +64,7 @@ identity to players.
 
 ### 3. Manager Help And Empty States
 
-Improve the **Scent Context** and **Scent Trails** managers with compact help
+Continue improving the **Scent Menu** and **Advanced Scent Context** surfaces with compact help
 text, clearer empty states, and hover/tooltips for fields that are easy to
 misread:
 
@@ -86,7 +87,7 @@ the handshake:
 
 This should remain GM-assisted and should not automate action spending.
 
-### 5. Trail Manager Confidence
+### 5. Trail Preview Confidence
 
 Make trail results easier to understand by showing short reason text beside DC
 previews and prompt buttons:
@@ -94,6 +95,8 @@ previews and prompt buttons:
 - tracker has Scent and Track
 - tracker is missing Track
 - trail is inactive
+- trail has no path segments yet
+- trail is hidden from players
 - water state prevents tracking for this tracker
 - roll prompt created instead of rolled directly
 

@@ -20,3 +20,5 @@ npm test
 ```
 
 Changes should preserve the public API exposed through `game.d35eScentSense` unless a breaking change is clearly documented.
+
+For behavior that depends on Foundry UI, canvas rendering, token movement, chat, or document flags, pair Node validation with a live Foundry smoke test when practical. Keep reproduction notes public-safe and avoid campaign names, world data, chat logs, local paths, and player-identifying details in public issues or pull requests.

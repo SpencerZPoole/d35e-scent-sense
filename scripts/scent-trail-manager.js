@@ -9,10 +9,13 @@
     getScentRange,
     getScentTrailDc,
     getScentTrails,
+    isTrailOverlayVisible,
     localize,
     moduleId,
+    openContextManager,
     rollTrackByScent,
     roundDistance,
+    setTrailOverlayVisible,
     template,
     updateScentTrail,
   } = {}) {
@@ -55,6 +58,19 @@
     function formatAge(hours) {
       if (!Number.isFinite(hours)) return "?";
       return `${Math.max(0, Math.floor(hours))} h`;
+    }
+
+    function formatSegmentState(trail) {
+      const segments = trail.pathSegments ?? [];
+      if (segments.length === 0) return localize("D35EScent.TrailManager.NoPathSegments");
+      const newest = segments.reduce((latest, segment) => segment.createdWorldTime > latest.createdWorldTime ? segment : latest, segments[0]);
+      const ageHours = Math.max(0, Math.floor(((game.time?.worldTime ?? newest.createdWorldTime) - newest.createdWorldTime) / 3600));
+      if (ageHours >= 72) return localize("D35EScent.TrailManager.Fade.Faded");
+      if (ageHours >= 48) return localize("D35EScent.TrailManager.Fade.Old");
+      if (ageHours >= 24) return localize("D35EScent.TrailManager.Fade.Faint");
+      if (ageHours >= 8) return localize("D35EScent.TrailManager.Fade.Stale");
+      if (ageHours >= 1) return localize("D35EScent.TrailManager.Fade.Aging");
+      return localize("D35EScent.TrailManager.Fade.Fresh");
     }
 
     function formatDc(dcResult) {
@@ -111,6 +127,7 @@
             powerfulCompetingOdor: String(trail.powerfulCompetingOdor === true),
             sourceLabel: trail.sourceName || trail.sourceTokenId || localize("D35EScent.TrailManager.UnknownSource"),
             profileSummary: formatProfile(trail.odorProfile),
+            segmentSummary: format("D35EScent.TrailManager.PathSummary", { count: trail.pathSegments?.length ?? 0, state: formatSegmentState(trail) }),
             canPrompt: Boolean(trackerToken && dc.trackable === true),
           };
         });
@@ -127,6 +144,7 @@
         trails: rows,
         hasTrails: rows.length > 0,
         hasSourceOptions: sourceOptions.length > 0,
+        trailViewActive: isTrailOverlayVisible?.() === true,
         buttons: [{ type: "submit", label: localize("D35EScent.TrailManager.Save"), icon: "fa-solid fa-floppy-disk" }],
       };
     }
@@ -139,8 +157,29 @@
       return root?.querySelector?.(selector)?.checked === true;
     }
 
+    function isTrailManagerOpen() {
+      return Boolean(trailManager?.element?.parentElement);
+    }
+
     async function refreshManager() {
+      if (!isTrailManagerOpen()) return;
       await trailManager?.render?.(true);
+    }
+
+    async function setTrailViewVisible(visible) {
+      setTrailOverlayVisible?.(visible === true);
+      await refreshManager();
+      return isTrailOverlayVisible?.() === true;
+    }
+
+    function getRequestedTrailViewState(...args) {
+      for (const value of args) {
+        if (typeof value === "boolean") return value;
+        const targetChecked = value?.currentTarget?.checked ?? value?.target?.checked;
+        if (typeof targetChecked === "boolean") return targetChecked;
+      }
+
+      return !(isTrailOverlayVisible?.() === true);
     }
 
     async function createTrailFromForm(root) {
@@ -154,10 +193,13 @@
         waterState: getValue(root, '[name="new.waterState"]', "none"),
         powerfulCompetingOdor: getValue(root, '[name="new.powerfulCompetingOdor"]', "false"),
         odorDcModifier: getValue(root, '[name="new.odorDcModifier"]', "0"),
+        recordMovement: getChecked(root, '[name="new.recordMovement"]'),
+        visibleToPlayers: getChecked(root, '[name="new.visibleToPlayers"]'),
         sizeNotes: getValue(root, '[name="new.sizeNotes"]', ""),
         countNotes: getValue(root, '[name="new.countNotes"]', ""),
         notes: getValue(root, '[name="new.notes"]', ""),
       });
+      ui.notifications?.info(localize("D35EScent.TrailManager.Created"));
       await refreshManager();
     }
 
@@ -170,6 +212,8 @@
           waterState: getValue(row, '[data-field="waterState"]', "none"),
           powerfulCompetingOdor: getValue(row, '[data-field="powerfulCompetingOdor"]', "false"),
           odorDcModifier: getValue(row, '[data-field="odorDcModifier"]', "0"),
+          recordMovement: getChecked(row, '[data-field="recordMovement"]'),
+          visibleToPlayers: getChecked(row, '[data-field="visibleToPlayers"]'),
           sizeNotes: getValue(row, '[data-field="sizeNotes"]', ""),
           countNotes: getValue(row, '[data-field="countNotes"]', ""),
           notes: getValue(row, '[data-field="notes"]', ""),
@@ -264,6 +308,7 @@
             button.addEventListener("click", (event) => {
               event.preventDefault();
               const trailId = event.currentTarget.closest("[data-scent-trail-id]")?.dataset?.scentTrailId;
+              if (!window.confirm(localize("D35EScent.TrailManager.DeleteConfirm"))) return;
               deleteScentTrail(canvas.scene, trailId)
                 .then(refreshManager)
                 .catch((error) => console.error(`${moduleId} | Failed to delete Scent trail.`, error));
@@ -277,11 +322,28 @@
               promptTrailRoll(trailId).catch((error) => console.error(`${moduleId} | Failed to prompt Scent tracking roll.`, error));
             });
           }
+
+          root.querySelector('[data-action="toggleTrailView"]')?.addEventListener("click", (event) => {
+            event.preventDefault();
+            setTrailViewVisible(!(isTrailOverlayVisible?.() === true)).catch((error) => {
+              console.error(`${moduleId} | Failed to toggle Scent trail preview.`, error);
+            });
+          });
+
+          root.querySelector('[data-action="openAdvancedContext"]')?.addEventListener("click", (event) => {
+            event.preventDefault();
+            openContextManager?.();
+          });
         }
 
         _updatePosition(position) {
           if (!this.element?.parentElement) return position;
           return super._updatePosition(position);
+        }
+
+        async _onClose(options = {}) {
+          await super._onClose?.(options);
+          if (trailManager === this) trailManager = null;
         }
 
         static async _onSubmit(event, form) {
@@ -295,6 +357,13 @@
     function openTrailManager(options = {}) {
       if (game.user?.isGM !== true) {
         ui.notifications?.warn(localize("D35EScent.TrailManager.GmOnly"));
+        return null;
+      }
+
+      if (isTrailManagerOpen()) {
+        const openManager = trailManager;
+        trailManager = null;
+        openManager.close?.();
         return null;
       }
 
@@ -320,22 +389,43 @@
         : controls.tokens;
       if (!tokenControl?.tools) return;
 
+      function upsertTool(toolData) {
+        if (Array.isArray(tokenControl.tools)) {
+          const existingIndex = tokenControl.tools.findIndex((tool) => tool.name === toolData.name);
+          if (existingIndex >= 0) tokenControl.tools[existingIndex] = { ...tokenControl.tools[existingIndex], ...toolData };
+          else tokenControl.tools.push(toolData);
+          return;
+        }
+
+        tokenControl.tools[toolData.name] = { ...(tokenControl.tools[toolData.name] ?? {}), ...toolData };
+      }
+
       const toolData = {
         name: `${moduleId}-trail-manager`,
         order: 14,
         title: "D35EScent.TrailManager.Tool",
-        icon: "fa-solid fa-shoe-prints",
+        icon: "fa-solid fa-gear",
         button: true,
         visible: true,
-        onClick: () => openTrailManager(),
         onChange: () => openTrailManager(),
       };
+      const viewToolData = {
+        name: `${moduleId}-trail-view`,
+        order: 15,
+        title: "D35EScent.TrailManager.ViewTool",
+        icon: "fa-solid fa-shoe-prints",
+        toggle: true,
+        active: isTrailOverlayVisible?.() === true,
+        visible: true,
+        onChange: (...args) => {
+          setTrailViewVisible(getRequestedTrailViewState(...args)).catch((error) => {
+            console.error(`${moduleId} | Failed to set Scent trail preview state.`, error);
+          });
+        },
+      };
 
-      if (Array.isArray(tokenControl.tools)) {
-        if (!tokenControl.tools.some((tool) => tool.name === `${moduleId}-trail-manager`)) tokenControl.tools.push(toolData);
-      } else if (!tokenControl.tools[`${moduleId}-trail-manager`]) {
-        tokenControl.tools[`${moduleId}-trail-manager`] = toolData;
-      }
+      upsertTool(toolData);
+      upsertTool(viewToolData);
     }
 
     return Object.freeze({

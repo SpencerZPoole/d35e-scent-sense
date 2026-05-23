@@ -1,6 +1,7 @@
 # Release Readiness Audit
 
 Date: 2026-05-21
+Updated: 2026-05-23
 
 ## Scope
 
@@ -22,6 +23,8 @@ This audit covers the public release copy of `d35e-scent-sense`.
 - The GM Scent Context manager writes only module-owned scene and token flags.
 - The odor profile layer adds false odor and familiar odor tag helpers without automatically revealing target identity to players.
 - The Scent trail layer stores GM-authored scene trail records, computes Scent tracking DC previews, and redacts player-facing roll prompts by default.
+- The post-`v1.0.0` trail workflow adds a unified Scent Menu, a separate View Scent Trails toggle, GM-enabled movement path recording, age-based trail display states, and explicit GM/player trail visibility controls.
+- Live validation on Foundry VTT `14.362` and D35E `3.0.2` verified module load, public APIs, odor masking, trail recording, overlay rendering, toolbar/menu preview synchronization, and cleanup behavior.
 - The D35E integration helper reports Scent range sources, ignored item sources, and token detection-mode status for diagnostics.
 - The migration helper provides dry-run-first normalization for module-owned scene, token, and trail flags without editing actor flags.
 - Live scratch-world product testing verifies item-granted Scent ranges on D35E actors with token vision override disabled, odor profile precedence, masking suppression, context-manager render controls, trail-manager render controls, Scent trail DC previews, roll prompt cleanup, and scan execution.
@@ -29,7 +32,7 @@ This audit covers the public release copy of `d35e-scent-sense`.
 - Runtime responsibilities are split across focused helper scripts before the main lifecycle script.
 - The detection-state layer distinguishes presence, direction availability, direction requests, GM-revealed direction, and pinpoint without writing ordinary scan state to world data.
 - RAW coverage, architecture, and v1 roadmap docs are present for publication review.
-- The public API reference, user guide, and release process docs are present for stable-release review.
+- The public API reference, user guide, package-page description, and release process docs are present for stable-release review.
 - Localization coverage is checked by `tools/check-localization.mjs` and included in `npm test`.
 - GitHub Actions runs the same `npm test` validation suite on pushes and pull requests.
 

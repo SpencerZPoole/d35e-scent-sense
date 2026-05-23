@@ -26,7 +26,7 @@ The default alert scope is conservative: unknown hostile targets. In practice, h
 
 ## 4. Use Scent Context
 
-Open **Scent Context** from Token Controls as GM to edit scene defaults and token overrides for:
+Open **Scent Menu** from Token Controls as GM, then use **Advanced Scent Context** to edit scene defaults and token overrides for:
 
 - wind band
 - odor strength
@@ -39,13 +39,17 @@ Selecting `inherit` clears that token or scene flag. Actor flags remain readable
 
 ## 5. Use Scent Trails
 
-Open **Scent Trails** from Token Controls as GM to create scene trail records. Trails are not generated from movement automatically. A trail can store age, water state, competing odor, odor modifier, source references, notes, and an odor profile snapshot.
+Open **Scent Menu** from Token Controls as GM to manage scene trail records. The top of the menu lists active trails before creation controls so the GM can quickly see what already exists, whether movement recording is enabled, who can see the trail, and whether the path has recent recorded segments.
 
-The Trail Manager can preview DCs for a selected scent-capable tracker and create a redacted Survival prompt. Player-facing prompts do not reveal hidden trail source details by default.
+Use **Create / Enable Trail** to choose the token emitting the odor trail. New trails record that token's movement by default. The GM can disable recording, hide or reveal the trail preview to players, edit trail context, save changes, or delete the trail and its recorded path segments.
+
+Use **View Scent Trails** in Token Controls, or the preview button inside the Scent Menu, to toggle trail path graphics. The GM sees active trail paths by default. Players only see trails that the GM explicitly marks visible to players.
+
+The Trail Manager can preview tracking DCs for a selected scent-capable tracker and create a redacted Survival prompt. Player-facing prompts do not reveal hidden trail source details by default.
 
 ## 6. Know The Boundary
 
-The module does not spend actions, decide every direction call, identify hidden creatures for players, or create movement trails automatically. Those calls remain GM-adjudicated.
+The module does not spend actions, decide every direction call, identify hidden creatures for players, or reveal trail paths to players unless the GM enables that visibility. Those calls remain GM-adjudicated.
 
 ## More Help
 

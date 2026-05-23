@@ -31,7 +31,7 @@ table ruling.
 `d35e-scent-sense` adds Scent support for the D35E Foundry system. It registers
 the Scent sense, adds 5 ft pinpoint handling, scans active scene tokens, sends
 owner and GM alerts, and gives the GM context tools for wind, odor strength,
-masking odors, false odors, familiar odor tags, and GM-authored scent trails.
+masking odors, false odors, familiar odor tags, and GM-authored visual scent trails.
 
 ### What The Module Automates
 
@@ -43,18 +43,20 @@ masking odors, false odors, familiar odor tags, and GM-authored scent trails.
 - Owner and GM alert routing.
 - Runtime state for presence, direction request, direction reveal, and pinpoint.
 - Scent tracking DC helper values for GM-authored trails.
+- Path segment recording for GM-created trails that have movement recording enabled.
+- GM-local trail path previews, with optional GM-controlled player visibility.
 
 ### What Stays GM-Assisted
 
 - Whether a player spends the needed table action to request direction.
 - What direction or location detail the GM reveals.
 - Whether a false odor or familiar odor tag should matter in the scene.
-- Whether a trail exists, when it starts, and what it represents.
+- Whether a trail exists, when it starts, what it represents, and whether players may preview it.
 - Whether a roll prompt should become a real table roll.
 
 ### What Remains Manual
 
-- Automatic movement-based trail creation.
+- Creating or enabling a trail source before movement can be recorded.
 - Automatic hidden-creature identification for players.
 - Automatic action-spending enforcement.
 - Complete environmental modeling beyond the module's context fields.
@@ -62,7 +64,7 @@ masking odors, false odors, familiar odor tags, and GM-authored scent trails.
 
 ## 2. Requirements
 
-- Foundry VTT: minimum `14`, verified with `14.361`.
+- Foundry VTT: minimum `14`, verified with `14.362`.
 - D35E system: minimum `3.0.2`, verified with `3.0.2`.
 - A D35E world where the module is enabled.
 - GM permissions for context editing, trail management, migration helpers, and
@@ -150,8 +152,8 @@ After enabling the module in a D35E world:
 4. Add or verify one actor with a positive Scent range.
 5. Place that actor as a token in a test scene.
 6. Select the token and confirm the Token HUD can toggle the local Scent ring.
-7. As GM, open Token Controls and confirm **Scent Context** and **Scent Trails**
-   tools are available.
+7. As GM, open Token Controls and confirm **Scent Menu** and **View Scent
+   Trails** tools are available.
 8. Use the console diagnostic below if Scent is not working as expected:
 
    ```js
@@ -262,8 +264,8 @@ tokens.
 
 ## 9. GM Scent Context Manager
 
-The **Scent Context** tool is GM-only and appears in Token Controls. It edits
-module-owned scene and token flags.
+Advanced Scent context is GM-only. Open **Scent Menu** from Token Controls, then
+use **Advanced Scent Context** to edit module-owned scene and token flags.
 
 Use it to:
 
@@ -332,23 +334,42 @@ creature identification.
 
 ## 11. Scent Trails And Tracking
 
-The **Scent Trails** tool is GM-only and appears in Token Controls. It manages
-GM-authored scene trail records.
+The **Scent Menu** tool is GM-only and appears in Token Controls. It manages
+GM-authored scene trail records and lists active scene trails before the create
+controls.
 
-The module does not create trails from movement automatically. A trail exists
-only when the GM or API creates it.
+The module records movement path segments only for trails the GM or API creates
+and leaves active with **Record movement** enabled. A token moving before a trail
+is created does not backfill old path geometry.
 
 ### Creating A Trail
 
-1. Open **Scent Trails** from Token Controls.
+1. Open **Scent Menu** from Token Controls.
 2. Choose a source token when available.
 3. Enter a trail label and any notes the GM needs.
 4. Set water state, competing odor, odor DC modifier, size notes, or count notes
    if useful.
-5. Create the trail.
+5. Leave **Record movement** enabled if future source-token movement should add
+   path segments.
+6. Leave **Visible to players** off unless the GM wants player clients to see
+   the preview path.
+7. Create the trail.
 
 The trail stores a source reference, creation time, active state, context fields,
-and an odor profile snapshot.
+visibility flags, path segments, and an odor profile snapshot.
+
+### Viewing Trail Paths
+
+Use **View Scent Trails** in Token Controls, or the Show/Hide Trail Preview
+button in **Scent Menu**, to toggle the local trail overlay. Both controls read
+and update the same client-local overlay state.
+
+GMs can see active trail paths when the overlay is on. Players do not see trail
+paths unless the GM marks that trail **Visible to players**.
+
+Trail paths fade by age. Fresh segments are strongest; old segments become faint
+or hidden once they are no longer meaningfully trackable by the module's trail
+age rules.
 
 ### Previewing A DC
 
@@ -370,6 +391,9 @@ resolve the roll manually.
 
 Delete trails that are no longer needed, or mark them inactive when the record
 should remain visible to the GM but stop being treated as trackable.
+
+Deleting a trail also removes its recorded path segments. The menu asks for
+confirmation before deletion.
 
 ## 12. Diagnostics And Admin Helpers
 
@@ -414,6 +438,7 @@ writing changes. Actual writes require GM permissions and `dryRun: false`.
 ```js
 game.d35eScentSense.openContextManager();
 game.d35eScentSense.openTrailManager();
+game.d35eScentSense.setTrailOverlayVisible(true);
 ```
 
 These helpers are GM-only and return `null` for users who cannot open the
@@ -477,20 +502,28 @@ manager.
 - If duplicates remain, include the token's detection modes and diagnostic
   output in the support report.
 
-### The Context Manager Does Not Open
+### Advanced Scent Context Does Not Open
 
 - Confirm you are logged in as GM.
 - Confirm the world is on a supported Foundry VTT version.
 - Try `game.d35eScentSense.openContextManager()` from the console.
 - Check the browser console for an error beginning with `d35e-scent-sense`.
 
-### The Trail Manager Does Not Show A DC
+### The Scent Menu Does Not Show A DC
 
 - Select a scent-capable tracker in the manager.
 - Confirm the tracker has Scent and a Track feat item.
 - Confirm the trail is active.
 - Check whether the water state makes the trail unavailable for that tracker.
 - Review the reason label shown by the manager.
+
+### View Scent Trails Does Not Show A Path
+
+- Confirm **View Scent Trails** is toggled on.
+- Confirm the active scene has at least one active trail with path segments.
+- Confirm the trail's source token moved after **Record movement** was enabled.
+- Confirm you are GM, or the trail is marked **Visible to players**.
+- Open **Scent Menu** and check the trail's **Trail Path** count and fade state.
 
 ### A Survival Roll Does Not Automatically Roll
 
@@ -530,8 +563,9 @@ When reporting an issue, include:
   game.d35eScentSense.getScentRangeBreakdown(canvas.tokens.controlled[0])
   ```
 
-- If trail-related, include the Trail Manager reason label and whether the trail
-  is active.
+- If trail-related, include the Scent Menu reason label, whether the trail is
+  active, whether **Record movement** is enabled, the path segment count, and
+  whether the trail is visible to players.
 - If context-related, include whether the value is set on scene, token, actor,
   or inherited default.
 
