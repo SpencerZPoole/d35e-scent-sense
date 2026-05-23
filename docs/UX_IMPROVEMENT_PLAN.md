@@ -1,7 +1,7 @@
 # UX Improvement Plan
 
-This document captures future user-experience work for `d35e-scent-sense`.
-It does not change the `v1.0.0` runtime behavior.
+This document captures future user-experience work for `d35e-scent-sense`
+after the `v1.1.0` trail UX stabilization release.
 
 ## Goal
 
@@ -119,7 +119,7 @@ local machine paths.
 
 Treat these improvements as candidates for a future `v1.1.0` release after
 scratch-world product testing. Keep changes incremental and preserve the stable
-`v1.0.0` public API.
+`v1.x` public API.
 
 ## Acceptance Criteria For Future UX Work
 

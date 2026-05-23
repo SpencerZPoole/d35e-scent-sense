@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 1.1.0 - 2026-05-23
+
 - Redesigned the GM trail workflow around one Scent Menu plus a separate View Scent Trails toggle.
 - Added path-aware Scent trail records with movement recording, GM/player visibility controls, path segment storage, and age-based trail display states.
 - Fixed automatic trail movement recording to derive destination centers from Foundry token update coordinates when available.

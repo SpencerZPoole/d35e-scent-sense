@@ -38,4 +38,4 @@ Supporting runtime modules own the specialized behavior:
 The next major architecture changes should continue adding stateful service boundaries without changing existing APIs:
 
 - Additional migration helpers for future schema changes.
-- `v1.0.0` freezes the public API shape in `docs/API_REFERENCE.md`; new helper additions should remain backward compatible unless a later major release says otherwise.
+- The `v1.x` line keeps the public API shape in `docs/API_REFERENCE.md` backward compatible unless a later major release says otherwise.

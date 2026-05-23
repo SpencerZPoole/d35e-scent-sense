@@ -1,6 +1,6 @@
 # V1 Roadmap
 
-This roadmap turns the current Scent helper into a stable `v1.0.0` module with documented RAW coverage and conservative GM-assisted automation.
+This roadmap records how the Scent helper reached the stable `v1.x` module line with documented RAW coverage and conservative GM-assisted automation.
 
 ## v0.4.0 Foundation
 
@@ -57,7 +57,7 @@ This roadmap turns the current Scent helper into a stable `v1.0.0` module with d
 - Keep the release public-safe: no private campaign data, compendia, bundled media, copied sourcebook prose, or local paths.
 - Status: stable promotion of the `v0.9.0` release candidate; no new RAW mechanics or public API changes.
 
-## Post-v1.0 Trail UX Stabilization
+## v1.1.0 Trail UX Stabilization
 
 - Replace the separate trail/context toolbar workflow with one GM Scent Menu plus a separate View Scent Trails overlay toggle.
 - Add path-aware trail records, GM-enabled source movement recording, age-based trail display states, and GM/player trail visibility controls.

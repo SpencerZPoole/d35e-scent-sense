@@ -1,6 +1,6 @@
 # D35E Scent Sense
 
-`d35e-scent-sense` is a Foundry Virtual Tabletop module for the D35E system. It adds conservative 3.5e SRD Scent support for tokens and actors, including presence alerts, optional owner/GM range rings, and 5 ft pinpoint detection.
+`d35e-scent-sense` is a Foundry Virtual Tabletop module for the D35E system. It adds conservative 3.5e SRD Scent support for tokens and actors, including presence alerts, optional owner/GM range rings, 5 ft pinpoint detection, and GM-managed visual scent trails.
 
 This repository contains module code, public-safe documentation, package-page screenshots, and validation tooling only. It does not include copied rulebook prose, stat blocks, adventure text, setting lore, compendium data, non-documentation artwork, audio, fonts, or private campaign material.
 
@@ -8,7 +8,7 @@ This repository contains module code, public-safe documentation, package-page sc
 
 - Foundry Virtual Tabletop: minimum `14`, verified `14.362`
 - D35E system: minimum `3.0.2`, verified `3.0.2`
-- Module version: `1.0.0`
+- Module version: `1.1.0`
 
 ## Install
 
@@ -18,7 +18,7 @@ In Foundry, open **Add-on Modules > Install Module**, paste this into **Manifest
 https://github.com/SpencerZPoole/d35e-scent-sense/releases/latest/download/module.json
 ```
 
-This repository is release-manifest-ready for stable version `1.0.0`.
+This repository is release-manifest-ready for stable version `1.1.0`.
 
 For development testing, copy or clone this folder into your Foundry `Data/modules` directory, then enable **D35E Scent Sense** in a D35E world.
 
@@ -48,7 +48,7 @@ For a shorter first-use checklist, see:
 - Adds a separate View Scent Trails token-control toggle for showing or hiding visual trail paths without opening the menu.
 - Adds path-aware scene Scent trails with GM-enabled movement recording, GM/player visibility controls, Scent tracking DC previews, and optional Survival roll prompts.
 - Documents the v1 RAW coverage target and splits runtime behavior into focused modules for safer future development.
-- Freezes the public API shape intended to remain stable through `v1.0.0`.
+- Preserves the public `v1.x` API shape while adding visual trail helpers.
 - Adds localization coverage checks and continuous validation for stable-release review.
 
 ## Usage
@@ -114,7 +114,7 @@ The current release is a conservative Scent helper, not complete silent automati
 - `docs/UX_IMPROVEMENT_PLAN.md` for future user-experience improvements.
 - `docs/D35E_INTEGRATION_NOTE.md` for D35E integration boundaries.
 - `docs/RELEASE_PROCESS.md` for release and validation gates.
-- `docs/V1_ROADMAP.md` for the milestone history behind stable `v1.0.0`.
+- `docs/V1_ROADMAP.md` for the milestone history behind the stable `v1.x` line.
 
 ## Content And License Boundary
 
