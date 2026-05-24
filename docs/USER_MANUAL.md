@@ -271,6 +271,8 @@ adjudicate clearly.
 
 Open **Configure Settings** for the module to adjust alert and overlay behavior.
 
+![D35E Scent Sense module settings](assets/foundry-page/module-settings.png)
+
 ### Scent Alert Scope
 
 - **Unknown hostiles**: default. Alerts focus on hostile targets that are not
@@ -413,6 +415,8 @@ and update the same client-local overlay state.
 
 GMs can see active source trails when the overlay is on. Players do not see trail
 paths unless the GM marks that source **Visible to players**.
+
+![D35E Scent Sense visible trail overlay](assets/foundry-page/scent-trail-overlay.png)
 
 Trail paths fade by age. Fresh segments are strongest; old segments become faint
 or hidden once they are no longer meaningfully trackable by the module's trail

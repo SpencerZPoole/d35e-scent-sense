@@ -67,6 +67,8 @@ Masking odor is the main mechanical suppressor: when it applies, Scent detection
 
 Use **View Scent Trails** in Token Controls, or **Show/Hide Trail Preview** inside the Scent Menu, to toggle trail path graphics. The GM sees active source trails by default. Players only see trails that the GM explicitly marks visible to players.
 
+![D35E Scent Sense visible trail overlay](assets/foundry-page/scent-trail-overlay.png)
+
 Tracking DC helper APIs remain available for macros and future UI work. The Scent Menu itself stays focused on source setup, source editing, and trail visibility.
 
 ## 6. Know The Boundary

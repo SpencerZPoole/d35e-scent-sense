@@ -13,6 +13,7 @@ const requiredScreenshotAssets = [
   "actor-senses-row.png",
   "diagnostics-support.png",
   "module-settings.png",
+  "scent-trail-overlay.png",
   "scent-context-manager.png",
   "scent-range-pinpoint.png",
   "scent-trails-manager.png",

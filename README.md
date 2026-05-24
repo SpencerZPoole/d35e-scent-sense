@@ -136,6 +136,8 @@ Source-specific odor and wind fields affect live Scent detection for that token.
 
 **View Scent Trails** shows or hides trail path graphics without opening the menu. GMs see active source trails by default, while players only see trails explicitly marked visible to players.
 
+![D35E Scent Sense visible trail overlay](docs/assets/foundry-page/scent-trail-overlay.png)
+
 ## Development Roadmap
 
 The current release is a conservative Scent helper, not complete silent automation of every table ruling. See:
