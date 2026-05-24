@@ -18,9 +18,9 @@ table ruling.
 - [6. Giving A Creature Scent](#6-giving-a-creature-scent)
 - [7. Scent Detection At The Table](#7-scent-detection-at-the-table)
 - [8. Settings And Controls](#8-settings-and-controls)
-- [9. GM Scent Context Manager](#9-gm-scent-context-manager)
+- [9. Scene Scent Sources](#9-scene-scent-sources)
 - [10. Odor Profiles](#10-odor-profiles)
-- [11. Scent Trails And Tracking](#11-scent-trails-and-tracking)
+- [11. Source Trails And Tracking Helpers](#11-source-trails-and-tracking-helpers)
 - [12. Diagnostics And Admin Helpers](#12-diagnostics-and-admin-helpers)
 - [13. Troubleshooting](#13-troubleshooting)
 - [14. Support Checklist](#14-support-checklist)
@@ -30,8 +30,9 @@ table ruling.
 
 `d35e-scent-sense` adds Scent support for the D35E Foundry system. It registers
 the Scent sense, adds 5 ft pinpoint handling, scans active scene tokens, sends
-owner and GM alerts, and gives the GM context tools for wind, odor strength,
-masking odors, false odors, familiar odor tags, and GM-authored visual scent trails.
+owner and GM alerts, and gives the GM Scent Source tools for wind, odor
+strength, masking odors, advanced false odor/tag notes, and GM-authored visual
+trails.
 
 ### What The Module Automates
 
@@ -42,21 +43,21 @@ masking odors, false odors, familiar odor tags, and GM-authored visual scent tra
 - Masking odor suppression when the GM marks it active.
 - Owner and GM alert routing.
 - Runtime state for presence, direction request, direction reveal, and pinpoint.
-- Scent tracking DC helper values for GM-authored trails.
-- Path segment recording for GM-created trails that have movement recording enabled.
-- GM-local trail path previews, with optional GM-controlled player visibility.
+- Scent tracking DC helper values for GM-authored Scent Sources.
+- Path segment recording for GM-created sources that have **Source leaves trail** enabled.
+- GM-local source trail overlays, with optional GM-controlled player visibility.
 
 ### What Stays GM-Assisted
 
 - Whether a player spends the needed table action to request direction.
 - What direction or location detail the GM reveals.
-- Whether a false odor or familiar odor tag should matter in the scene.
-- Whether a trail exists, when it starts, what it represents, and whether players may preview it.
+- Whether an advanced false odor note or familiar odor tag should matter in the scene.
+- Whether a Scent Source exists, when it starts leaving a trail, what it represents, and whether players may see it.
 - Whether a roll prompt should become a real table roll.
 
 ### What Remains Manual
 
-- Creating or enabling a trail source before movement can be recorded.
+- Creating a Scent Source before movement can be recorded.
 - Automatic hidden-creature identification for players.
 - Automatic action-spending enforcement.
 - Complete environmental modeling beyond the module's context fields.
@@ -67,11 +68,11 @@ masking odors, false odors, familiar odor tags, and GM-authored visual scent tra
 - Foundry VTT: minimum `14`, verified with `14.362`.
 - D35E system: minimum `3.0.2`, verified with `3.0.2`.
 - A D35E world where the module is enabled.
-- GM permissions for context editing, trail management, migration helpers, and
+- GM permissions for source editing, trail viewing, migration helpers, and
   most diagnostics.
 
 The module is distributed through GitHub releases. The current stable module
-version is `1.1.1`.
+version is `1.2.0`.
 
 ## 3. Installation
 
@@ -97,7 +98,7 @@ version is `1.1.1`.
 Use this path only if the manifest installer is unavailable.
 
 1. Open the latest GitHub release for `SpencerZPoole/d35e-scent-sense`.
-2. Download the release zip named like `d35e-scent-sense-v1.1.1.zip`.
+2. Download the release zip named like `d35e-scent-sense-v1.2.0.zip`.
 3. Extract the zip into your Foundry user data module folder so the module
    folder is named `d35e-scent-sense`.
 4. Confirm that `module.json` is directly inside that folder, not inside an
@@ -126,8 +127,8 @@ with the contents of the newer release zip. Keep the same folder name and
 confirm that `module.json` is still at the module root.
 
 Module-owned scene and token flags are stored in the world, not in the module
-folder, so replacing the module folder does not delete your scene context or
-trail records.
+folder, so replacing the module folder does not delete your scene context,
+Scent Source records, or path segments.
 
 ### Disabling
 
@@ -299,43 +300,65 @@ The module can draw local Scent range rings for tokens the current user owns or
 that the GM can view. The Token HUD includes a Scent ring toggle for individual
 tokens.
 
-## 9. GM Scent Context Manager
+## 9. Scene Scent Sources
 
-Advanced Scent context is GM-only. Open **Scent Menu** from Token Controls, then
-use **Advanced Scent Context** to edit module-owned scene and token flags.
+Scene Scent Sources are GM-only records for tokens that matter as odor sources
+in the current scene. Open **Scent Menu** from Token Controls. The menu is one
+page:
 
-Use it to:
+- **Create New Scent Source** at the top.
+- **Scene Scent Sources** below it.
 
-- Set scene defaults for wind, odor strength, and masking odor.
-- Override individual token context.
-- Mark a token as Scent-relevant for the GM-marked alert scope.
-- Add false odor and odor tag data.
-- Preview effective Scent context from a selected scent-capable source token.
+Create a source when a token gives off an odor the GM wants to manage. The
+source row becomes the place to edit that token's odor behavior. The menu does
+not show every token in the scene; it shows only tokens the GM has intentionally
+created as Scent Sources.
 
-### Inherit Values
+### Create New Scent Source
 
-Selecting `inherit` clears the value at that document level. The module then
-falls back through its normal precedence chain:
+Use the create controls to choose a source token, label the source, and set:
 
-1. Explicit API options.
-2. Target token flags.
-3. Target actor flags.
-4. Scene flags.
-5. Neutral defaults.
+- odor strength
+- wind band
+- masking odor
+- water state
+- competing odor
+- manual odor DC modifier
+- player visibility
+- whether the **Source leaves trail**
 
-The manager writes scene and token flags only. Actor flags are readable for
-inheritance but are not edited by this UI.
+**Source leaves trail** maps to the compatible `recordMovement` field. When it
+is enabled, future movement by that token records path segments. Movement before
+the source exists is not backfilled.
 
-### Scene Defaults
+Use **Advanced GM details** for false odor, odor tags, size/count notes, and
+freeform GM notes. Those fields are useful for misleading odors, familiar-odor
+helper checks, and private bookkeeping, but they do not need to compete with the
+core source controls during normal play. Masking odor is the option that
+mechanically suppresses detection; false odor and tags do not suppress detection
+or identify creatures by themselves.
 
-Scene defaults are useful when the entire scene shares a wind band, odor
-condition, or masking odor state.
+### Scene Scent Sources Table
 
-### Token Overrides
+Use this table during play. Each row edits the created source directly:
 
-Token overrides are useful when one creature or object has a stronger odor,
-false odor, specific familiar odor tags, or a masking odor state that differs
-from the scene.
+- Active controls whether the source affects live Scent behavior and trail
+  display.
+- Source Token can be changed if the GM picked the wrong token.
+- Source Profile controls odor strength, wind, masking odor, trail recording,
+  and player visibility for that source.
+- Trackability shows stable GM facts: source age, path segment count, fade
+  state, water state, competing odor, and manual DC modifier.
+- Advanced GM details keep false odor, odor tags, size/count notes, and
+  freeform context available without making every row noisy.
+
+Source-specific odor and wind fields affect live Scent detection for that token.
+The module still reads older scene/token/actor context flags for compatibility
+when no active Scent Source exists for a target.
+
+The legacy console helper `game.d35eScentSense.openContextManager()` remains
+available for compatibility, but it now opens the same **Scent Menu** instead of
+opening a second management window.
 
 ## 10. Odor Profiles
 
@@ -350,7 +373,7 @@ Supported strengths are:
 - `strong`
 - `overpowering`
 
-Strength affects helper range calculations and previews.
+Strength affects effective range calculations and detection helpers.
 
 ### Masking Odor
 
@@ -360,40 +383,27 @@ conceals the relevant scent.
 
 ### False Odor
 
-False odor is GM-facing metadata. It helps the GM track that an odor is
-misleading, but it does not automatically lie to players or identify a creature.
+False odor is advanced GM-facing metadata. It helps the GM track that an odor is
+misleading, but it does not automatically lie to players, suppress detection, or
+identify a creature.
 
 ### Odor Tags
 
 Odor tags are short GM-authored labels such as `wolf` or `smoke`. They support
-familiar-odor helper checks and previews. Tags are helper data, not automatic
-creature identification.
+familiar-odor helper checks. Tags are helper data, not automatic creature
+identification and not range modifiers.
 
-## 11. Scent Trails And Tracking
+## 11. Source Trails And Tracking Helpers
 
-The **Scent Menu** tool is GM-only and appears in Token Controls. It manages
-GM-authored scene trail records and lists active scene trails before the create
-controls.
+A Scent Source can leave a trail. The module records movement path segments only
+for sources the GM or API creates and leaves active with **Source leaves trail**
+enabled. A token moving before a source is created does not backfill old path
+geometry.
 
-The module records movement path segments only for trails the GM or API creates
-and leaves active with **Record movement** enabled. A token moving before a trail
-is created does not backfill old path geometry.
-
-### Creating A Trail
-
-1. Open **Scent Menu** from Token Controls.
-2. Choose a source token when available.
-3. Enter a trail label and any notes the GM needs.
-4. Set water state, competing odor, odor DC modifier, size notes, or count notes
-   if useful.
-5. Leave **Record movement** enabled if future source-token movement should add
-   path segments.
-6. Leave **Visible to players** off unless the GM wants player clients to see
-   the preview path.
-7. Create the trail.
-
-The trail stores a source reference, creation time, active state, context fields,
-visibility flags, path segments, and an odor profile snapshot.
+The source record stores a source reference, creation time, active state, source
+profile fields, visibility flags, path segments, and notes. Odor strength is
+source profile data. Tracking DC helpers still use trail age, water, competing
+odor, and the manual odor DC modifier.
 
 ### Viewing Trail Paths
 
@@ -401,35 +411,35 @@ Use **View Scent Trails** in Token Controls, or the Show/Hide Trail Preview
 button in **Scent Menu**, to toggle the local trail overlay. Both controls read
 and update the same client-local overlay state.
 
-GMs can see active trail paths when the overlay is on. Players do not see trail
-paths unless the GM marks that trail **Visible to players**.
+GMs can see active source trails when the overlay is on. Players do not see trail
+paths unless the GM marks that source **Visible to players**.
 
 Trail paths fade by age. Fresh segments are strongest; old segments become faint
 or hidden once they are no longer meaningfully trackable by the module's trail
 age rules.
 
-### Previewing A DC
+### Tracking DC And Roll APIs
 
-Select a scent-capable tracker in the manager to preview tracking eligibility
-and DC details. The helper considers Scent, Track eligibility, trail age, water
-state, competing odor, and odor modifier fields.
+The Scent Menu no longer includes a tracker preview dropdown. Tracking helpers
+remain available to macros and future UI work. They consider Scent, Track
+eligibility, source trail age, water state, competing odor, and odor modifier
+fields.
 
-### Roll Prompts
-
-The manager can create a redacted Survival prompt. Player-facing prompt text is
-kept limited by default. GM-facing details can include the trail label, source,
-and notes.
+The roll helper can still create a redacted Survival prompt when called through
+the public API. Player-facing prompt text is kept limited by default. GM-facing
+details can include the source label, token, odor strength, and notes.
 
 If a native D35E skill roll method is available, the module may attempt to use
 it. Otherwise it creates a prompt and returns a `not-rolled` result so the GM can
 resolve the roll manually.
 
-### Deleting Or Inactivating Trails
+### Deleting Or Inactivating Sources
 
-Delete trails that are no longer needed, or mark them inactive when the record
-should remain visible to the GM but stop being treated as trackable.
+Delete sources that are no longer needed, or mark them inactive when the record
+should remain visible to the GM but stop affecting live Scent behavior and trail
+display.
 
-Deleting a trail also removes its recorded path segments. The menu asks for
+Deleting a source also removes its recorded path segments. The menu asks for
 confirmation before deletion.
 
 ## 12. Diagnostics And Admin Helpers
@@ -442,7 +452,7 @@ These helpers are useful for GMs, module maintainers, and support reports.
 game.d35eScentSense
 ```
 
-### Check A Token's Scent Sources
+### Check A Token's Scent Range Sources
 
 ```js
 game.d35eScentSense.getScentRangeBreakdown(canvas.tokens.controlled[0])
@@ -479,7 +489,8 @@ game.d35eScentSense.setTrailOverlayVisible(true);
 ```
 
 These helpers are GM-only and return `null` for users who cannot open the
-manager.
+manager. `openContextManager()` is a compatibility helper and opens the same
+unified Scent Menu.
 
 ## 13. Troubleshooting
 
@@ -523,7 +534,7 @@ manager.
 - Use **Unknown hostiles** or **GM-marked hostiles** instead of **All creatures**.
 - Disable presence alerts if you only want pinpoint alerts.
 - Mark only important targets with `scentRelevant` when using GM-marked scope.
-- Use scene or token context to mark masking odor where appropriate.
+- Create or edit a Scene Scent Source and mark masking odor where appropriate.
 
 ### No Alerts Appear
 
@@ -541,28 +552,29 @@ manager.
 - If duplicates remain, include the token's detection modes and diagnostic
   output in the support report.
 
-### Advanced Scent Context Does Not Open
+### Scent Menu Does Not Open
 
 - Confirm you are logged in as GM.
 - Confirm the world is on a supported Foundry VTT version.
-- Try `game.d35eScentSense.openContextManager()` from the console.
+- Try `game.d35eScentSense.openTrailManager()` from the console; it should open
+  **Scent Menu**.
+- Try `game.d35eScentSense.openContextManager()` from the console if a macro
+  still calls the older compatibility entrypoint.
 - Check the browser console for an error beginning with `d35e-scent-sense`.
 
-### The Scent Menu Does Not Show A DC
+### The Scent Menu Does Not Show A Tracker Dropdown
 
-- Select a scent-capable tracker in the manager.
-- Confirm the tracker has Scent and a Track feat item.
-- Confirm the trail is active.
-- Check whether the water state makes the trail unavailable for that tracker.
-- Review the reason label shown by the manager.
+That is expected. The public menu is now focused on source setup and source
+editing. Tracking DC and roll helpers remain available through
+`game.d35eScentSense.getScentSourceDc()` and `rollTrackByScent()`.
 
 ### View Scent Trails Does Not Show A Path
 
 - Confirm **View Scent Trails** is toggled on.
-- Confirm the active scene has at least one active trail with path segments.
-- Confirm the trail's source token moved after **Record movement** was enabled.
-- Confirm you are GM, or the trail is marked **Visible to players**.
-- Open **Scent Menu** and check the trail's **Trail Path** count and fade state.
+- Confirm the active scene has at least one active Scent Source with path segments.
+- Confirm the source token moved after **Source leaves trail** was enabled.
+- Confirm you are GM, or the source is marked **Visible to players**.
+- Open **Scent Menu** and check the source's path count and fade state.
 
 ### A Survival Roll Does Not Automatically Roll
 
@@ -602,9 +614,9 @@ When reporting an issue, include:
   game.d35eScentSense.getScentRangeBreakdown(canvas.tokens.controlled[0])
   ```
 
-- If trail-related, include the Scent Menu reason label, whether the trail is
-  active, whether **Record movement** is enabled, the path segment count, and
-  whether the trail is visible to players.
+- If source/trail-related, include the Scent Menu reason label, whether the source is
+  active, whether **Source leaves trail** is enabled, the path segment count, and
+  whether the source trail is visible to players.
 - If context-related, include whether the value is set on scene, token, actor,
   or inherited default.
 

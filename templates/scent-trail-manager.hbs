@@ -14,112 +14,44 @@
           {{localize "D35EScent.TrailManager.ShowTrailView"}}
         {{/if}}
       </button>
-      <button type="button" data-action="openAdvancedContext">
-        <i class="fa-solid fa-sliders"></i>
-        {{localize "D35EScent.TrailManager.AdvancedContext"}}
-      </button>
     </div>
-  </section>
-
-  <section class="d35e-scent-trail-manager__trails">
-    <h3>{{localize "D35EScent.TrailManager.ActiveTrails"}}</h3>
-    {{#if hasTrails}}
-      <table>
-        <thead>
-          <tr>
-            <th>{{localize "D35EScent.TrailManager.Active"}}</th>
-            <th>{{localize "D35EScent.TrailManager.Label"}}</th>
-            <th>{{localize "D35EScent.TrailManager.Source"}}</th>
-            <th>{{localize "D35EScent.TrailManager.Path"}}</th>
-            <th>{{localize "D35EScent.TrailManager.Visibility"}}</th>
-            <th>{{localize "D35EScent.TrailManager.Dc"}}</th>
-            <th>{{localize "D35EScent.TrailManager.Notes"}}</th>
-            <th></th>
-          </tr>
-        </thead>
-        <tbody>
-          {{#each trails}}
-            <tr data-scent-trail-id="{{id}}">
-              <td class="d35e-scent-trail-manager__active">
-                <input type="checkbox" data-field="active" {{#if active}}checked{{/if}}>
-              </td>
-              <td>
-                <input type="text" data-field="label" value="{{label}}">
-              </td>
-              <td>
-                <strong>{{sourceLabel}}</strong>
-                <small>{{id}}</small>
-              </td>
-              <td>
-                <label class="d35e-scent-trail-manager__check">
-                  <input type="checkbox" data-field="recordMovement" {{#if recordMovement}}checked{{/if}}>
-                  <span>{{localize "D35EScent.TrailManager.RecordMovement"}}</span>
-                </label>
-                <small>{{segmentSummary}}</small>
-                <small>{{localize "D35EScent.TrailManager.Age"}}: {{age}}</small>
-              </td>
-              <td>
-                <label class="d35e-scent-trail-manager__check">
-                  <input type="checkbox" data-field="visibleToPlayers" {{#if visibleToPlayers}}checked{{/if}}>
-                  <span>{{localize "D35EScent.TrailManager.VisibleToPlayers"}}</span>
-                </label>
-              </td>
-              <td>
-                <label>
-                  <span>{{localize "D35EScent.TrailManager.WaterState"}}</span>
-                  <select data-field="waterState">
-                    {{selectOptions ../waterOptions selected=waterState valueAttr="value" labelAttr="label"}}
-                  </select>
-                </label>
-                <label>
-                  <span>{{localize "D35EScent.TrailManager.CompetingOdor"}}</span>
-                  <select data-field="powerfulCompetingOdor">
-                    {{selectOptions ../booleanOptions selected=powerfulCompetingOdor valueAttr="value" labelAttr="label"}}
-                  </select>
-                </label>
-                <label>
-                  <span>{{localize "D35EScent.TrailManager.OdorModifier"}}</span>
-                  <input type="number" data-field="odorDcModifier" value="{{odorDcModifier}}" step="1">
-                </label>
-                <span>{{dcLabel}}</span>
-                <small>{{dcReason}}</small>
-              </td>
-              <td>
-                <input type="text" data-field="sizeNotes" value="{{sizeNotes}}" placeholder="{{localize 'D35EScent.TrailManager.SizePlaceholder'}}">
-                <input type="text" data-field="countNotes" value="{{countNotes}}" placeholder="{{localize 'D35EScent.TrailManager.CountPlaceholder'}}">
-                <input type="text" data-field="notes" value="{{notes}}" placeholder="{{localize 'D35EScent.TrailManager.NotesPlaceholder'}}">
-                <small>{{profileSummary}}</small>
-              </td>
-              <td class="d35e-scent-trail-manager__actions">
-                <button type="button" data-action="promptTrailRoll" title="{{localize 'D35EScent.TrailManager.PromptRoll'}}" {{#unless canPrompt}}disabled{{/unless}}>
-                  <i class="fa-solid fa-dice-d20"></i>
-                </button>
-                <button type="button" data-action="deleteTrail" title="{{localize 'D35EScent.TrailManager.Delete'}}">
-                  <i class="fa-solid fa-trash"></i>
-                </button>
-              </td>
-            </tr>
-          {{/each}}
-        </tbody>
-      </table>
-    {{else}}
-      <p class="d35e-scent-trail-manager__empty">{{localize "D35EScent.TrailManager.NoTrails"}}</p>
-    {{/if}}
   </section>
 
   <section class="d35e-scent-trail-manager__create">
     <h3>{{localize "D35EScent.TrailManager.CreateHeading"}}</h3>
+    <p>{{localize "D35EScent.TrailManager.CreateHint"}}</p>
     <div class="d35e-scent-trail-manager__create-grid">
       <label>
-        <span>{{localize "D35EScent.TrailManager.Source"}}</span>
+        <span>{{localize "D35EScent.TrailManager.SourceToken"}}</span>
         <select name="new.sourceTokenId" {{#unless hasSourceOptions}}disabled{{/unless}}>
           {{selectOptions sourceOptions selected=selectedSourceTokenId valueAttr="value" labelAttr="label"}}
         </select>
       </label>
 
       <label>
-        <span>{{localize "D35EScent.TrailManager.Label"}}</span>
+        <span>{{localize "D35EScent.TrailManager.SourceLabel"}}</span>
         <input type="text" name="new.label" placeholder="{{localize 'D35EScent.TrailManager.LabelPlaceholder'}}">
+      </label>
+
+      <label>
+        <span>{{localize "D35EScent.TrailManager.OdorStrength"}}</span>
+        <select name="new.odorStrength">
+          {{selectOptions odorOptions selected="normal" valueAttr="value" labelAttr="label"}}
+        </select>
+      </label>
+
+      <label>
+        <span>{{localize "D35EScent.ContextManager.Wind.Label"}}</span>
+        <select name="new.windBand">
+          {{selectOptions windOptions selected="normal" valueAttr="value" labelAttr="label"}}
+        </select>
+      </label>
+
+      <label>
+        <span>{{localize "D35EScent.ContextManager.Masking.Label"}}</span>
+        <select name="new.maskingOdor">
+          {{selectOptions booleanOptions selected="false" valueAttr="value" labelAttr="label"}}
+        </select>
       </label>
 
       <label>
@@ -143,7 +75,7 @@
 
       <label class="d35e-scent-trail-manager__check">
         <input type="checkbox" name="new.recordMovement" checked>
-        <span>{{localize "D35EScent.TrailManager.RecordMovement"}}</span>
+        <span>{{localize "D35EScent.TrailManager.SourceLeavesTrail"}}</span>
       </label>
 
       <label class="d35e-scent-trail-manager__check">
@@ -151,20 +83,38 @@
         <span>{{localize "D35EScent.TrailManager.VisibleToPlayers"}}</span>
       </label>
 
-      <label>
-        <span>{{localize "D35EScent.TrailManager.SizeNotes"}}</span>
-        <input type="text" name="new.sizeNotes" placeholder="{{localize 'D35EScent.TrailManager.SizePlaceholder'}}">
-      </label>
+      <details class="d35e-scent-trail-manager__advanced d35e-scent-trail-manager__wide">
+        <summary>{{localize "D35EScent.TrailManager.AdvancedSourceDetails"}}</summary>
+        <p>{{localize "D35EScent.TrailManager.AdvancedSourceHint"}}</p>
+        <div class="d35e-scent-trail-manager__advanced-grid">
+          <label>
+            <span>{{localize "D35EScent.ContextManager.FalseOdor.Label"}}</span>
+            <select name="new.falseOdor">
+              {{selectOptions booleanOptions selected="false" valueAttr="value" labelAttr="label"}}
+            </select>
+          </label>
 
-      <label>
-        <span>{{localize "D35EScent.TrailManager.CountNotes"}}</span>
-        <input type="text" name="new.countNotes" placeholder="{{localize 'D35EScent.TrailManager.CountPlaceholder'}}">
-      </label>
+          <label>
+            <span>{{localize "D35EScent.ContextManager.OdorTags.Label"}}</span>
+            <input type="text" name="new.odorTags" placeholder="{{localize 'D35EScent.ContextManager.OdorTags.Placeholder'}}">
+          </label>
 
-      <label>
-        <span>{{localize "D35EScent.TrailManager.Notes"}}</span>
-        <input type="text" name="new.notes" placeholder="{{localize 'D35EScent.TrailManager.NotesPlaceholder'}}">
-      </label>
+          <label>
+            <span>{{localize "D35EScent.TrailManager.SizeNotes"}}</span>
+            <input type="text" name="new.sizeNotes" placeholder="{{localize 'D35EScent.TrailManager.SizePlaceholder'}}">
+          </label>
+
+          <label>
+            <span>{{localize "D35EScent.TrailManager.CountNotes"}}</span>
+            <input type="text" name="new.countNotes" placeholder="{{localize 'D35EScent.TrailManager.CountPlaceholder'}}">
+          </label>
+
+          <label class="d35e-scent-trail-manager__wide">
+            <span>{{localize "D35EScent.TrailManager.Notes"}}</span>
+            <input type="text" name="new.notes" placeholder="{{localize 'D35EScent.TrailManager.NotesPlaceholder'}}">
+          </label>
+        </div>
+      </details>
 
       <button type="button" data-action="createTrail" {{#unless hasSourceOptions}}disabled{{/unless}}>
         <i class="fa-solid fa-plus"></i>
@@ -173,13 +123,114 @@
     </div>
   </section>
 
-  <section class="d35e-scent-trail-manager__tracker">
-    <h3>{{localize "D35EScent.TrailManager.TrackingPreview"}}</h3>
-    <label>
-      <span>{{localize "D35EScent.TrailManager.PreviewTracker"}}</span>
-      <select name="trackerTokenId">
-        {{selectOptions trackerOptions selected=selectedTrackerTokenId valueAttr="value" labelAttr="label"}}
-      </select>
-    </label>
+  <section class="d35e-scent-trail-manager__sources">
+    <h3>{{localize "D35EScent.TrailManager.SceneSources"}}</h3>
+    {{#if hasSources}}
+      <table>
+        <thead>
+          <tr>
+            <th>{{localize "D35EScent.TrailManager.Active"}}</th>
+            <th>{{localize "D35EScent.TrailManager.SourceLabel"}}</th>
+            <th>{{localize "D35EScent.TrailManager.SourceToken"}}</th>
+            <th>{{localize "D35EScent.TrailManager.SourceProfile"}}</th>
+            <th>{{localize "D35EScent.TrailManager.Trackability"}}</th>
+            <th>{{localize "D35EScent.TrailManager.Notes"}}</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          {{#each sources}}
+            <tr data-scent-source-id="{{id}}" data-scent-trail-id="{{id}}">
+              <td class="d35e-scent-trail-manager__active">
+                <input type="checkbox" data-field="active" {{#if active}}checked{{/if}}>
+              </td>
+              <td class="d35e-scent-trail-manager__source-label">
+                <input type="text" data-field="label" value="{{label}}">
+              </td>
+              <td class="d35e-scent-trail-manager__source-token">
+                <select data-field="sourceTokenId">
+                  {{selectOptions ../sourceOptions selected=sourceTokenId valueAttr="value" labelAttr="label"}}
+                </select>
+              </td>
+              <td class="d35e-scent-trail-manager__profile">
+                <label>
+                  <span>{{localize "D35EScent.TrailManager.OdorStrength"}}</span>
+                  <select data-field="odorStrength">
+                    {{selectOptions ../odorOptions selected=odorStrength valueAttr="value" labelAttr="label"}}
+                  </select>
+                </label>
+                <label>
+                  <span>{{localize "D35EScent.ContextManager.Wind.Label"}}</span>
+                  <select data-field="windBand">
+                    {{selectOptions ../windOptions selected=windBand valueAttr="value" labelAttr="label"}}
+                  </select>
+                </label>
+                <label>
+                  <span>{{localize "D35EScent.ContextManager.Masking.Label"}}</span>
+                  <select data-field="maskingOdor">
+                    {{selectOptions ../booleanOptions selected=maskingOdor valueAttr="value" labelAttr="label"}}
+                  </select>
+                </label>
+                <label class="d35e-scent-trail-manager__check">
+                  <input type="checkbox" data-field="recordMovement" {{#if recordMovement}}checked{{/if}}>
+                  <span>{{localize "D35EScent.TrailManager.SourceLeavesTrail"}}</span>
+                </label>
+                <label class="d35e-scent-trail-manager__check">
+                  <input type="checkbox" data-field="visibleToPlayers" {{#if visibleToPlayers}}checked{{/if}}>
+                  <span>{{localize "D35EScent.TrailManager.VisibleToPlayers"}}</span>
+                </label>
+              </td>
+              <td>
+                <label>
+                  <span>{{localize "D35EScent.TrailManager.WaterState"}}</span>
+                  <select data-field="waterState">
+                    {{selectOptions ../waterOptions selected=waterState valueAttr="value" labelAttr="label"}}
+                  </select>
+                </label>
+                <label>
+                  <span>{{localize "D35EScent.TrailManager.CompetingOdor"}}</span>
+                  <select data-field="powerfulCompetingOdor">
+                    {{selectOptions ../booleanOptions selected=powerfulCompetingOdor valueAttr="value" labelAttr="label"}}
+                  </select>
+                </label>
+                <label>
+                  <span>{{localize "D35EScent.TrailManager.OdorModifier"}}</span>
+                  <input type="number" data-field="odorDcModifier" value="{{odorDcModifier}}" step="1">
+                </label>
+                <strong>{{dcLabel}}</strong>
+                <small>{{dcReasonLabel}}</small>
+                <small>{{segmentSummary}}</small>
+                <small>{{localize "D35EScent.TrailManager.Age"}}: {{age}}</small>
+              </td>
+              <td>
+                <details class="d35e-scent-trail-manager__advanced-row">
+                  <summary>{{localize "D35EScent.TrailManager.AdvancedSourceDetails"}}</summary>
+                  <label>
+                    <span>{{localize "D35EScent.ContextManager.FalseOdor.Label"}}</span>
+                    <select data-field="falseOdor">
+                      {{selectOptions ../booleanOptions selected=falseOdor valueAttr="value" labelAttr="label"}}
+                    </select>
+                  </label>
+                  <label>
+                    <span>{{localize "D35EScent.ContextManager.OdorTags.Label"}}</span>
+                    <input type="text" data-field="odorTags" value="{{odorTags}}" placeholder="{{localize 'D35EScent.ContextManager.OdorTags.Placeholder'}}">
+                  </label>
+                  <input type="text" data-field="sizeNotes" value="{{sizeNotes}}" placeholder="{{localize 'D35EScent.TrailManager.SizePlaceholder'}}">
+                  <input type="text" data-field="countNotes" value="{{countNotes}}" placeholder="{{localize 'D35EScent.TrailManager.CountPlaceholder'}}">
+                  <input type="text" data-field="notes" value="{{notes}}" placeholder="{{localize 'D35EScent.TrailManager.NotesPlaceholder'}}">
+                </details>
+              </td>
+              <td class="d35e-scent-trail-manager__actions">
+                <button type="button" data-action="deleteTrail" title="{{localize 'D35EScent.TrailManager.Delete'}}">
+                  <i class="fa-solid fa-trash"></i>
+                </button>
+              </td>
+            </tr>
+          {{/each}}
+        </tbody>
+      </table>
+    {{else}}
+      <p class="d35e-scent-trail-manager__empty">{{localize "D35EScent.TrailManager.NoTrails"}}</p>
+    {{/if}}
   </section>
 </div>

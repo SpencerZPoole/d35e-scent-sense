@@ -50,28 +50,24 @@ Use `game.d35eScentSense.getScentRangeBreakdown(actorOrToken)` when a token does
 
 The default alert scope is conservative: unknown hostile targets. In practice, hidden or invisible hostile tokens can trigger owner alerts. GMs can change the scope in module settings to all hostiles, all creatures, or GM-marked hostiles.
 
-## 4. Use Scent Context
+## 4. Create Scene Scent Sources
 
-Open **Scent Menu** from Token Controls as GM, then use **Advanced Scent Context** to edit scene defaults and token overrides for:
+Open **Scent Menu** from Token Controls as GM. The menu is one page:
 
-- wind band
-- odor strength
-- masking odor
-- false odor
-- odor tags
-- GM-marked Scent relevance
+- **Create New Scent Source** is at the top.
+- **Scene Scent Sources** is below it and lists only sources the GM has created for this scene.
 
-Selecting `inherit` clears that token or scene flag. Actor flags remain readable for inheritance but are not edited by this UI.
+Create a source when a token gives off an odor you want the module to track. The main fields cover the table controls used most often: odor strength, wind, masking odor, water state, competing odor, manual DC modifier, player visibility, and **Source leaves trail**. Use **Advanced GM details** for false odor, odor tags, and notes.
 
-## 5. Use Scent Trails
+Masking odor is the main mechanical suppressor: when it applies, Scent detection for that target/source context is blocked. False odor and odor tags are intentionally quieter helper fields. They can support GM notes and familiar-odor checks, but they do not automatically identify creatures, mislead players, or change Scent range by themselves.
 
-Open **Scent Menu** from Token Controls as GM to manage scene trail records. The top of the menu lists active trails before creation controls so the GM can quickly see what already exists, whether movement recording is enabled, who can see the trail, and whether the path has recent recorded segments.
+**Source leaves trail** means future movement by that token records path segments. Movement before the source exists is not backfilled.
 
-Use **Create / Enable Trail** to choose the token emitting the odor trail. New trails record that token's movement by default. The GM can disable recording, hide or reveal the trail preview to players, edit trail context, save changes, or delete the trail and its recorded path segments.
+## 5. View Trails From Sources
 
-Use **View Scent Trails** in Token Controls, or the preview button inside the Scent Menu, to toggle trail path graphics. The GM sees active trail paths by default. Players only see trails that the GM explicitly marks visible to players.
+Use **View Scent Trails** in Token Controls, or **Show/Hide Trail Preview** inside the Scent Menu, to toggle trail path graphics. The GM sees active source trails by default. Players only see trails that the GM explicitly marks visible to players.
 
-The Trail Manager can preview tracking DCs for a selected scent-capable tracker and create a redacted Survival prompt. Player-facing prompts do not reveal hidden trail source details by default.
+Tracking DC helper APIs remain available for macros and future UI work. The Scent Menu itself stays focused on source setup, source editing, and trail visibility.
 
 ## 6. Know The Boundary
 

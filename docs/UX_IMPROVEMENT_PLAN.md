@@ -1,7 +1,7 @@
 # UX Improvement Plan
 
 This document captures future user-experience work for `d35e-scent-sense`
-after the `v1.1.0` trail UX stabilization release.
+after the `v1.2.0` Scent Source workflow release and the 2026-05-24 hard live Scent Source QA pass.
 
 ## Goal
 
@@ -10,13 +10,20 @@ the table without reducing GM control or weakening player privacy.
 
 ## Current UX Baseline
 
-The stable release already provides the core product surfaces:
+The current product surface already provides:
 
 - Module settings for alert scope, wall respect, notifications, and rings.
 - Token HUD ring toggles for owned or GM-viewed Scent sources.
 - GM-only **Scent Menu** plus a separate **View Scent Trails** toggle in Token Controls.
 - Chat/dialog alerts for presence, direction requests, and pinpoint events.
 - Public API diagnostics such as `getScentRangeBreakdown` and dry-run migration.
+
+The 2026-05-24 polish pass also established these UI rules:
+
+- The menu is one page: **Create New Scent Source** followed by **Scene Scent Sources**.
+- Masking odor stays visible in the main workflow because it suppresses Scent detection.
+- False odor, odor tags, and notes live under **Advanced GM details** because they are helper/metadata fields.
+- **Source leaves trail** is the user-facing label for movement recording.
 
 The likely friction is not missing RAW coverage; it is discoverability,
 explanation, and confidence. A GM can do the work, but the module should make the
@@ -30,10 +37,9 @@ new GM's first hour:
 - Install from the manifest URL and enable the module.
 - Add Scent to a test actor and confirm the ring/detection mode appears.
 - Trigger a presence alert, direction request, and pinpoint alert.
-- Open **Scent Menu**, use **Advanced Scent Context**, set scene defaults, add
-  token overrides, then reset them with `inherit`.
-- Create, preview, prompt, show/hide, record movement for, and delete a Scent
-  trail.
+- Open **Scent Menu**, create a Scent Source, edit its source-specific odor and
+  wind fields, then save it.
+- Show/hide, record movement for, and delete a Scent Source that leaves a trail.
 - Run `getScentRangeBreakdown` on a working token and on a deliberately broken
   setup.
 - Record every place where the next action is unclear, the label is too terse,
@@ -45,7 +51,7 @@ new GM's first hour:
 
 Add a GM-only first-run checklist that appears once per world or can be reopened
 from settings. It should link to the user manual, module settings, Scent Menu,
-View Scent Trails, Advanced Scent Context, and basic diagnostics.
+View Scent Trails, Scent Source setup, and basic diagnostics.
 
 Keep it concise. The goal is orientation, not an in-game manual wall.
 
@@ -64,17 +70,14 @@ identity to players.
 
 ### 3. Manager Help And Empty States
 
-Continue improving the **Scent Menu** and **Advanced Scent Context** surfaces with compact help
-text, clearer empty states, and hover/tooltips for fields that are easy to
-misread:
+Continue improving the **Scent Menu** source table with compact help text,
+clearer empty states, and hover/tooltips for fields that are easy to misread:
 
-- `inherit`
-- `false odor`
-- `odor tags`
-- `GM Marked`
-- tracker eligibility
+- **Source leaves trail**
 - water state
 - competing odor
+
+False odor and odor tags should remain documented and discoverable, but they should stay visually secondary unless a future familiar-odor workflow makes them more central.
 
 ### 4. Clearer Direction Flow
 
@@ -87,18 +90,16 @@ the handshake:
 
 This should remain GM-assisted and should not automate action spending.
 
-### 5. Trail Preview Confidence
+### 5. Trail Visibility Confidence
 
-Make trail results easier to understand by showing short reason text beside DC
-previews and prompt buttons:
+Make source trail results easier to understand by showing short reason text
+beside path and trackability facts:
 
-- tracker has Scent and Track
-- tracker is missing Track
-- trail is inactive
-- trail has no path segments yet
-- trail is hidden from players
-- water state prevents tracking for this tracker
-- roll prompt created instead of rolled directly
+- source is inactive
+- source has no path segments yet
+- source is hidden from players
+- **Source leaves trail** is disabled
+- water state affects tracking helper results
 
 ### 6. Support Bundle
 
@@ -109,7 +110,7 @@ Add a GM-only copyable support summary that includes non-secret module facts:
 - module version
 - alert settings
 - selected token Scent source breakdown
-- active scene context summary
+- active Scent Source summary
 - recent diagnostic reason labels
 
 Do not include world secrets, private campaign notes, hidden target identity, or
@@ -117,7 +118,7 @@ local machine paths.
 
 ## Release Shape
 
-Treat these improvements as candidates for a future `v1.2.0` release after
+Treat these improvements as candidates for a future `v1.3.0` release after
 scratch-world product testing. Keep changes incremental and preserve the stable
 `v1.x` public API.
 
@@ -126,7 +127,7 @@ scratch-world product testing. Keep changes incremental and preserve the stable
 - A new GM can install the module, identify the main tools, and diagnose a
   missing Scent source without reading code.
 - Player-facing messages still do not reveal hidden target identity.
-- Existing settings, APIs, context flags, odor profile flags, trails, and
+- Existing settings, APIs, context flags, odor profile flags, source/trail records, and
   migration helpers remain backward compatible.
-- `npm test`, public-surface scan, localization check, and local security gate
+- `npm run validate`, public-surface scan, localization check, and local security gate
   pass before release.

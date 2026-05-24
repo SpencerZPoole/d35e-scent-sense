@@ -177,8 +177,23 @@
       return true;
     }
 
+    function isLiveTokenDocument(tokenDocument) {
+      if (!tokenDocument) return false;
+      const parent = tokenDocument.parent;
+      if (!parent?.tokens?.get) return true;
+      if (!tokenDocument.id) return false;
+      return parent.tokens.get(tokenDocument.id) === tokenDocument;
+    }
+
+    function isStaleTokenDocumentError(error) {
+      const message = String(error?.message ?? "");
+      return message.includes("does not exist in the EmbeddedCollection collection")
+        || message.includes("Cannot read properties of undefined");
+    }
+
     async function persistTokenScentDetection(tokenDocument) {
       if (!game.user?.isGM || !tokenDocument?.update) return false;
+      if (!isLiveTokenDocument(tokenDocument)) return false;
       const guard = getActorSyncGuard(tokenDocument.actor);
       if (!guard.allowed) return false;
 
@@ -186,7 +201,12 @@
       const updateData = buildDetectionModeUpdateData("detectionModes", tokenDocument.detectionModes, range);
       if (!updateData) return false;
 
-      await tokenDocument.update(updateData, { [moduleId]: { sync: true }, stopAuraUpdate: true });
+      try {
+        await tokenDocument.update(updateData, { [moduleId]: { sync: true }, stopAuraUpdate: true });
+      } catch (error) {
+        if (isStaleTokenDocumentError(error) || !isLiveTokenDocument(tokenDocument)) return false;
+        throw error;
+      }
       return true;
     }
 
@@ -316,6 +336,7 @@
       buildDetectionModesWithScent,
       getActorSyncGuard,
       getIntegrationStatus,
+      isLiveTokenDocument,
       patchTokenDocumentRefresh,
       queueActorSync,
       registerDetectionMode,

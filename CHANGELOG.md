@@ -2,9 +2,35 @@
 
 ## Unreleased
 
+## 1.2.0 - 2026-05-24
+
+- Redesigned the GM Scent Menu around **Scent Sources**: create a source at the
+  top, edit scene sources below, and remove the tracker preview and odor
+  override jump-page workflow.
+- Added public Scent Source API aliases (`createScentSource`,
+  `updateScentSource`, `deleteScentSource`, `getScentSources`,
+  `getScentSourceDc`) while keeping legacy trail APIs compatible.
+- Renamed movement recording in the UI to **Source leaves trail** while
+  preserving the existing `recordMovement` data field.
+- Added source odor strength to Scent Menu creation and editing while leaving
+  tracking DC rules unchanged.
+- Moved lower-frequency false odor, odor tag, and note fields into
+  **Advanced GM details** so masking odor and common source controls stay easy
+  to scan during play.
+- Folded former scene/token odor override controls into source-specific fields
+  on created Scent Sources and kept `openContextManager()` as a compatibility
+  entrypoint into the unified menu.
+- Reworded public docs around Scent Sources so the UI is clearer about live
+  source odor facts versus recorded path segments.
 - Clarified the first-run actor-sheet workflow for granting Scent through
   **Attributes > Senses > pencil > Scent**, including live Foundry screenshots
   and the exact D35E data paths the module reads.
+- Updated README, manual, quick start, API, architecture, RAW coverage,
+  release, package-page, and roadmap docs after hard scratch-world QA so the
+  public documentation matches the current one-page Scent Source workflow.
+- Documented the live-tested rule boundary: masking odor suppresses detection,
+  while false odor and odor tags remain advanced GM helper data unless a macro
+  or future UI uses them for familiar-odor workflows.
 
 ## 1.1.1 - 2026-05-23
 

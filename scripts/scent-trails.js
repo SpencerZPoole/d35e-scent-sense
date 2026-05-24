@@ -50,6 +50,13 @@
     return WATER_STATES.NONE;
   }
 
+  function normalizeWindBand(value) {
+    const token = normalizeToken(value);
+    if (token === "upwind" || token === "up") return "upwind";
+    if (token === "downwind" || token === "down") return "downwind";
+    return "normal";
+  }
+
   function normalizeOdorStrength(value) {
     const token = normalizeToken(value);
     if (token === "strong") return "strong";
@@ -178,6 +185,7 @@
       sourceName,
       createdWorldTime,
       updatedWorldTime,
+      windBand: normalizeWindBand(data.windBand ?? data.wind ?? data.airflow),
       waterState: normalizeWaterState(data.waterState),
       powerfulCompetingOdor: normalizeBoolean(data.powerfulCompetingOdor ?? data.competingOdor, false),
       odorDcModifier: integerNumber(data.odorDcModifier, 0),
@@ -418,6 +426,7 @@
     normalizeTrails,
     normalizeTrail,
     normalizeWaterState,
+    normalizeWindBand,
     readFlag,
     upsertTrail,
   });

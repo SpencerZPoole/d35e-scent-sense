@@ -32,6 +32,7 @@ const normalized = trails.normalizeTrail({
   sourceActorId: "act1",
   sourceName: "Hidden Wolf",
   createdWorldTime: 0,
+  windBand: "down",
   waterState: "flowing",
   powerfulCompetingOdor: "yes",
   odorDcModifier: "2",
@@ -56,6 +57,7 @@ assert.deepEqual(
     sourceName: "Hidden Wolf",
     createdWorldTime: 0,
     updatedWorldTime: 7200,
+    windBand: "downwind",
     waterState: "flowingWater",
     powerfulCompetingOdor: true,
     odorDcModifier: 2,
@@ -82,6 +84,9 @@ assert.equal(trails.getSceneTrails(scene)[0].label, "Wolf trail");
 const updated = trails.upsertTrail(trails.getSceneTrails(scene), { ...normalized, label: "Wolf trail refreshed" }, { worldTime: 7200 });
 assert.equal(updated.length, 1);
 assert.equal(updated[0].label, "Wolf trail refreshed");
+assert.equal(trails.normalizeTrail({ id: "plain", sourceTokenId: "tok1", odorProfile: { odorStrength: "loud" } }).odorProfile.odorStrength, "normal");
+assert.equal(trails.normalizeTrail({ id: "windy", sourceTokenId: "tok1", windBand: "crosswind" }).windBand, "normal");
+assert.equal(trails.normalizeTrail({ id: "legacy", sourceTokenId: "tok1" }).odorProfile.odorStrength, "normal");
 
 const added = trails.upsertTrail(updated, {
   id: "second-trail",
@@ -142,6 +147,7 @@ assert.equal(prompt.player.sourceName, undefined);
 assert.equal(prompt.gm.trailLabel, "Wolf trail");
 assert.equal(prompt.gm.sourceName, "Hidden Wolf");
 assert.equal(prompt.player.dc, prompt.gm.dc);
+assert.equal(prompt.gm.odorProfile.odorStrength, "overpowering");
 
 console.log("Scent trail tests passed.");
 
@@ -155,6 +161,7 @@ function pickTrail(trail) {
     sourceName: trail.sourceName,
     createdWorldTime: trail.createdWorldTime,
     updatedWorldTime: trail.updatedWorldTime,
+    windBand: trail.windBand,
     waterState: trail.waterState,
     powerfulCompetingOdor: trail.powerfulCompetingOdor,
     odorDcModifier: trail.odorDcModifier,

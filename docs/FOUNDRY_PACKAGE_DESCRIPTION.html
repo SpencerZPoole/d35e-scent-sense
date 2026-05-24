@@ -1,6 +1,6 @@
 <h2>D35E Scent Sense</h2>
 
-<p><strong>D35E Scent Sense</strong> adds conservative D&amp;D 3.5e SRD Scent support for worlds running the D35E Foundry system. It helps GMs and token owners notice scent presence, request direction, handle 5 ft pinpoint cases, manage scene context, and run visual scent trails without silently replacing table adjudication.</p>
+<p><strong>D35E Scent Sense</strong> adds conservative D&amp;D 3.5e SRD Scent support for worlds running the D35E Foundry system. It helps GMs and token owners notice scent presence, request direction, handle 5 ft pinpoint cases, and manage scene Scent Sources that can leave visual trails without silently replacing table adjudication.</p>
 
 <p>The module is built as a GM aid: it automates repeatable range and state checks where the mechanics are clear, then keeps judgment calls visible for the GM.</p>
 
@@ -34,9 +34,9 @@
 
 <p><img src="https://raw.githubusercontent.com/SpencerZPoole/d35e-scent-sense/main/docs/assets/foundry-page/module-settings.png" alt="D35E Scent Sense module settings overview" /></p>
 
-<p><img src="https://raw.githubusercontent.com/SpencerZPoole/d35e-scent-sense/main/docs/assets/foundry-page/scent-context-manager.png" alt="D35E Scent Sense GM Scent Context manager" /></p>
+<p><img src="https://raw.githubusercontent.com/SpencerZPoole/d35e-scent-sense/main/docs/assets/foundry-page/scent-context-manager.png" alt="D35E Scent Sense Scent Source setup" /></p>
 
-<p><img src="https://raw.githubusercontent.com/SpencerZPoole/d35e-scent-sense/main/docs/assets/foundry-page/scent-trails-manager.png" alt="D35E Scent Sense Scent Trails manager" /></p>
+<p><img src="https://raw.githubusercontent.com/SpencerZPoole/d35e-scent-sense/main/docs/assets/foundry-page/scent-trails-manager.png" alt="D35E Scent Sense Scent Sources menu" /></p>
 
 <h3>What It Adds</h3>
 
@@ -49,15 +49,15 @@
   <li>Tracks Scent states such as presence, direction available, direction requested, direction revealed, and pinpoint.</li>
 </ul>
 
-<h3>GM Context And Odor Tools</h3>
+<h3>Scene Scent Sources</h3>
 
-<p>The GM-only Scent Context manager helps track scene defaults and token-specific overrides for wind, odor strength, masking odors, false odors, familiar odor tags, and GM-marked Scent relevance. These fields are helper data for adjudication; they do not automatically identify hidden creatures for players.</p>
+<p>The GM-only Scent Menu is a single page for creating and editing scene Scent Sources. A source stores the token, label, odor strength, wind, masking odor, water state, competing odor, player visibility, and whether the source leaves a trail when it moves. Masking odor is the main mechanical suppressor. False odor, familiar odor tags, and private notes remain available under Advanced GM details instead of crowding the main workflow.</p>
 
-<p>Odor profiles can mark targets as normal, strong, or overpowering, record masking or false odors, and store short familiar-odor tags such as <code>wolf</code>, <code>smoke</code>, or <code>spice</code>.</p>
+<p>Odor profiles can mark targets as normal, strong, or overpowering, record masking odors, and store optional false-odor or familiar-odor helper tags such as <code>wolf</code>, <code>smoke</code>, or <code>spice</code>. False odor and tags do not identify creatures or mislead players automatically; they keep the GM's context organized.</p>
 
-<h3>Scent Trails And Tracking</h3>
+<h3>Source Trails And Tracking</h3>
 
-<p>The Scent Menu lets GMs review active scene trails, create or enable trails from source tokens, record future source movement as visual path segments, preview tracking DCs for scent-capable trackers, and create redacted Survival prompts. A separate View Scent Trails token-control toggle shows or hides the path overlay without opening the menu.</p>
+<p>Sources can leave trails. When <strong>Source leaves trail</strong> is enabled, future token movement records visual path segments. A separate View Scent Trails token-control toggle shows or hides the path overlay without opening the menu. Tracking DC helper APIs remain available for macros and future UI work; the menu stays focused on source setup and source editing.</p>
 
 <h3>Diagnostics And Support</h3>
 
@@ -76,7 +76,7 @@ game.d35eScentSense.migrateFlags({ dryRun: true })</pre>
 <ul>
   <li>Foundry VTT: minimum 14, verified 14.362.</li>
   <li>D35E system: minimum 3.0.2, verified 3.0.2.</li>
-<li>Module version: 1.1.1.</li>
+<li>Module version: 1.2.0.</li>
 </ul>
 
 <h3>Boundaries</h3>

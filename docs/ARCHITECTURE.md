@@ -11,7 +11,7 @@ Supporting runtime modules own the specialized behavior:
 - `scent-rules.js`: pure SRD-derived Scent calculations and tracking helpers.
 - `scent-context.js`: pure context flag normalization and precedence.
 - `scent-odor-profile.js`: pure odor profile normalization, familiar odor tag matching, and profile flag planning.
-- `scent-trails.js`: pure trail record normalization, age/DC helpers, and prompt redaction.
+- `scent-trails.js`: pure compatible source/trail record normalization, age/DC helpers, and prompt redaction.
 - `scent-d35e-sources.js`: pure D35E Scent source discovery and range diagnostics.
 - `scent-migration.js`: pure migration planning for module-owned scene, token, and trail flags.
 - `scent-state.js`: pure detection-state normalization for presence, direction request/reveal status, and pinpoint.
@@ -19,8 +19,8 @@ Supporting runtime modules own the specialized behavior:
 - `scent-overlay.js`: local Scent rings, pinpoint cues, Token HUD overlay toggles, and visual trail path rendering.
 - `scent-alerts.js`: sockets, owner alerts, GM whispers, direction requests, and pinpoint notifications.
 - `scent-d35e-integration.js`: D35E sense registration, detection mode registration, token detection mode syncing, and refresh patching.
-- `scent-context-manager.js`: GM-only ApplicationV2 context manager used by the Advanced Scent Context path.
-- `scent-trail-manager.js`: GM-only Scent Menu, active trail list, trail CRUD, View Scent Trails toolbar registration, DC previews, and roll prompt actions.
+- `scent-context-manager.js`: legacy compatibility runtime for the older standalone context manager path. It is retained for API compatibility, but the user-facing workflow is the unified Scent Menu.
+- `scent-trail-manager.js`: GM-only Scent Menu, Scent Source CRUD, source table editing, the Show/Hide Trail Preview menu button, and View Scent Trails toolbar registration.
 - `scent-api.js`: public API object construction for `game.d35eScentSense`.
 
 ## Design Rules
@@ -28,9 +28,10 @@ Supporting runtime modules own the specialized behavior:
 - Pure rules stay free of Foundry globals so they can be tested with Node.
 - Foundry-specific code is grouped by responsibility instead of accumulated in the bootstrap script.
 - Player-facing alerts must not reveal hidden target identity unless the GM has already adjudicated it.
-- GM tools may write module-owned scene and token flags; actor flags are read as inherited context but not edited by the context manager.
-- Trail records are GM/API-authored scene data. Movement path segments are recorded only for active trails whose GM-controlled `recordMovement` flag is enabled.
-- Trail path visibility is client-local for the overlay toggle and GM-controlled for player access through each trail's `visibleToPlayers` flag.
+- The current GM menu writes source-specific scene records. Older scene, token, and actor context flags remain readable for compatibility.
+- Scent Source records are GM/API-authored scene data stored in the legacy `scentTrails` flag. Movement path segments are recorded only for active sources whose GM-controlled `recordMovement` flag is enabled.
+- Trail path visibility is client-local for the overlay toggle and GM-controlled for player access through each source's `visibleToPlayers` flag.
+- Masking odor is kept in the main source workflow because it suppresses detection. False odor, odor tags, and notes are advanced GM details because they are metadata/helper fields rather than primary detection controls.
 - Release artifacts must not include private world data, compendia, media assets, fonts, sourcebook prose, or local machine paths.
 
 ## Future Architecture Work

@@ -149,4 +149,64 @@ await runtime.syncActorTokens(actorWithMixedTokens);
 assert.equal(getActiveTokensArgument, false, "syncActorTokens should include linked and unlinked tokens");
 assert.equal(tokenUpdates.length, 2, "syncActorTokens should update every active token document");
 
+let staleTokenUpdated = false;
+const staleTokenDocument = {
+  id: "stale-token",
+  actor: { id: "actor5", name: "Stale Token Actor", type: "character", range: 30, system: {} },
+  detectionModes: [],
+  parent: {
+    tokens: {
+      get: () => undefined,
+    },
+  },
+  update: async () => {
+    staleTokenUpdated = true;
+  },
+};
+const actorWithStaleToken = {
+  id: "actor5",
+  name: "Stale Token Actor",
+  type: "character",
+  range: 30,
+  system: {},
+  prototypeToken: {
+    detectionModes: [],
+  },
+  update: async () => {},
+  getActiveTokens: () => [{ document: staleTokenDocument }],
+};
+await runtime.syncActorTokens(actorWithStaleToken);
+assert.equal(runtime.isLiveTokenDocument(staleTokenDocument), false, "deleted token documents should be considered stale");
+assert.equal(staleTokenUpdated, false, "syncActorTokens should skip stale token documents without updating them");
+
+let transientUpdateCalls = 0;
+const transientTokenDocument = {
+  id: "transient-token",
+  actor: { id: "actor6", name: "Transient Token Actor", type: "character", range: 30, system: {} },
+  detectionModes: [],
+  update: async () => {
+    transientUpdateCalls += 1;
+    throw new Error("undefined id [transient-token] does not exist in the EmbeddedCollection collection.");
+  },
+};
+transientTokenDocument.parent = {
+  tokens: {
+    get: () => transientTokenDocument,
+  },
+};
+const actorWithTransientToken = {
+  id: "actor6",
+  name: "Transient Token Actor",
+  type: "character",
+  range: 30,
+  system: {},
+  prototypeToken: {
+    detectionModes: [],
+  },
+  update: async () => {},
+  getActiveTokens: () => [{ document: transientTokenDocument }],
+};
+await runtime.syncActorTokens(actorWithTransientToken);
+assert.equal(transientUpdateCalls, 1, "syncActorTokens should try live token updates");
+
 console.log("D35E integration tests passed.");

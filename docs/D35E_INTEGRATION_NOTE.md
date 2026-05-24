@@ -1,6 +1,6 @@
 # D35E Integration Note
 
-This note documents how `d35e-scent-sense` integrates with the D35E Foundry system as of `v1.1.1`.
+This note documents how `d35e-scent-sense` integrates with the D35E Foundry system as of `v1.2.0` and the current Scent Source workflow.
 
 ## Current Integration Points
 
@@ -32,4 +32,4 @@ No upstream pull request is included in this release.
 
 `v1.0.0` promoted the release-candidate feature set to a stable release; the D35E runtime integration behavior remains the `v0.8.2` behavior that passed scratch-world product testing.
 
-`v1.1.1` does not change the D35E sense-source integration path. The `v1.1.x` line adds scene trail path recording and overlay rendering around existing token movement and trail APIs.
+`v1.2.0` does not change the D35E sense-source integration path. It completes the public Scent Source workflow around the existing D35E sheet data, `scentPinpoint` sync, and actor range discovery behavior while keeping legacy source/trail APIs compatible.

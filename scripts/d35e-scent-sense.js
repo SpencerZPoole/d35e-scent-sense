@@ -215,19 +215,19 @@
       canTrackByScent,
       createScentTrail,
       deleteScentTrail,
+      evaluateScentDetection,
       format,
+      getContextApi,
+      getOdorProfile,
       getScentRange,
+      getScentContext,
       getScentTrailDc,
       getScentTrails,
       isTrailOverlayVisible,
       localize,
       moduleId: MODULE_ID,
-      openContextManager,
-      rollTrackByScent,
-      roundDistance,
       setTrailOverlayVisible,
       template: TRAIL_MANAGER_TEMPLATE,
-      toggleTrailOverlay,
       updateScentTrail,
     });
 
@@ -263,16 +263,54 @@
     return getScentContext(sourceToken, targetToken, options).context;
   }
 
+  function getTargetTokenId(documentOrToken) {
+    const document = getTargetDocument(documentOrToken);
+    return firstDefined(documentOrToken?.id, document?.id, "");
+  }
+
+  function isExplicitContextValue(value) {
+    return value !== undefined && value !== null && value !== "" && value !== "inherit";
+  }
+
+  function findScentSourceForToken(scene, documentOrToken) {
+    const tokenId = getTargetTokenId(documentOrToken);
+    if (!scene || !tokenId) return null;
+
+    return getScentTrails(scene)
+      .filter((source) => source.active === true && source.sourceTokenId === tokenId)
+      .sort((a, b) => (b.updatedWorldTime ?? 0) - (a.updatedWorldTime ?? 0))[0] ?? null;
+  }
+
+  function buildSourceExplicit(source) {
+    if (!source) return {};
+    return {
+      windBand: source.windBand,
+      odorStrength: source.odorProfile?.odorStrength,
+      maskingOdor: source.odorProfile?.maskingOdor,
+      falseOdor: source.odorProfile?.falseOdor,
+      odorTags: source.odorProfile?.odorTags,
+    };
+  }
+
+  function mergeSourceExplicit(source, explicit = {}) {
+    const merged = buildSourceExplicit(source);
+    for (const [key, value] of Object.entries(explicit ?? {})) {
+      if (isExplicitContextValue(value)) merged[key] = value;
+    }
+    return merged;
+  }
+
   function getScentContext(_sourceToken, targetToken, options = {}) {
     const targetDocument = getTargetDocument(targetToken);
     const targetActor = targetToken?.actor ?? targetDocument?.actor;
     const scene = options.scene ?? targetDocument?.parent ?? canvas?.scene;
-    const explicit = options.context ?? options;
+    const sourceRecord = findScentSourceForToken(scene, targetToken);
+    const explicit = mergeSourceExplicit(sourceRecord, options.context ?? options);
     const contextApi = getContextApi();
 
     if (contextApi?.getScentContext) {
       const scentContext = contextApi.getScentContext({ explicit, targetDocument, targetActor, scene });
-      const odorProfileExplicit = options.odorProfile ?? explicit;
+      const odorProfileExplicit = mergeSourceExplicit(sourceRecord, options.odorProfile ?? explicit);
       const odorProfile = getOdorProfileApi()?.getOdorProfile?.({ explicit: odorProfileExplicit, targetDocument, targetActor, scene });
       if (!odorProfile) return scentContext;
 
@@ -315,7 +353,8 @@
   function getOdorProfile(documentOrToken, options = {}) {
     const odorProfileApi = getOdorProfileApi();
     const { targetDocument, targetActor, scene } = getOdorProfileInputs(documentOrToken, options);
-    const explicit = options.odorProfile ?? options.context ?? options;
+    const sourceRecord = findScentSourceForToken(scene, documentOrToken);
+    const explicit = mergeSourceExplicit(sourceRecord, options.odorProfile ?? options.context ?? options);
 
     return odorProfileApi?.getOdorProfile?.({ explicit, targetDocument, targetActor, scene }) ?? {
       profile: { odorStrength: "normal", maskingOdor: false, falseOdor: false, odorTags: [] },
@@ -550,6 +589,10 @@
     return getScentTrailsApi()?.getSceneTrails?.(scene, { worldTime: options.worldTime ?? game.time?.worldTime ?? 0 }) ?? [];
   }
 
+  function getScentSources(scene = canvas?.scene, options = {}) {
+    return getScentTrails(scene, options);
+  }
+
   function getSceneToken(scene, tokenId) {
     if (!tokenId) return null;
     if (scene?.id && scene.id === canvas?.scene?.id) {
@@ -603,6 +646,10 @@
     return { created: true, trail };
   }
 
+  async function createScentSource(scene = canvas?.scene, data = {}) {
+    return createScentTrail(scene, data);
+  }
+
   async function updateScentTrail(scene = canvas?.scene, trailId, data = {}) {
     if (game.user?.isGM !== true) return { updated: false, reason: "not-gm", trail: null };
     if (!scene?.setFlag) return { updated: false, reason: "invalid-scene", trail: null };
@@ -614,16 +661,24 @@
 
     const worldTime = game.time?.worldTime ?? current.updatedWorldTime;
     const sourceData = data.sourceToken || data.sourceTokenId ? buildTrailSourceData(data, scene) : {};
+    const odorProfile = data.odorProfile
+      ? { ...(current.odorProfile ?? {}), ...data.odorProfile }
+      : current.odorProfile;
     const trail = trailApi.normalizeTrail({
       ...current,
       ...data,
       ...sourceData,
+      odorProfile,
       id: current.id,
       createdWorldTime: current.createdWorldTime,
       updatedWorldTime: worldTime,
     }, { worldTime });
     await persistScentTrails(scene, trailApi.upsertTrail(trails, trail, { worldTime }));
     return { updated: true, trail };
+  }
+
+  async function updateScentSource(scene = canvas?.scene, sourceId, data = {}) {
+    return updateScentTrail(scene, sourceId, data);
   }
 
   async function deleteScentTrail(scene = canvas?.scene, trailId) {
@@ -639,6 +694,10 @@
     return { deleted: true };
   }
 
+  async function deleteScentSource(scene = canvas?.scene, sourceId) {
+    return deleteScentTrail(scene, sourceId);
+  }
+
   function getScentTrailDc(trailOrId, tracker, options = {}) {
     const scene = options.scene ?? tracker?.scene ?? tracker?.document?.parent ?? canvas?.scene;
     const trail = typeof trailOrId === "string" ? findScentTrail(scene, trailOrId) : trailOrId;
@@ -652,11 +711,19 @@
     }) ?? { trackable: false, dc: null, reason: "trails-unavailable" };
   }
 
+  function getScentSourceDc(sourceOrId, tracker, options = {}) {
+    return getScentTrailDc(sourceOrId, tracker, options);
+  }
+
   function getScentTrailDisplayState(segmentOrTrail, options = {}) {
     return getScentTrailsApi()?.getTrailDisplayState?.(segmentOrTrail, {
       ...options,
       worldTime: options.worldTime ?? game.time?.worldTime ?? 0,
     }) ?? { visible: true, ageHours: 0, opacity: 0.75, state: "fresh" };
+  }
+
+  function getScentSourceDisplayState(segmentOrSource, options = {}) {
+    return getScentTrailDisplayState(segmentOrSource, options);
   }
 
   async function createWhisper(userIds, content) {
@@ -691,6 +758,7 @@
       content += `<p>${escapeHtml(format("D35EScent.Trail.GmRollContext", {
         trail: data.trailLabel,
         source: data.sourceName || localize("D35EScent.TrailManager.UnknownSource"),
+        odor: localize(`D35EScent.TrailManager.Odor.${data.odorProfile?.odorStrength === "overpowering" ? "Overpowering" : data.odorProfile?.odorStrength === "strong" ? "Strong" : "Normal"}`),
         notes: [data.sizeNotes, data.countNotes, data.notes].filter(Boolean).join("; ") || localize("D35EScent.TrailManager.None"),
       }))}</p>`;
     }
@@ -1177,7 +1245,7 @@
   }
 
   function openContextManager(options = {}) {
-    return ensureRuntimes().contextManager.openContextManager(options);
+    return ensureRuntimes().trailManager.openTrailManager({ ...options, forceOpen: true });
   }
 
   function registerContextManagerTool(controls) {
@@ -1274,7 +1342,9 @@
         PINPOINT_RANGE,
       },
       canTrackByScent,
+      createScentSource,
       createScentTrail,
+      deleteScentSource,
       deleteScentTrail,
       evaluateScentDetection,
       evaluateScentState,
@@ -1290,6 +1360,9 @@
       getMigrationApi,
       getScentRules,
       getScentStateApi,
+      getScentSourceDc,
+      getScentSourceDisplayState,
+      getScentSources,
       getScentTrailDc,
       getScentTrailDisplayState,
       getScentTrails,
@@ -1312,6 +1385,7 @@
       setTrailOverlayVisible,
       syncActorTokens,
       toggleTrailOverlay,
+      updateScentSource,
       updateScentTrail,
     });
 

@@ -140,7 +140,8 @@
 }
 
 .d35e-scent-trail-manager__heading span,
-.d35e-scent-trail-manager td small {
+.d35e-scent-trail-manager td small,
+.d35e-scent-trail-manager__create p {
   color: var(--color-text-light-6);
 }
 
@@ -162,17 +163,48 @@
   border-top: 1px solid var(--color-border-light-tertiary);
 }
 
+.d35e-scent-trail-manager__create p {
+  margin: 0 0 4px;
+}
+
 .d35e-scent-trail-manager__create-grid {
   display: grid;
-  grid-template-columns: repeat(5, minmax(120px, 1fr)) auto;
+  grid-template-columns: repeat(4, minmax(140px, 1fr)) auto;
   gap: 8px;
   align-items: end;
 }
 
-.d35e-scent-trail-manager__create-grid label,
-.d35e-scent-trail-manager__tracker label {
+.d35e-scent-trail-manager__create-grid label {
   display: grid;
   gap: 4px;
+}
+
+.d35e-scent-trail-manager__wide {
+  grid-column: span 2;
+}
+
+.d35e-scent-trail-manager__advanced {
+  grid-column: 1 / -1;
+  padding: 6px 8px;
+  border: 1px solid var(--color-border-light-tertiary);
+}
+
+.d35e-scent-trail-manager__advanced summary,
+.d35e-scent-trail-manager__advanced-row summary {
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.d35e-scent-trail-manager__advanced p {
+  margin: 6px 0 8px;
+  color: var(--color-text-light-6);
+}
+
+.d35e-scent-trail-manager__advanced-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(140px, 1fr));
+  gap: 8px;
+  align-items: end;
 }
 
 .d35e-scent-trail-manager__check {
@@ -185,13 +217,7 @@
   flex: 0 0 auto;
 }
 
-.d35e-scent-trail-manager__tracker {
-  max-width: 420px;
-  padding-top: 10px;
-  border-top: 1px solid var(--color-border-light-tertiary);
-}
-
-.d35e-scent-trail-manager__trails {
+.d35e-scent-trail-manager__sources {
   max-height: 520px;
   overflow: auto;
   border-top: 1px solid var(--color-border-light-tertiary);
@@ -222,6 +248,23 @@
   min-width: 120px;
 }
 
+.d35e-scent-trail-manager__source-label {
+  min-width: 170px;
+}
+
+.d35e-scent-trail-manager__source-label input[type="text"],
+.d35e-scent-trail-manager__source-token select {
+  width: 100%;
+}
+
+.d35e-scent-trail-manager__source-token {
+  min-width: 230px;
+}
+
+.d35e-scent-trail-manager__tags {
+  min-width: 150px;
+}
+
 .d35e-scent-trail-manager td input[type="number"] {
   width: 70px;
 }
@@ -232,17 +275,43 @@
   margin-bottom: 4px;
 }
 
+.d35e-scent-trail-manager__profile {
+  min-width: 260px;
+}
+
+.d35e-scent-trail-manager__profile label {
+  grid-template-columns: minmax(88px, auto) minmax(120px, 1fr);
+  align-items: center;
+}
+
+.d35e-scent-trail-manager__advanced-row {
+  min-width: 190px;
+}
+
+.d35e-scent-trail-manager__advanced-row label {
+  display: grid;
+  gap: 3px;
+  margin: 6px 0;
+}
+
+.d35e-scent-trail-manager__advanced-row input,
+.d35e-scent-trail-manager__advanced-row select {
+  width: 100%;
+}
+
 .d35e-scent-trail-manager td strong,
 .d35e-scent-trail-manager td small {
   display: block;
 }
 
 .d35e-scent-trail-manager__active,
+.d35e-scent-trail-manager__mark,
 .d35e-scent-trail-manager__actions {
   text-align: center;
 }
 
-.d35e-scent-trail-manager__active input {
+.d35e-scent-trail-manager__active input,
+.d35e-scent-trail-manager__mark input {
   width: 18px;
   height: 18px;
 }
@@ -263,6 +332,18 @@
   }
 
   .d35e-scent-trail-manager__create-grid {
+    grid-template-columns: repeat(2, minmax(140px, 1fr));
+  }
+
+  .d35e-scent-trail-manager__wide {
+    grid-column: span 2;
+  }
+
+  .d35e-scent-trail-manager__advanced {
+    grid-column: 1 / -1;
+  }
+
+  .d35e-scent-trail-manager__advanced-grid {
     grid-template-columns: repeat(2, minmax(140px, 1fr));
   }
 }

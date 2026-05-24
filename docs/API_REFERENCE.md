@@ -1,6 +1,6 @@
 # API Reference
 
-This document records the stable public API for the `v1.x` release line as of `v1.1.1`. New helpers may be added later, but the names and result fields below should remain backward compatible unless a future major version says otherwise.
+This document records the stable public API for the `v1.x` release line as of `v1.2.0`. New helpers may be added later, but the names and result fields below should remain backward compatible unless a future major version says otherwise.
 
 ## Entry Points
 
@@ -9,7 +9,7 @@ This document records the stable public API for the `v1.x` release line as of `v
 - `game.d35eScentSense.context` and `globalThis.d35eScentSenseContext`: context flag normalization helpers.
 - `game.d35eScentSense.odorProfile` and `globalThis.d35eScentSenseOdorProfile`: odor profile helpers.
 - `game.d35eScentSense.state` and `globalThis.d35eScentSenseState`: detection state helpers.
-- `game.d35eScentSense.trails` and `globalThis.d35eScentSenseTrails`: trail record helpers.
+- `game.d35eScentSense.trails` and `globalThis.d35eScentSenseTrails`: compatible source/trail record helpers.
 
 ## D35E Sheet Data
 
@@ -26,19 +26,20 @@ The range helpers below read both locations and use the highest positive value.
 - `getEffectiveScentRange(sourceToken, targetToken, options)`: returns the RAW-aware effective range after wind, odor strength, and masking context.
 - `evaluateScentDetection(sourceToken, targetToken, options)`: compatibility detection helper.
 - `evaluateScentState(sourceToken, targetToken, options)`: preferred state helper for consumers that need presence, direction, and pinpoint distinctions.
-- `getScentContext(sourceToken, targetToken, options)`: returns effective wind, odor, masking, false odor, and tag context with source metadata.
-- `setScentContextFlags(document, values, options)`: GM-only setter for module-owned scene or token context flags.
+- `getScentContext(sourceToken, targetToken, options)`: returns effective wind, odor, masking, false odor, and tag context with source metadata. Created Scent Sources take precedence for their source token.
+- `setScentContextFlags(document, values, options)`: GM-only setter for module-owned scene or token context flags. This remains supported for macros and legacy data; the normal GM UI stores source-specific values on Scent Source records.
 - `getOdorProfile(documentOrToken, options)`: returns effective odor profile values and source metadata.
 - `setOdorProfileFlags(document, values, options)`: GM-only setter for module-owned odor profile flags.
 - `identifyFamiliarOdor(actor, targetProfile, options)`: returns familiar tag matches without revealing identity automatically.
 - `getTrackingByScentDc(options)`: returns a RAW-derived Scent tracking DC helper result.
 - `canTrackByScent(actor)`: returns `true` only when the actor has Scent and a Track feat item.
-- `getScentTrails(scene, options)`: returns normalized scene trail records.
-- `createScentTrail(scene, data)`, `updateScentTrail(scene, trailId, data)`, and `deleteScentTrail(scene, trailId)`: GM-only scene trail CRUD helpers.
-- `getScentTrailDc(trailOrId, tracker, options)`: returns tracking eligibility and DC details for one trail.
-- `getScentTrailDisplayState(segmentOrTrail, options)`: returns age, fade state, visibility, and opacity metadata for trail display.
+- `getScentSources(scene, options)`: returns normalized scene Scent Source records.
+- `createScentSource(scene, data)`, `updateScentSource(scene, sourceId, data)`, and `deleteScentSource(scene, sourceId)`: GM-only scene source CRUD helpers. Create/update return compatibility objects containing the normalized record under `trail`; delete returns `{ deleted: true }` on success.
+- `getScentSourceDc(sourceOrId, tracker, options)`: returns tracking eligibility and DC details for one source/trail.
+- `getScentSourceDisplayState(segmentOrSource, options)`: returns age, fade state, visibility, and opacity metadata for source trail display.
+- `getScentTrails(scene, options)`, `createScentTrail(scene, data)`, `updateScentTrail(scene, trailId, data)`, `deleteScentTrail(scene, trailId)`, `getScentTrailDc(trailOrId, tracker, options)`, and `getScentTrailDisplayState(segmentOrTrail, options)`: legacy-compatible aliases for the source APIs. Stored scene flags remain `scentTrails` for backward compatibility.
 - `rollTrackByScent(trackerToken, trailId, options)`: attempts a compatible native Survival roll or creates a redacted prompt.
-- `openContextManager(options)` and `openTrailManager(options)`: GM-only ApplicationV2 tools. The primary toolbar entry is the unified Scent Menu; Advanced Scent Context remains available through that menu and the API.
+- `openContextManager(options)` and `openTrailManager(options)`: GM-only ApplicationV2 tools. The primary toolbar entry is the unified Scent Menu; `openContextManager` is preserved for compatibility and now opens that same menu instead of a separate context window.
 - `migrateFlags(options)`: GM-only migration helper; dry-run by default.
 - `syncActorTokens(actor)`, `refresh(options)`, `scan(options)`, `resetNotificationState(options)`, `isOverlayVisible(actorOrToken)`, and `setOverlayVisible(actorOrToken, visible)`: runtime integration and local Scent-ring presentation helpers.
 - `isTrailOverlayVisible()`, `setTrailOverlayVisible(visible)`, and `toggleTrailOverlay()`: client-local trail path preview state helpers used by both the Scent Menu preview button and View Scent Trails toolbar toggle.
@@ -56,6 +57,8 @@ Valid `state` values are `none`, `presence`, `directionAvailable`, `directionReq
 
 ## Flag Boundary
 
-The module reads scene, token, and actor flags for context inheritance, but the GM managers write only scene and token flags. `migrateFlags` normalizes module-owned scene, token, and trail data; it reports actor flag anomalies without editing actors.
+The module reads older scene, token, and actor flags for context inheritance, but the GM Scent Menu now stores source-specific odor and wind values on created Scent Source records. `migrateFlags` normalizes module-owned scene, token, and trail data; it reports actor flag anomalies without editing actors.
 
-Trail records are scene flags. Normalized records include `active`, `recordMovement`, `visibleToPlayers`, `sourceTokenId`, `createdWorldTime`, `updatedWorldTime`, water/odor/DC fields, notes, an odor profile snapshot, and `pathSegments`. Path segments store `trailId`, `sourceTokenId`, `sceneId`, `createdWorldTime`, `start`, and `end` canvas coordinates.
+Scent Source records are stored in the legacy `scentTrails` scene flag. Normalized records include `active`, `recordMovement`, `visibleToPlayers`, `sourceTokenId`, `createdWorldTime`, `updatedWorldTime`, `windBand`, water/odor/DC fields, notes, an odor profile snapshot, and `pathSegments`. Path segments store `trailId`, `sourceTokenId`, `sceneId`, `createdWorldTime`, `start`, and `end` canvas coordinates.
+
+Masking odor is a mechanical detection suppressor. False odor and odor tags are preserved in context/profile data and can support familiar-odor checks, but they do not modify range or identify creatures automatically.

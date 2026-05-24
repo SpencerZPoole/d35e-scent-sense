@@ -12,9 +12,6 @@
     isTrailOverlayVisible,
     localize,
     moduleId,
-    openContextManager,
-    rollTrackByScent,
-    roundDistance,
     setTrailOverlayVisible,
     template,
     updateScentTrail,
@@ -40,6 +37,22 @@
       ];
     }
 
+    function buildOdorOptions() {
+      return [
+        option("normal", localize("D35EScent.TrailManager.Odor.Normal")),
+        option("strong", localize("D35EScent.TrailManager.Odor.Strong")),
+        option("overpowering", localize("D35EScent.TrailManager.Odor.Overpowering")),
+      ];
+    }
+
+    function buildWindOptions() {
+      return [
+        option("normal", localize("D35EScent.ContextManager.Wind.Normal")),
+        option("upwind", localize("D35EScent.ContextManager.Wind.Upwind")),
+        option("downwind", localize("D35EScent.ContextManager.Wind.Downwind")),
+      ];
+    }
+
     function getTokenById(tokenId) {
       return canvas?.tokens?.placeables?.find((token) => token.id === tokenId) ?? null;
     }
@@ -48,11 +61,9 @@
       return canvas?.tokens?.controlled?.[0]?.id ?? canvas?.tokens?.placeables?.find((token) => token?.actor)?.id ?? "";
     }
 
-    function getDefaultTrackerTokenId() {
-      const controlled = canvas?.tokens?.controlled?.find((token) => getScentRange(token.actor) > 0 && canTrackByScent(token.actor));
-      if (controlled) return controlled.id;
-
-      return canvas?.tokens?.placeables?.find((token) => getScentRange(token.actor) > 0 && canTrackByScent(token.actor))?.id ?? "";
+    function getTokenName(tokenId) {
+      const token = getTokenById(tokenId);
+      return token?.name ?? tokenId ?? "";
     }
 
     function formatAge(hours) {
@@ -79,56 +90,54 @@
       return localize(`D35EScent.TrailManager.Reason.${dcResult.reason ?? "unknown"}`);
     }
 
-    function formatProfile(profile = {}) {
-      const tags = Array.isArray(profile.odorTags) && profile.odorTags.length > 0 ? profile.odorTags.join(", ") : localize("D35EScent.TrailManager.None");
-      return format("D35EScent.TrailManager.ProfileSummary", {
-        odor: profile.odorStrength ?? "normal",
-        falseOdor: profile.falseOdor === true ? localize("D35EScent.TrailManager.Yes") : localize("D35EScent.TrailManager.No"),
-        tags,
-      });
+    function formatReason(reason) {
+      return localize(`D35EScent.TrailManager.Reason.${reason ?? "trackable"}`);
     }
 
-    function buildTrailManagerData(selectedSourceTokenId = "", selectedTrackerTokenId = "") {
+    function stringifyTags(tags) {
+      if (Array.isArray(tags)) return tags.join(", ");
+      return String(tags ?? "");
+    }
+
+    function buildScentMenuData(selectedSourceTokenId = "") {
       const scene = canvas?.scene ?? null;
       const tokens = (canvas?.tokens?.placeables ?? []).filter((token) => token?.actor);
       const sourceTokenId = tokens.some((token) => token.id === selectedSourceTokenId) ? selectedSourceTokenId : getDefaultSourceTokenId();
-      const trackerTokenId = tokens.some((token) => token.id === selectedTrackerTokenId) ? selectedTrackerTokenId : getDefaultTrackerTokenId();
-      const trackerToken = trackerTokenId ? getTokenById(trackerTokenId) : null;
-      const trails = getScentTrails(scene);
-
       const sourceOptions = tokens
         .slice()
         .sort((a, b) => String(a.name).localeCompare(String(b.name)))
-        .map((token) => option(token.id, token.name));
-      const trackerOptions = [
-        option("", localize("D35EScent.TrailManager.NoTracker")),
-        ...tokens
-          .filter((token) => getScentRange(token.actor) > 0)
-          .sort((a, b) => String(a.name).localeCompare(String(b.name)))
-          .map((token) => {
-            const label = canTrackByScent(token.actor)
-              ? format("D35EScent.TrailManager.TrackerOption", { name: token.name, range: getScentRange(token.actor) })
-              : format("D35EScent.TrailManager.TrackerOptionNoTrack", { name: token.name, range: getScentRange(token.actor) });
-            return option(token.id, label);
-          }),
-      ];
+        .map((token) => {
+          const range = getScentRange?.(token.actor) ?? 0;
+          const label = range > 0
+            ? format("D35EScent.TrailManager.SourceOption", { name: token.name, range })
+            : token.name;
+          return option(token.id, label);
+        });
 
-      const rows = trails
+      const sources = getScentTrails(scene)
         .slice()
         .sort((a, b) => String(a.label).localeCompare(String(b.label)))
-        .map((trail) => {
-          const dc = getScentTrailDc(trail, trackerToken, { requireTracker: Boolean(trackerToken) });
+        .map((source) => {
+          const dc = getScentTrailDc(source, null, { requireTracker: false });
+          const sourceName = source.sourceName || getTokenName(source.sourceTokenId) || localize("D35EScent.TrailManager.UnknownSource");
           return {
-            ...trail,
+            ...source,
+            sourceName,
+            sourceTokenId: source.sourceTokenId ?? "",
             age: formatAge(dc.trailAgeHours),
             dcLabel: formatDc(dc),
-            dcReason: dc.reason,
-            odorDcModifier: trail.odorDcModifier,
-            powerfulCompetingOdor: String(trail.powerfulCompetingOdor === true),
-            sourceLabel: trail.sourceName || trail.sourceTokenId || localize("D35EScent.TrailManager.UnknownSource"),
-            profileSummary: formatProfile(trail.odorProfile),
-            segmentSummary: format("D35EScent.TrailManager.PathSummary", { count: trail.pathSegments?.length ?? 0, state: formatSegmentState(trail) }),
-            canPrompt: Boolean(trackerToken && dc.trackable === true),
+            dcReasonLabel: formatReason(dc.reason),
+            odorDcModifier: source.odorDcModifier,
+            odorStrength: source.odorProfile?.odorStrength ?? "normal",
+            maskingOdor: String(source.odorProfile?.maskingOdor === true),
+            falseOdor: String(source.odorProfile?.falseOdor === true),
+            odorTags: stringifyTags(source.odorProfile?.odorTags),
+            windBand: source.windBand ?? "normal",
+            powerfulCompetingOdor: String(source.powerfulCompetingOdor === true),
+            segmentSummary: format("D35EScent.TrailManager.PathSummary", {
+              count: source.pathSegments?.length ?? 0,
+              state: formatSegmentState(source),
+            }),
           };
         });
 
@@ -136,13 +145,13 @@
         title: localize("D35EScent.TrailManager.Title"),
         sceneName: scene?.name ?? localize("D35EScent.TrailManager.NoScene"),
         selectedSourceTokenId: sourceTokenId,
-        selectedTrackerTokenId: trackerTokenId,
         sourceOptions,
-        trackerOptions,
         waterOptions: buildWaterOptions(),
         booleanOptions: buildBooleanOptions(),
-        trails: rows,
-        hasTrails: rows.length > 0,
+        odorOptions: buildOdorOptions(),
+        windOptions: buildWindOptions(),
+        sources,
+        hasSources: sources.length > 0,
         hasSourceOptions: sourceOptions.length > 0,
         trailViewActive: isTrailOverlayVisible?.() === true,
         buttons: [{ type: "submit", label: localize("D35EScent.TrailManager.Save"), icon: "fa-solid fa-floppy-disk" }],
@@ -168,21 +177,32 @@
 
     async function setTrailViewVisible(visible) {
       setTrailOverlayVisible?.(visible === true);
+      ui.controls?.render?.();
       await refreshManager();
       return isTrailOverlayVisible?.() === true;
     }
 
     function getRequestedTrailViewState(...args) {
+      const current = isTrailOverlayVisible?.() === true;
+      const cameFromUserEvent = args.some((value) => {
+        if (!value || typeof value !== "object") return false;
+        return (typeof Event !== "undefined" && value instanceof Event) || "currentTarget" in value || "target" in value;
+      });
+
       for (const value of args) {
-        if (typeof value === "boolean") return value;
+        if (typeof value === "boolean") {
+          return cameFromUserEvent && value === current ? !current : value;
+        }
         const targetChecked = value?.currentTarget?.checked ?? value?.target?.checked;
-        if (typeof targetChecked === "boolean") return targetChecked;
+        if (typeof targetChecked === "boolean") {
+          return cameFromUserEvent && targetChecked === current ? !current : targetChecked;
+        }
       }
 
-      return !(isTrailOverlayVisible?.() === true);
+      return !current;
     }
 
-    async function createTrailFromForm(root) {
+    async function createSourceFromForm(root) {
       const sourceTokenId = getValue(root, '[name="new.sourceTokenId"]', trailManager?.sourceTokenId ?? "");
       const sourceToken = getTokenById(sourceTokenId);
       if (!sourceToken) return;
@@ -190,6 +210,13 @@
       await createScentTrail(canvas.scene, {
         sourceToken,
         label: getValue(root, '[name="new.label"]', ""),
+        windBand: getValue(root, '[name="new.windBand"]', "normal"),
+        odorProfile: {
+          odorStrength: getValue(root, '[name="new.odorStrength"]', "normal"),
+          maskingOdor: getValue(root, '[name="new.maskingOdor"]', "false"),
+          falseOdor: getValue(root, '[name="new.falseOdor"]', "false"),
+          odorTags: getValue(root, '[name="new.odorTags"]', ""),
+        },
         waterState: getValue(root, '[name="new.waterState"]', "none"),
         powerfulCompetingOdor: getValue(root, '[name="new.powerfulCompetingOdor"]', "false"),
         odorDcModifier: getValue(root, '[name="new.odorDcModifier"]', "0"),
@@ -203,12 +230,20 @@
       await refreshManager();
     }
 
-    async function saveTrailRows(root) {
-      for (const row of root.querySelectorAll("[data-scent-trail-id]")) {
-        const trailId = row.dataset.scentTrailId;
-        await updateScentTrail(canvas.scene, trailId, {
+    async function saveSourceRows(root) {
+      for (const row of root.querySelectorAll("[data-scent-source-id]")) {
+        const sourceId = row.dataset.scentSourceId;
+        await updateScentTrail(canvas.scene, sourceId, {
           active: getChecked(row, '[data-field="active"]'),
           label: getValue(row, '[data-field="label"]', ""),
+          sourceTokenId: getValue(row, '[data-field="sourceTokenId"]', ""),
+          windBand: getValue(row, '[data-field="windBand"]', "normal"),
+          odorProfile: {
+            odorStrength: getValue(row, '[data-field="odorStrength"]', "normal"),
+            maskingOdor: getValue(row, '[data-field="maskingOdor"]', "false"),
+            falseOdor: getValue(row, '[data-field="falseOdor"]', "false"),
+            odorTags: getValue(row, '[data-field="odorTags"]', ""),
+          },
           waterState: getValue(row, '[data-field="waterState"]', "none"),
           powerfulCompetingOdor: getValue(row, '[data-field="powerfulCompetingOdor"]', "false"),
           odorDcModifier: getValue(row, '[data-field="odorDcModifier"]', "0"),
@@ -220,20 +255,6 @@
         });
       }
       await refreshManager();
-    }
-
-    async function promptTrailRoll(trailId) {
-      const trackerTokenId = trailManager?.trackerTokenId ?? "";
-      const trackerToken = trackerTokenId ? getTokenById(trackerTokenId) : null;
-      if (!trackerToken) {
-        ui.notifications?.warn(localize("D35EScent.TrailManager.NoTrackerSelected"));
-        return;
-      }
-
-      const result = await rollTrackByScent(trackerToken, trailId, { scene: canvas.scene });
-      if (result?.promptCreated) ui.notifications?.info(localize("D35EScent.TrailManager.RollPromptCreated"));
-      else if (result?.rolled) ui.notifications?.info(localize("D35EScent.TrailManager.RollStarted"));
-      else ui.notifications?.warn(localize(`D35EScent.TrailManager.Reason.${result?.reason ?? "unknown"}`));
     }
 
     function getTrailManagerClass() {
@@ -253,7 +274,7 @@
             resizable: true,
           },
           position: {
-            width: 1100,
+            width: 1180,
           },
           form: {
             submitOnChange: false,
@@ -265,7 +286,7 @@
         static PARTS = {
           form: {
             template,
-            scrollable: [".d35e-scent-trail-manager__trails"],
+            scrollable: [".d35e-scent-trail-manager__sources"],
           },
           footer: {
             template: "templates/generic/form-footer.hbs",
@@ -275,13 +296,12 @@
         constructor(options = {}) {
           super(options);
           this.sourceTokenId = options.sourceTokenId ?? getDefaultSourceTokenId();
-          this.trackerTokenId = options.trackerTokenId ?? getDefaultTrackerTokenId();
         }
 
         async _prepareContext(options = {}) {
           return {
             ...(await super._prepareContext(options)),
-            ...buildTrailManagerData(this.sourceTokenId, this.trackerTokenId),
+            ...buildScentMenuData(this.sourceTokenId),
           };
         }
 
@@ -294,32 +314,19 @@
             this.sourceTokenId = event.currentTarget.value;
           });
 
-          root.querySelector('[name="trackerTokenId"]')?.addEventListener("change", (event) => {
-            this.trackerTokenId = event.currentTarget.value;
-            this.render(true);
-          });
-
           root.querySelector('[data-action="createTrail"]')?.addEventListener("click", (event) => {
             event.preventDefault();
-            createTrailFromForm(root).catch((error) => console.error(`${moduleId} | Failed to create Scent trail.`, error));
+            createSourceFromForm(root).catch((error) => console.error(`${moduleId} | Failed to create Scent source.`, error));
           });
 
           for (const button of root.querySelectorAll('[data-action="deleteTrail"]')) {
             button.addEventListener("click", (event) => {
               event.preventDefault();
-              const trailId = event.currentTarget.closest("[data-scent-trail-id]")?.dataset?.scentTrailId;
+              const sourceId = event.currentTarget.closest("[data-scent-source-id]")?.dataset?.scentSourceId;
               if (!window.confirm(localize("D35EScent.TrailManager.DeleteConfirm"))) return;
-              deleteScentTrail(canvas.scene, trailId)
+              deleteScentTrail(canvas.scene, sourceId)
                 .then(refreshManager)
-                .catch((error) => console.error(`${moduleId} | Failed to delete Scent trail.`, error));
-            });
-          }
-
-          for (const button of root.querySelectorAll('[data-action="promptTrailRoll"]')) {
-            button.addEventListener("click", (event) => {
-              event.preventDefault();
-              const trailId = event.currentTarget.closest("[data-scent-trail-id]")?.dataset?.scentTrailId;
-              promptTrailRoll(trailId).catch((error) => console.error(`${moduleId} | Failed to prompt Scent tracking roll.`, error));
+                .catch((error) => console.error(`${moduleId} | Failed to delete Scent source.`, error));
             });
           }
 
@@ -328,11 +335,6 @@
             setTrailViewVisible(!(isTrailOverlayVisible?.() === true)).catch((error) => {
               console.error(`${moduleId} | Failed to toggle Scent trail preview.`, error);
             });
-          });
-
-          root.querySelector('[data-action="openAdvancedContext"]')?.addEventListener("click", (event) => {
-            event.preventDefault();
-            openContextManager?.();
           });
         }
 
@@ -349,7 +351,7 @@
         static async _onSubmit(event, form) {
           event.preventDefault();
           const root = form instanceof HTMLElement ? form : trailManager?.element;
-          if (root) await saveTrailRows(root);
+          if (root) await saveSourceRows(root);
         }
       };
     }
@@ -361,6 +363,12 @@
       }
 
       if (isTrailManagerOpen()) {
+        if (options.forceOpen === true) {
+          trailManager.sourceTokenId = options.sourceTokenId ?? trailManager.sourceTokenId;
+          trailManager.render?.(true);
+          return trailManager;
+        }
+
         const openManager = trailManager;
         trailManager = null;
         openManager.close?.();
@@ -375,7 +383,6 @@
 
       trailManager = new TrailManager({
         sourceTokenId: options.sourceTokenId ?? getDefaultSourceTokenId(),
-        trackerTokenId: options.trackerTokenId ?? getDefaultTrackerTokenId(),
       });
       trailManager.render(true);
       return trailManager;
@@ -392,12 +399,12 @@
       function upsertTool(toolData) {
         if (Array.isArray(tokenControl.tools)) {
           const existingIndex = tokenControl.tools.findIndex((tool) => tool.name === toolData.name);
-          if (existingIndex >= 0) tokenControl.tools[existingIndex] = { ...tokenControl.tools[existingIndex], ...toolData };
+          if (existingIndex >= 0) tokenControl.tools[existingIndex] = toolData;
           else tokenControl.tools.push(toolData);
           return;
         }
 
-        tokenControl.tools[toolData.name] = { ...(tokenControl.tools[toolData.name] ?? {}), ...toolData };
+        tokenControl.tools[toolData.name] = toolData;
       }
 
       const toolData = {

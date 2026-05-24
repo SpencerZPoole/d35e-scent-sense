@@ -10,7 +10,7 @@ References checked:
 
 ## Current Coverage
 
-| Rule Area | v1.1.1 Status | Notes |
+| Rule Area | Current Status | Notes |
 | --- | --- | --- |
 | Scent sense registration | Automated | Registers `scent` as a D35E sense label when the D35E system is active. |
 | Default detection range | Automated | Uses `30 ft` as the module default helper value and reads configured D35E prepared actor, base actor, and eligible item Scent ranges when present. |
@@ -23,21 +23,21 @@ References checked:
 | Track feat requirement | Automated helper | `canTrackByScent` requires Scent plus a Track feat item. |
 | Tracking DC by Scent | Automated helper | Helper computes fresh-trail, cold-trail, competing-odor, odor modifier, and water-state values. |
 | Survival roll workflow | GM-assisted prompt | Trail helper computes the DC and can create a redacted GM/owner prompt; native skill rolling is best-effort when the actor exposes a compatible method. |
-| Persistent trails | GM-authored visual scene records | The Scent Menu and API store scene-level trails under module-owned flags. Once the GM creates or enables a trail with movement recording, source-token movement appends path segments. |
-| Familiar odor identification | GM-facing helper | Odor tags and familiar tag matching are exposed through API helpers and the GM context manager; player identity is not revealed automatically. |
-| Water and water-breathing UI | GM-facing trail controls | Trail records include water state and preview DC impact for selected trackers. |
-| False/powerful odor sources | GM-facing helper | False odor flags and strong/overpowering odor profile fields are available for GM context and preview details. |
+| Persistent trails | GM-authored visual scene records | The Scent Menu and API store scene-level Scent Sources under module-owned flags. Once the GM creates a source with **Source leaves trail** enabled, source-token movement appends path segments. |
+| Familiar odor identification | Advanced GM-facing helper | Odor tags and familiar tag matching are exposed through API helpers and Advanced GM details on Scent Sources; player identity is not revealed automatically. |
+| Water and water-breathing UI | GM-facing source controls | Source records include water state for tracking helper DC impact. |
+| False/powerful odor sources | Mixed | Strong and overpowering odor strength modify effective range. False odor is advanced GM metadata and does not change range, suppress detection, or reveal/lie to players automatically. |
 | Surface and visibility modifiers while scent-tracking | Explicitly ignored for Scent trail DCs | Trail DC helpers model Scent-specific age, water, competing odor, and odor modifier inputs without applying normal surface or visibility categories. |
 
 ## V1 Stable Statement
 
-`v1.1.1` can say:
+Current `v1.x` behavior can say:
 
 - Automated detection covers range, wind, odor strength, masking odor, presence, direction requests, and 5 ft pinpoint.
-- GM tools cover scene and token scent context, false odor flags, and odor tags without editing actor flags unexpectedly.
-- Tracking support covers persistent trails, visual path segments, Scent-specific DCs, Track eligibility, age-based fade states, and optional Survival roll prompts.
+- GM tools cover source-specific wind, odor strength, and masking odor in the main Scent Source workflow. False odor flags and odor tags remain available as advanced helper data without editing actor flags unexpectedly.
+- Tracking support covers Scent Sources that leave trails, visual path segments, Scent-specific DC helper APIs, Track eligibility, and age-based fade states.
 - Public docs clearly identify which pieces are automated, which are GM-assisted, and which remain manual table adjudication.
 
 ## Stable Release Notes
 
-`v1.1.1` preserves the documented conservative RAW boundary while improving the Scent trail workflow with GM-created visual path recording, age-based fade states, and explicit GM/player visibility controls.
+`v1.2.0` preserves the documented conservative RAW boundary while completing the Scent Source workflow with GM-created visual path recording, age-based fade states, explicit GM/player visibility controls, source-specific odor controls, and clearer masking/false-odor/tag wording in the GM workflow.

@@ -46,7 +46,7 @@ This roadmap records how the Scent helper reached the stable `v1.x` module line 
 - Freeze the public API for v1 in `docs/API_REFERENCE.md`.
 - Finish user and maintainer docs with `docs/USER_GUIDE.md` and `docs/RELEASE_PROCESS.md`.
 - Improve localization coverage with a checked English key audit.
-- Add CI for `npm test`.
+- Add CI for the package validation suite.
 - Run scratch-world Foundry validation, downloaded artifact validation, and local security scanning.
 - Status: completed in `v0.9.0`; no runtime mechanics were intentionally changed from `v0.8.2`.
 
@@ -63,3 +63,11 @@ This roadmap records how the Scent helper reached the stable `v1.x` module line 
 - Add path-aware trail records, GM-enabled source movement recording, age-based trail display states, and GM/player trail visibility controls.
 - Preserve existing trail CRUD and DC APIs while adding overlay state helpers and display-state helpers.
 - Validate the workflow in a live Foundry world before release packaging.
+
+## v1.2.0 Scent Source Polish
+
+- Simplify the GM workflow around **Create New Scent Source** and **Scene Scent Sources**.
+- Keep masking odor in the main source controls because it has direct mechanical impact.
+- Move false odor, odor tags, and notes into Advanced GM details because they are helper/metadata fields.
+- Preserve old trail API names and stored `scentTrails` scene data while using Scent Source wording in the public UI and docs.
+- Keep View Scent Trails as a separate overlay toggle synchronized with the Scent Menu **Show/Hide Trail Preview** button.

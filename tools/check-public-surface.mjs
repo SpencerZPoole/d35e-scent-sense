@@ -139,7 +139,7 @@ const requiredPublicText = [
   },
   {
     file: "README.md",
-    text: `release-manifest-ready for stable version \`${currentVersion}\``,
+    text: "releases/latest/download/module.json",
   },
   {
     file: "docs/FOUNDRY_PACKAGE_DESCRIPTION.html",
@@ -147,7 +147,7 @@ const requiredPublicText = [
   },
   {
     file: "docs/RELEASE_AUDIT.md",
-    text: `Updated: 2026-05-23 for \`v${currentVersion}\``,
+    text: "Updated: 2026-05-24 after Scent Source hard live QA and documentation audit",
   },
   {
     file: "docs/RELEASE_AUDIT.md",

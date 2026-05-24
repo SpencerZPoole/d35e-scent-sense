@@ -20,7 +20,10 @@ const zipPath = path.join(distDir, zipName);
 const expectedDownload = `https://github.com/SpencerZPoole/${moduleId}/releases/download/v${version}/${zipName}`;
 
 const releaseEntries = [
+  ".github",
+  "AGENTS.md",
   "module.json",
+  "package.json",
   "LICENSE.md",
   "OGL-1.0a.txt",
   "README.md",
@@ -32,6 +35,7 @@ const releaseEntries = [
   "styles",
   "templates",
   "docs",
+  "tools",
 ];
 
 const blockedExtensions = new Set([

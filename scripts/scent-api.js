@@ -3,7 +3,9 @@
 
   function createApi({
     canTrackByScent,
+    createScentSource,
     createScentTrail,
+    deleteScentSource,
     deleteScentTrail,
     constants,
     evaluateScentDetection,
@@ -18,6 +20,9 @@
     getScentRangeBreakdown,
     getScentRules,
     getScentStateApi,
+    getScentSourceDc,
+    getScentSourceDisplayState,
+    getScentSources,
     getScentTrailDc,
     getScentTrailDisplayState,
     getScentTrails,
@@ -40,6 +45,7 @@
     setTrailOverlayVisible,
     syncActorTokens,
     toggleTrailOverlay,
+    updateScentSource,
     updateScentTrail,
   } = {}) {
     return {
@@ -50,7 +56,9 @@
       state: getScentStateApi(),
       trails: getScentTrailsApi(),
       canTrackByScent,
+      createScentSource,
       createScentTrail,
+      deleteScentSource,
       deleteScentTrail,
       evaluateScentDetection,
       evaluateScentState,
@@ -60,6 +68,9 @@
       getScentContext,
       getScentRange,
       getScentRangeBreakdown,
+      getScentSourceDc,
+      getScentSourceDisplayState,
+      getScentSources,
       getScentTrailDc,
       getScentTrailDisplayState,
       getScentTrails,
@@ -81,6 +92,7 @@
       setTrailOverlayVisible,
       syncActorTokens,
       toggleTrailOverlay,
+      updateScentSource,
       updateScentTrail,
     };
   }

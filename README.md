@@ -1,6 +1,6 @@
 # D35E Scent Sense
 
-`d35e-scent-sense` is a Foundry Virtual Tabletop module for the D35E system. It adds conservative 3.5e SRD Scent support for tokens and actors, including presence alerts, optional owner/GM range rings, 5 ft pinpoint detection, and GM-managed visual scent trails.
+`d35e-scent-sense` is a Foundry Virtual Tabletop module for the D35E system. It adds conservative 3.5e SRD Scent support for tokens and actors, including presence alerts, optional owner/GM range rings, 5 ft pinpoint detection, and GM-managed Scent Sources that can leave visual trails.
 
 This repository contains module code, public-safe documentation, package-page screenshots, and validation tooling only. It does not include copied rulebook prose, stat blocks, adventure text, setting lore, compendium data, non-documentation artwork, audio, fonts, or private campaign material.
 
@@ -12,7 +12,7 @@ This repository contains module code, public-safe documentation, package-page sc
 
 - Foundry Virtual Tabletop: minimum `14`, verified `14.362`
 - D35E system: minimum `3.0.2`, verified `3.0.2`
-- Module version: `1.1.1`
+- Module version: `1.2.0`
 
 ## Install
 
@@ -22,7 +22,7 @@ In Foundry, open **Add-on Modules > Install Module**, paste this into **Manifest
 https://github.com/SpencerZPoole/d35e-scent-sense/releases/latest/download/module.json
 ```
 
-This repository is release-manifest-ready for stable version `1.1.1`.
+The current stable package version is `1.2.0`.
 
 For development testing, copy or clone this folder into your Foundry `Data/modules` directory, then enable **D35E Scent Sense** in a D35E world.
 
@@ -47,10 +47,10 @@ For a shorter first-use checklist, see:
 - Keeps GM adjudication in the loop for direction and exact-location calls.
 - Tracks Scent detection state for presence, available direction requests, requested direction, GM-revealed direction, and 5 ft pinpoint.
 - Provides RAW-aware helper calculations for wind, odor strength, masking odors, and tracking by Scent.
-- Adds odor profiles for odor strength, masking odors, false odor sources, and familiar odor tags.
-- Adds one GM Scent Menu for active trail review, trail creation, trail editing, tracking previews, and advanced Scent context access.
+- Adds odor profiles for odor strength and masking odors, with false odor and familiar odor tags available as advanced GM helper data.
+- Adds one GM Scent Menu for creating and editing scene Scent Sources.
 - Adds a separate View Scent Trails token-control toggle for showing or hiding visual trail paths without opening the menu.
-- Adds path-aware scene Scent trails with GM-enabled movement recording, GM/player visibility controls, Scent tracking DC previews, and optional Survival roll prompts.
+- Adds path-aware scene Scent Sources with source-specific odor/wind fields, GM-enabled **Source leaves trail** movement recording, GM/player visibility controls, and Scent tracking DC helper APIs.
 - Documents the v1 RAW coverage target and splits runtime behavior into focused modules for safer future development.
 - Preserves the public `v1.x` API shape while adding visual trail helpers.
 - Adds localization coverage checks and continuous validation for stable-release review.
@@ -101,6 +101,9 @@ game.d35eScentSense.setScentContextFlags(token.document, { odorStrength: "strong
 game.d35eScentSense.setOdorProfileFlags(token.document, { falseOdor: true, odorTags: "wolf, smoke" });
 game.d35eScentSense.openContextManager();
 game.d35eScentSense.openTrailManager();
+game.d35eScentSense.createScentSource(canvas.scene, { sourceToken: token });
+game.d35eScentSense.getScentSources(canvas.scene);
+game.d35eScentSense.getScentSourceDc(source, trackerToken);
 game.d35eScentSense.createScentTrail(canvas.scene, { sourceToken: token });
 game.d35eScentSense.getScentTrailDc(trail, trackerToken);
 game.d35eScentSense.getScentTrailDisplayState(trail.pathSegments[0]);
@@ -111,11 +114,11 @@ game.d35eScentSense.migrateFlags({ dryRun: true });
 game.d35eScentSense.refresh({ persist: true });
 ```
 
-The rules helper is also available at `game.d35eScentSense.rules` and `globalThis.d35eScentSenseRules`. Context flag normalization is available at `game.d35eScentSense.context` and `globalThis.d35eScentSenseContext`. Odor profile helpers are available at `game.d35eScentSense.odorProfile` and `globalThis.d35eScentSenseOdorProfile`. Detection-state helpers are available at `game.d35eScentSense.state` and `globalThis.d35eScentSenseState`. Trail helpers are available at `game.d35eScentSense.trails` and `globalThis.d35eScentSenseTrails`.
+The rules helper is also available at `game.d35eScentSense.rules` and `globalThis.d35eScentSenseRules`. Context flag normalization is available at `game.d35eScentSense.context` and `globalThis.d35eScentSenseContext`. Odor profile helpers are available at `game.d35eScentSense.odorProfile` and `globalThis.d35eScentSenseOdorProfile`. Detection-state helpers are available at `game.d35eScentSense.state` and `globalThis.d35eScentSenseState`. Trail/source record helpers are available at `game.d35eScentSense.trails` and `globalThis.d35eScentSenseTrails`. The older `createScentTrail`, `updateScentTrail`, `deleteScentTrail`, `getScentTrails`, and `getScentTrailDc` names remain supported compatibility aliases for the new Scent Source workflow.
 
 `evaluateScentDetection` returns a compatibility object with `detectable`, `pinpoint`, `band`, `reason`, `reasons`, `baseRange`, `effectiveRange`, `distance`, `context`, `state`, `states`, `directionAvailable`, `directionRequested`, `directionRevealed`, `directionStatus`, `requiresGmDirection`, and `notificationBand`. `evaluateScentState` returns the same state metadata and should be preferred by consumers that need to distinguish presence, direction request, revealed direction, and pinpoint.
 
-Lightweight Scent context can be supplied through API options or flags on the target token, target actor, or scene:
+Lightweight Scent context can be supplied through API options or flags on the target token, target actor, or scene. The Scent Menu now writes these values onto created Scent Source records for normal table use; the flag helpers remain available for macros, migrations, and older data.
 
 ```js
 await token.document.setFlag("d35e-scent-sense", "windBand", "upwind");
@@ -125,11 +128,13 @@ await token.document.setFlag("d35e-scent-sense", "falseOdor", true);
 await token.document.setFlag("d35e-scent-sense", "odorTags", ["wolf", "smoke"]);
 ```
 
-Supported context values are `normal`, `upwind`, and `downwind` for wind; `normal`, `strong`, and `overpowering` for odor strength; booleans for masking and false odors; and comma-separated or array odor tags for familiar-odor helpers. Tracking helpers compute RAW-derived DCs only; they do not roll Survival or replace GM adjudication.
+Supported context values are `normal`, `upwind`, and `downwind` for wind; `normal`, `strong`, and `overpowering` for odor strength; booleans for masking and false odors; and comma-separated or array odor tags for familiar-odor helpers. Masking odor suppresses detection. False odor and odor tags are GM helper data: they persist into context and familiar-odor checks, but they do not automatically lie to players or identify a creature. Tracking helpers compute RAW-derived DCs only; they do not roll Survival or replace GM adjudication.
 
-GMs can open **Scent Menu** from Token Controls and use **Advanced Scent Context** to edit scene defaults and current-scene token flags. Selecting `inherit` clears the module flag and returns that value to the normal precedence chain. Familiar odor matching is GM-facing helper data only; the module does not automatically identify a hidden creature for players.
+GMs can open **Scent Menu** from Token Controls to create a **Scent Source** for a scene token. A source stores the odor strength, wind band, masking odor, water state, competing odor, manual DC modifier, visibility, and whether the **Source leaves trail** as it moves. Less common helper data such as false odor, odor tags, and notes lives under **Advanced GM details**. The table below the create controls shows only scene tokens that have been created as Scent Sources, so the GM can quickly edit live source facts without sorting through every token on the map.
 
-GMs can use **Scent Menu** to create or enable scene-level trail records from current-scene tokens, review active trails first, preview tracking DCs for a selected scent-capable tracker, and create a redacted Survival prompt. New trails record source-token movement by default after the GM creates them. **View Scent Trails** shows or hides trail path graphics; GMs see active trails by default, while players only see trails explicitly marked visible to players.
+Source-specific odor and wind fields affect live Scent detection for that token. Recorded path segments are still used for trail overlays and tracking helpers. The legacy `game.d35eScentSense.openContextManager()` API remains available, but it now opens the same Scent Menu instead of a second management window.
+
+**View Scent Trails** shows or hides trail path graphics without opening the menu. GMs see active source trails by default, while players only see trails explicitly marked visible to players.
 
 ## Development Roadmap
 
@@ -156,7 +161,7 @@ This module is an independent community module. It is not affiliated with Foundr
 Run the local validation suite before publishing or packaging:
 
 ```bash
-npm test
+npm run validate
 ```
 
 The checks verify manifest structure, required legal files, script syntax, localization coverage, RAW helper behavior, odor profile behavior, trail behavior, D35E integration helpers, migration helpers, and public-surface cleanliness.
