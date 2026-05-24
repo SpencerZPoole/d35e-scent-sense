@@ -8,6 +8,9 @@ const moduleManifest = JSON.parse(fs.readFileSync(path.join(root, "module.json")
 const currentVersion = moduleManifest.version;
 const moduleId = moduleManifest.id;
 const requiredScreenshotAssets = [
+  "actor-scent-range-confirmed.png",
+  "actor-scent-sense-editor.png",
+  "actor-senses-row.png",
   "diagnostics-support.png",
   "module-settings.png",
   "scent-context-manager.png",

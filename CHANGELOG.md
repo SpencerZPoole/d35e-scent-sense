@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Clarified the first-run actor-sheet workflow for granting Scent through
+  **Attributes > Senses > pencil > Scent**, including live Foundry screenshots
+  and the exact D35E data paths the module reads.
+
 ## 1.1.1 - 2026-05-23
 
 - Replaced public package-page screenshots with live Foundry captures from a neutral scratch D35E world.

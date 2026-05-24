@@ -12,6 +12,18 @@
 
 <p>After installation, enable <strong>D35E Scent Sense</strong> in a D35E world and reload when Foundry asks.</p>
 
+<h3>Give An Actor Scent</h3>
+
+<p>Open the actor sheet, go to <strong>Attributes</strong>, scroll to <strong>Senses</strong>, click the pencil icon, enter the desired range in <strong>Scent</strong>, and click <strong>Submit</strong>. That D35E sheet value is the normal setup path for the module.</p>
+
+<p><img src="https://raw.githubusercontent.com/SpencerZPoole/d35e-scent-sense/main/docs/assets/foundry-page/actor-senses-row.png" alt="D35E actor sheet Senses row" /></p>
+
+<p><img src="https://raw.githubusercontent.com/SpencerZPoole/d35e-scent-sense/main/docs/assets/foundry-page/actor-scent-sense-editor.png" alt="D35E actor Scent sense editor" /></p>
+
+<p><img src="https://raw.githubusercontent.com/SpencerZPoole/d35e-scent-sense/main/docs/assets/foundry-page/actor-scent-range-confirmed.png" alt="D35E actor sheet confirmed Scent range" /></p>
+
+<p>The module reads that value from <code>system.attributes.senses.scent</code>. D35E may also expose the prepared range at <code>system.senses.scent</code>; the module checks both paths and uses the highest valid positive range.</p>
+
 <h3>Screenshots</h3>
 
 <p><img src="https://raw.githubusercontent.com/SpencerZPoole/d35e-scent-sense/main/docs/assets/foundry-page/scent-range-pinpoint.png" alt="D35E Scent Sense range and pinpoint overview" /></p>

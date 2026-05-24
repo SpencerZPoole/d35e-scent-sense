@@ -16,7 +16,33 @@ Then open a D35E world, enable **D35E Scent Sense** in **Manage Modules**, and r
 
 ## 2. Give A Token Scent
 
-The module reads Scent from D35E actor sense data and eligible item sense data. A positive range makes the actor a Scent source. The module also syncs a `scentPinpoint` token detection mode at the 5 ft pinpoint range.
+For normal use, give Scent to the actor through the D35E sheet before testing
+alerts, rings, or trails:
+
+1. Open the actor sheet or a placed token's actor sheet.
+2. Open the **Attributes** tab.
+3. Scroll down to the **Senses** row in the Traits area.
+4. Click the pencil icon on the **Senses** row.
+5. In the Senses configuration window, enter the range in **Scent**.
+6. Click **Submit**.
+
+![D35E actor sheet Senses row](assets/foundry-page/actor-senses-row.png)
+
+![D35E actor Scent sense editor](assets/foundry-page/actor-scent-sense-editor.png)
+
+After saving, the actor sheet should show a `Scent 30 ft.` style badge on the
+**Senses** row if you entered `30`.
+
+![D35E actor sheet confirmed Scent range](assets/foundry-page/actor-scent-range-confirmed.png)
+
+The module reads that D35E sheet value from `system.attributes.senses.scent`.
+D35E may also prepare the same range at `system.senses.scent`; the module checks
+both locations and uses the highest positive value it finds. Eligible item sense
+data can also grant Scent, but the actor-sheet path above is the clearest setup
+path for a GM or player.
+
+A positive range makes the actor a Scent-capable source. The module also syncs a
+`scentPinpoint` token detection mode at the 5 ft pinpoint range.
 
 Use `game.d35eScentSense.getScentRangeBreakdown(actorOrToken)` when a token does not behave as expected. The diagnostic reports contributing sources, ignored sources, and token sync status.
 

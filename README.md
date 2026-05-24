@@ -53,7 +53,32 @@ For a shorter first-use checklist, see:
 
 ## Usage
 
-Give a D35E actor a positive Scent range through the actor sense data or an active item sense value. The module uses `30` as the default SRD-derived Scent range where its own helper constants are needed, and `5` for pinpoint handling.
+### Give An Actor Scent
+
+For normal table use, add Scent through the D35E actor sheet:
+
+1. Open the actor or token sheet.
+2. Open the **Attributes** tab.
+3. Scroll to the **Senses** row in the Traits area.
+4. Click the pencil icon on that row.
+5. Enter the range in the **Scent** field.
+6. Click **Submit**.
+
+![D35E actor sheet Senses row](docs/assets/foundry-page/actor-senses-row.png)
+
+![D35E actor Scent sense editor](docs/assets/foundry-page/actor-scent-sense-editor.png)
+
+After submit, the sheet should show a `Scent 30 ft.` style badge on the
+**Senses** row for a 30 ft. entry.
+
+![D35E actor sheet confirmed Scent range](docs/assets/foundry-page/actor-scent-range-confirmed.png)
+
+The module reads that D35E sheet data from `system.attributes.senses.scent`.
+After D35E prepares the actor, the same value may also appear at
+`system.senses.scent`; the module checks both and uses the highest valid
+positive range. A positive range makes the actor a Scent-capable source. The
+module uses `30` as the default SRD-derived Scent range where its own helper
+constants are needed, and `5` for pinpoint handling.
 
 The module exposes `game.d35eScentSense` after initialization:
 

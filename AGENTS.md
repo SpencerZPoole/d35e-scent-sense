@@ -5,6 +5,7 @@
 - Keep changes narrow, compatible with Foundry VTT 14 and the D35E system, and aligned with the existing module structure.
 - Treat README, docs, screenshots, release notes, `module.json`, and the Foundry package page as release surfaces, not afterthoughts.
 - Do not use AI-generated, staged, or mock screenshots for public module documentation. Use live Foundry screenshots from a running app session whenever screenshots are updated.
+- Before calling public user documentation complete, walk through the first-run human setup path from an empty actor: install/enable the module, open the D35E actor sheet, add Scent through **Attributes > Senses > pencil > Scent**, place/select a token, verify the module diagnostic sees the range, and make sure the docs tell that story plainly.
 - Follow the official Foundry VTT module-development guidance when changing manifest metadata, compatibility, module structure, release packaging, or installation URLs: https://foundryvtt.com/article/module-development/
 - A public release is not complete after pushing GitHub tags alone. Publish or verify the matching version on the Foundry VTT package listing using the package release workflow/API, then confirm the public package page shows the expected version, compatibility, manifest link, download link, and description.
 

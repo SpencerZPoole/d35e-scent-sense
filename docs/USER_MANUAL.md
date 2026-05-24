@@ -165,6 +165,32 @@ After enabling the module in a D35E world:
 The module treats an actor or token as a Scent source when it finds a positive
 Scent range from supported D35E data.
 
+### Normal Actor-Sheet Setup
+
+The clearest setup path is the D35E actor sheet:
+
+1. Open the actor sheet, or open a placed token's actor sheet.
+2. Open the **Attributes** tab.
+3. Scroll down to the **Senses** row in the Traits area.
+4. Click the pencil icon on the **Senses** row.
+5. In the Senses configuration window, enter the desired range in **Scent**.
+6. Click **Submit**.
+
+![D35E actor sheet Senses row](assets/foundry-page/actor-senses-row.png)
+
+![D35E actor Scent sense editor](assets/foundry-page/actor-scent-sense-editor.png)
+
+After submit, the actor sheet should show a `Scent 30 ft.` style badge on the
+**Senses** row if you entered `30`.
+
+![D35E actor sheet confirmed Scent range](assets/foundry-page/actor-scent-range-confirmed.png)
+
+That sheet workflow writes the base D35E actor value at
+`system.attributes.senses.scent`. During D35E actor preparation, the same range
+may also be exposed at `system.senses.scent`. The module checks both paths, so
+the actor-sheet setup above is directly connected to Scent range discovery,
+alerts, rings, pinpoint sync, and trail tracking eligibility.
+
 Supported sources include:
 
 - D35E prepared actor senses.
@@ -174,6 +200,17 @@ Supported sources include:
 
 The module chooses the highest valid Scent range it finds. If a source is
 ignored, the range breakdown diagnostic reports why.
+
+For a quick confirmation, select the token and run:
+
+```js
+game.d35eScentSense.getScentRangeBreakdown(canvas.tokens.controlled[0])
+```
+
+For an actor that was given `Scent 30 ft.` through the sheet, the diagnostic
+should report a `range` of `30` and a contributor from
+`system.attributes.senses.scent`. It may also report a prepared contributor from
+`system.senses.scent`.
 
 ### Eligible Item Sources
 
@@ -464,7 +501,9 @@ manager.
 ### A Token With Scent Is Not Detecting Anything
 
 - Confirm the source token has an actor.
-- Confirm the actor has a positive Scent range.
+- Confirm the actor has a positive Scent range on **Attributes > Senses**.
+- Open the Senses pencil editor and check that the **Scent** field itself has a
+  number greater than `0`, not only a note in **Special Senses**.
 - Run `getScentRangeBreakdown` on the token.
 - Confirm the target is inside the effective range.
 - Check whether **Respect Walls** is blocking the alert.

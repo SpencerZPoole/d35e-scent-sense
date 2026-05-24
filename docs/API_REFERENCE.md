@@ -11,6 +11,13 @@ This document records the stable public API for the `v1.x` release line as of `v
 - `game.d35eScentSense.state` and `globalThis.d35eScentSenseState`: detection state helpers.
 - `game.d35eScentSense.trails` and `globalThis.d35eScentSenseTrails`: trail record helpers.
 
+## D35E Sheet Data
+
+The normal D35E sheet path is **Attributes > Senses > pencil > Scent**. That
+editor writes the base range to `system.attributes.senses.scent`. During actor
+preparation, D35E may also expose the prepared value at `system.senses.scent`.
+The range helpers below read both locations and use the highest positive value.
+
 ## Stable Runtime API
 
 - `getScentRange(actorOrToken)`: returns the highest valid Scent range found for a D35E actor or token.
