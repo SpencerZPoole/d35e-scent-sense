@@ -55,6 +55,12 @@ For a shorter first-use checklist, see:
 - Preserves the public `v1.x` API shape while adding visual trail helpers.
 - Adds localization coverage checks and continuous validation for stable-release review.
 
+## Screenshots
+
+![D35E Scent Sense module settings](docs/assets/foundry-page/module-settings.png)
+
+![D35E Scent Sense visible trail overlay](docs/assets/foundry-page/scent-trail-overlay.png)
+
 ## Usage
 
 ### Give An Actor Scent
@@ -135,8 +141,6 @@ GMs can open **Scent Menu** from Token Controls to create a **Scent Source** for
 Source-specific odor and wind fields affect live Scent detection for that token. Recorded path segments are still used for trail overlays and tracking helpers. The legacy `game.d35eScentSense.openContextManager()` API remains available, but it now opens the same Scent Menu instead of a second management window.
 
 **View Scent Trails** shows or hides trail path graphics without opening the menu. GMs see active source trails by default, while players only see trails explicitly marked visible to players.
-
-![D35E Scent Sense visible trail overlay](docs/assets/foundry-page/scent-trail-overlay.png)
 
 ## Development Roadmap
 

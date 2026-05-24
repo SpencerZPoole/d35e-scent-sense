@@ -143,6 +143,14 @@ const requiredPublicText = [
     text: "releases/latest/download/module.json",
   },
   {
+    file: "README.md",
+    text: "docs/assets/foundry-page/module-settings.png",
+  },
+  {
+    file: "README.md",
+    text: "docs/assets/foundry-page/scent-trail-overlay.png",
+  },
+  {
     file: "docs/FOUNDRY_PACKAGE_DESCRIPTION.html",
     text: `Module version: ${currentVersion}.`,
   },
