@@ -4,6 +4,10 @@
 
 This repository contains module code, public-safe documentation, package-page screenshots, and validation tooling only. It does not include copied rulebook prose, stat blocks, adventure text, setting lore, compendium data, non-documentation artwork, audio, fonts, or private campaign material.
 
+**Support:** If this module helps your table, donations are optional and support continued maintenance, compatibility testing, release packaging, and documentation.
+
+[![Sponsor on GitHub](https://img.shields.io/badge/GitHub%20Sponsors-Donate-ea4aaa?style=flat&logo=githubsponsors&logoColor=white)](https://github.com/sponsors/SpencerZPoole) [![Donate with PayPal](https://img.shields.io/badge/PayPal-One--time%20donation-00457C?style=flat&logo=paypal&logoColor=white)](https://paypal.me/mrpooley92)
+
 ## Compatibility
 
 - Foundry Virtual Tabletop: minimum `14`, verified `14.362`
@@ -156,12 +160,3 @@ npm test
 ```
 
 The checks verify manifest structure, required legal files, script syntax, localization coverage, RAW helper behavior, odor profile behavior, trail behavior, D35E integration helpers, migration helpers, and public-surface cleanliness.
-
-## Donate
-
-If this project helped your table or module work, donations are welcome. GitHub Sponsors is best for recurring sponsorships; PayPal works well for one-time donations.
-
-[![Sponsor on GitHub](https://img.shields.io/badge/GitHub%20Sponsors-Donate-ea4aaa?style=flat&logo=githubsponsors&logoColor=white)](https://github.com/sponsors/SpencerZPoole)
-[![Donate with PayPal](https://img.shields.io/badge/PayPal-One--time%20donation-00457C?style=flat&logo=paypal&logoColor=white)](https://paypal.me/mrpooley92)
-
-The module remains free, independent, and bound by the license boundaries documented above.
