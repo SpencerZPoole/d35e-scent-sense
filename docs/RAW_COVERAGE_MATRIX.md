@@ -40,4 +40,4 @@ Current `v1.x` behavior can say:
 
 ## Stable Release Notes
 
-`v1.2.0` preserves the documented conservative RAW boundary while completing the Scent Source workflow with GM-created visual path recording, age-based fade states, explicit GM/player visibility controls, source-specific odor controls, and clearer masking/false-odor/tag wording in the GM workflow.
+`v1.2.1` preserves the documented conservative RAW boundary from `v1.2.0` while refreshing release surfaces and installed documentation parity for the current Scent Source workflow.

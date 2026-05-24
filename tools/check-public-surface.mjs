@@ -156,7 +156,7 @@ const requiredPublicText = [
   },
   {
     file: "docs/RELEASE_AUDIT.md",
-    text: "Updated: 2026-05-24 after Scent Source hard live QA and documentation audit",
+    text: "Updated: 2026-05-24 after v1.2.1 package-description and installed-doc sync",
   },
   {
     file: "docs/RELEASE_AUDIT.md",

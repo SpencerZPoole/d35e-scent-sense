@@ -1,6 +1,6 @@
 # API Reference
 
-This document records the stable public API for the `v1.x` release line as of `v1.2.0`. New helpers may be added later, but the names and result fields below should remain backward compatible unless a future major version says otherwise.
+This document records the stable public API for the `v1.x` release line as of `v1.2.1`. New helpers may be added later, but the names and result fields below should remain backward compatible unless a future major version says otherwise.
 
 ## Entry Points
 

@@ -1,6 +1,6 @@
 {
   "name": "d35e-scent-sense",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "description": "Conservative 3.5e SRD Scent support and GM-managed Scent Sources for the D35E Foundry system.",
   "private": true,
   "type": "module",

@@ -1,6 +1,6 @@
 # D35E Integration Note
 
-This note documents how `d35e-scent-sense` integrates with the D35E Foundry system as of `v1.2.0` and the current Scent Source workflow.
+This note documents how `d35e-scent-sense` integrates with the D35E Foundry system as of `v1.2.1` and the current Scent Source workflow.
 
 ## Current Integration Points
 
@@ -33,3 +33,5 @@ No upstream pull request is included in this release.
 `v1.0.0` promoted the release-candidate feature set to a stable release; the D35E runtime integration behavior remains the `v0.8.2` behavior that passed scratch-world product testing.
 
 `v1.2.0` does not change the D35E sense-source integration path. It completes the public Scent Source workflow around the existing D35E sheet data, `scentPinpoint` sync, and actor range discovery behavior while keeping legacy source/trail APIs compatible.
+
+`v1.2.1` keeps gameplay behavior unchanged. It refreshes the shipped in-game package description and installed documentation/screenshot parity for the current Scent Source workflow.

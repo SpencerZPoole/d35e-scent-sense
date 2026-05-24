@@ -2,6 +2,15 @@
 
 ## Unreleased
 
+## 1.2.1 - 2026-05-24
+
+- Updated the in-game package description so Foundry's module list mentions
+  GM-managed Scent Sources and visual trails.
+- Added validation coverage to keep the runtime package description aligned
+  with `module.json`.
+- Synced public documentation and screenshot references for the current Scent
+  Source workflow without changing gameplay behavior or public APIs.
+
 ## 1.2.0 - 2026-05-24
 
 - Redesigned the GM Scent Menu around **Scent Sources**: create a source at the

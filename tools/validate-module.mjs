@@ -21,8 +21,6 @@ const requiredFiles = [
   "docs/RELEASE_PROCESS.md",
   "docs/USER_GUIDE.md",
   "docs/V1_ROADMAP.md",
-  ".github/workflows/release.yml",
-  ".github/workflows/validate.yml",
   "lang/en.json",
   "scripts/scent-rules.js",
   "scripts/scent-context.js",
@@ -61,6 +59,7 @@ const requiredFiles = [
 
 const errors = [];
 const expectedManifestUrl = "https://github.com/SpencerZPoole/d35e-scent-sense/releases/latest/download/module.json";
+const sourceCheckoutOnlyFiles = [".github/workflows/release.yml", ".github/workflows/validate.yml"];
 const expectedScripts = [
   "scripts/scent-rules.js",
   "scripts/scent-context.js",
@@ -99,6 +98,14 @@ for (const relativePath of requiredFiles) {
   }
 }
 
+if (fs.existsSync(path.join(root, ".git"))) {
+  for (const relativePath of sourceCheckoutOnlyFiles) {
+    if (!fs.existsSync(path.join(root, relativePath))) {
+      fail(`Missing source-checkout file: ${relativePath}`);
+    }
+  }
+}
+
 const manifest = readJson("module.json");
 const packageJson = readJson("package.json");
 readJson("lang/en.json");
@@ -114,6 +121,12 @@ if (manifest) {
   if (typeof manifest.url !== "string" || !manifest.url.includes("d35e-scent-sense")) fail("module.json url is missing or incorrect");
   if (manifest.manifest !== expectedManifestUrl) fail("module.json manifest URL is missing or incorrect");
   if (manifest.download !== expectedDownloadUrl) fail("module.json download URL is missing or incorrect");
+  const mainScriptContent = fs.readFileSync(path.join(root, "scripts/d35e-scent-sense.js"), "utf8");
+  const packageDescriptionMatch = mainScriptContent.match(/const\s+PACKAGE_DESCRIPTION\s*=\s*"([^"]+)";/);
+  if (!packageDescriptionMatch) fail("scripts/d35e-scent-sense.js must declare PACKAGE_DESCRIPTION");
+  if (packageDescriptionMatch?.[1] !== manifest.description) {
+    fail("scripts/d35e-scent-sense.js PACKAGE_DESCRIPTION must match module.json description");
+  }
   if (!Array.isArray(manifest.authors) || manifest.authors[0]?.name !== "Spencer Poole") fail("module.json author must be Spencer Poole");
   if (manifest.compatibility?.minimum !== "14") fail("module.json Foundry minimum compatibility must be 14");
   if (manifest.compatibility?.verified !== "14.362") fail("module.json Foundry verified compatibility must be 14.362");

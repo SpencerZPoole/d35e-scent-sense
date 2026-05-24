@@ -4,7 +4,7 @@
   const MODULE_ID = "d35e-scent-sense";
   const PACKAGE_TITLE = "D35E Scent Sense";
   const PACKAGE_DESCRIPTION =
-    "Adds conservative 3.5e SRD Scent support for the D35E Foundry system: presence alerts, optional owner/GM range rings, and 5 ft pinpoint detection.";
+    "Adds conservative 3.5e SRD Scent support for the D35E Foundry system: presence alerts, optional owner/GM range rings, 5 ft pinpoint detection, and GM-managed Scent Sources that can leave visual trails.";
   const SOCKET_NAME = `module.${MODULE_ID}`;
   const SENSE_ID = "scent";
   const DETECTION_MODE_ID = "scentPinpoint";

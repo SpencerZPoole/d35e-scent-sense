@@ -72,7 +72,7 @@ trails.
   most diagnostics.
 
 The module is distributed through GitHub releases. The current stable module
-version is `1.2.0`.
+version is `1.2.1`.
 
 ## 3. Installation
 
@@ -98,7 +98,7 @@ version is `1.2.0`.
 Use this path only if the manifest installer is unavailable.
 
 1. Open the latest GitHub release for `SpencerZPoole/d35e-scent-sense`.
-2. Download the release zip named like `d35e-scent-sense-v1.2.0.zip`.
+2. Download the release zip named like `d35e-scent-sense-v1.2.1.zip`.
 3. Extract the zip into your Foundry user data module folder so the module
    folder is named `d35e-scent-sense`.
 4. Confirm that `module.json` is directly inside that folder, not inside an
