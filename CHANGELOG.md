@@ -2,6 +2,26 @@
 
 ## Unreleased
 
+## 1.2.2 - 2026-06-04
+
+- Hardened Scent chat confidentiality so every module-created Scent chat card is
+  a private whisper with module privacy flags instead of a public fallback.
+- Kept player-facing presence, pinpoint, and tracking prompt cards redacted;
+  hidden target names, actor IDs, token IDs, coordinates, scene-secret detail,
+  and GM notes remain GM-only.
+- Added defense-in-depth chat guards that reject public or wrongly-recipiented
+  module-flagged Scent cards before creation and hide private Scent cards from
+  clients outside the whisper audience.
+- Changed Respect Walls failure handling to fail closed: blocked walls,
+  unavailable collision APIs, or collision test errors suppress automated Scent
+  alerts instead of risking hidden target leaks.
+- Made native D35E tracking rolls an explicit opt-in for `rollTrackByScent`;
+  the default tracking path now creates private redacted owner prompts plus
+  GM-only detail prompts.
+- Added alert confidentiality tests covering owner/GM whisper recipients,
+  non-scent party exclusion, GM-only detail cards, redacted socket payloads,
+  wall-blocked alerts, and tracking prompt privacy.
+
 ## 1.2.1 - 2026-05-24
 
 - Updated the in-game package description so Foundry's module list mentions

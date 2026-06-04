@@ -156,7 +156,7 @@ const requiredPublicText = [
   },
   {
     file: "docs/RELEASE_AUDIT.md",
-    text: "Updated: 2026-05-24 after v1.2.1 package-description and installed-doc sync",
+    text: "Updated: 2026-06-04 after v1.2.2 chat confidentiality hardening",
   },
   {
     file: "docs/RELEASE_AUDIT.md",

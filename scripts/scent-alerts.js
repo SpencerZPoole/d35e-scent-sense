@@ -29,6 +29,89 @@
       REVEALED: "revealed",
     });
 
+    const PRIVACY_AUDIENCES = Object.freeze({
+      GM: "gm",
+      OWNER_GM: "owner-gm",
+    });
+
+    function normalizeUserIds(userIds = []) {
+      return Array.from(new Set(userIds.map((userId) => {
+        if (typeof userId === "string") return userId;
+        return userId?.id ?? userId?._id ?? null;
+      }).filter(Boolean)));
+    }
+
+    function getUsers() {
+      if (Array.isArray(game.users)) return game.users;
+      if (typeof game.users?.filter === "function") return game.users.filter(() => true);
+      return [];
+    }
+
+    function getUserById(userId) {
+      if (!userId) return null;
+      return game.users?.get?.(userId) ?? getUsers().find((user) => user.id === userId) ?? null;
+    }
+
+    function getAssignedActorId(user) {
+      const character = user?.character;
+      if (typeof character === "string") return character;
+      return character?.id ?? character?._id ?? user?.characterId ?? user?.data?.character ?? user?.data?.characterId ?? null;
+    }
+
+    function isActiveGmUserId(userId) {
+      const user = getUserById(userId);
+      return user?.active === true && user?.isGM === true;
+    }
+
+    function getPrivacyFlags({ audience = PRIVACY_AUDIENCES.OWNER_GM, containsSecret = false, recipients = [] } = {}) {
+      return {
+        [moduleId]: {
+          private: true,
+          audience,
+          containsSecret: containsSecret === true,
+          recipients: normalizeUserIds(recipients),
+        },
+      };
+    }
+
+    function getMessageFlags(message) {
+      if (typeof message?.getFlag === "function") {
+        return {
+          private: message.getFlag(moduleId, "private"),
+          audience: message.getFlag(moduleId, "audience"),
+          containsSecret: message.getFlag(moduleId, "containsSecret"),
+        };
+      }
+
+      return message?.flags?.[moduleId] ?? message?._source?.flags?.[moduleId] ?? {};
+    }
+
+    function getMessageWhisperRecipients(message) {
+      return normalizeUserIds(message?.whisper ?? message?._source?.whisper ?? message?.data?.whisper ?? []);
+    }
+
+    function isSecretAudience(audience, containsSecret) {
+      return containsSecret === true || audience === PRIVACY_AUDIENCES.GM;
+    }
+
+    function validatePrivateChatData({ recipients, audience, containsSecret, reason = "Scent chat card" } = {}) {
+      const whisper = normalizeUserIds(recipients);
+      if (whisper.length === 0) {
+        console.error(`${moduleId} | Refusing to create public ${reason}; no whisper recipients were provided.`);
+        return false;
+      }
+
+      if (isSecretAudience(audience, containsSecret)) {
+        const nonGmRecipient = whisper.find((userId) => !isActiveGmUserId(userId));
+        if (nonGmRecipient) {
+          console.error(`${moduleId} | Refusing to create secret ${reason}; non-GM recipient ${nonGmRecipient} was included.`);
+          return false;
+        }
+      }
+
+      return true;
+    }
+
     function isPrimaryActiveGm() {
       if (game.user?.isGM !== true) return false;
 
@@ -45,6 +128,12 @@
     function getActiveOwnerRecipients(token) {
       if (!token?.actor) return [];
 
+      const actorId = token.actor.id ?? token.actor._id;
+      const assignedUsers = game.users
+        .filter((user) => user.active && !user.isGM && actorId && getAssignedActorId(user) === actorId)
+        .map((user) => user.id);
+      if (assignedUsers.length > 0) return assignedUsers;
+
       const nonGmOwners = game.users
         .filter((user) => user.active && !user.isGM && token.actor.testUserPermission?.(user, "OWNER") === true)
         .map((user) => user.id);
@@ -52,6 +141,10 @@
 
       if (game.user?.isGM === true && token.actor.testUserPermission?.(game.user, "OWNER") === true) return [game.user.id];
       return [];
+    }
+
+    function getOwnerAndGmRecipients(token) {
+      return normalizeUserIds([...getActiveOwnerRecipients(token), ...getActiveGmIds()]);
     }
 
     function buildGmContextContent(detail) {
@@ -116,20 +209,47 @@
       }
     }
 
-    async function createWhisper(userIds, content) {
-      const recipients = Array.from(new Set(userIds.filter(Boolean)));
-      if (recipients.length === 0) return null;
+    async function createPrivateMessage(userIds, content, options = {}) {
+      const recipients = normalizeUserIds(userIds);
+      const audience = options.audience ?? PRIVACY_AUDIENCES.OWNER_GM;
+      const containsSecret = options.containsSecret === true;
+      if (!globalThis.ChatMessage?.create) return null;
+      if (!validatePrivateChatData({ recipients, audience, containsSecret, reason: options.reason ?? "Scent chat card" })) return null;
 
       return ChatMessage.create({
         user: game.user.id,
         speaker: ChatMessage.getSpeaker({ alias: "Scent" }),
         whisper: recipients,
         content,
+        flags: getPrivacyFlags({ audience, containsSecret, recipients }),
       });
     }
 
     async function createGmWhisper(content) {
-      return createWhisper(getActiveGmIds(), content);
+      return createPrivateMessage(getActiveGmIds(), content, {
+        audience: PRIVACY_AUDIENCES.GM,
+        containsSecret: true,
+        reason: "GM-only Scent detail card",
+      });
+    }
+
+    function getOwnerAlertRecipients(alert) {
+      const recipients = normalizeUserIds(alert?.recipients ?? []);
+      return recipients.length > 0 ? recipients : normalizeUserIds([game.user?.id]);
+    }
+
+    function isPrimaryOwnerAlertRecipient(alert) {
+      const recipients = getOwnerAlertRecipients(alert);
+      return recipients.length === 0 || recipients[0] === game.user?.id;
+    }
+
+    async function createOwnerWhisper(content, alert) {
+      if (!isPrimaryOwnerAlertRecipient(alert)) return null;
+      return createPrivateMessage([...getOwnerAlertRecipients(alert), ...getActiveGmIds()], content, {
+        audience: PRIVACY_AUDIENCES.OWNER_GM,
+        containsSecret: false,
+        reason: "owner Scent alert card",
+      });
     }
 
     function buildPresenceContent() {
@@ -150,8 +270,6 @@
         id: randomId(),
         type: socketTypes.MOVE_ACTION_REQUEST,
         eventId: alert.eventId,
-        sourceName: alert.sourceName,
-        sceneName: alert.sceneName,
       };
 
       game.socket?.emit(socketName, payload);
@@ -160,13 +278,13 @@
 
     async function showPresenceAlert(alert) {
       if (getSetting(settings.NOTIFICATION_MODE) === "chat") {
-        await createWhisper([game.user.id], buildPresenceContent());
+        await createOwnerWhisper(buildPresenceContent(), alert);
         return;
       }
 
       const DialogV2 = foundry.applications?.api?.DialogV2;
       if (!DialogV2?.confirm) {
-        await createWhisper([game.user.id], buildPresenceContent());
+        await createOwnerWhisper(buildPresenceContent(), alert);
         return;
       }
 
@@ -181,16 +299,16 @@
     }
 
     async function showPinpointAlert(alert) {
-      showLocalPinpointCue(alert.point);
+      if (alert.point) showLocalPinpointCue(alert.point);
 
       if (getSetting(settings.NOTIFICATION_MODE) === "chat") {
-        await createWhisper([game.user.id], buildPinpointContent());
+        await createOwnerWhisper(buildPinpointContent(), alert);
         return;
       }
 
       const DialogV2 = foundry.applications?.api?.DialogV2;
       if (!DialogV2?.confirm) {
-        await createWhisper([game.user.id], buildPinpointContent());
+        await createOwnerWhisper(buildPinpointContent(), alert);
         return;
       }
 
@@ -206,8 +324,8 @@
       if (!isPrimaryActiveGm()) return;
 
       const detail = gmEventCache.get(payload.eventId);
-      const actorName = escapeHtml(detail?.sourceName ?? payload.sourceName ?? "A token");
-      const sceneName = escapeHtml(detail?.sceneName ?? payload.sceneName ?? canvas?.scene?.name ?? "the current scene");
+      const actorName = escapeHtml(detail?.sourceName ?? "A token");
+      const sceneName = escapeHtml(detail?.sceneName ?? canvas?.scene?.name ?? "the current scene");
 
       let content = `<p>${escapeHtml(format("D35EScent.Alert.GmDirectionRequest", { actor: actorName }))}</p>`;
       if (detail) {
@@ -326,11 +444,6 @@
         type: socketTypes.PRESENCE_ALERT,
         eventId,
         recipients,
-        sourceTokenId: sourceToken.id,
-        sourceActorId: sourceToken.actor?.id,
-        sourceName: sourceToken.name,
-        sceneId: scene.id,
-        sceneName: scene.name,
       });
     }
 
@@ -358,15 +471,6 @@
         type: socketTypes.PINPOINT_ALERT,
         eventId,
         recipients,
-        sourceTokenId: sourceToken.id,
-        sourceActorId: sourceToken.actor?.id,
-        sourceName: sourceToken.name,
-        sceneId: scene.id,
-        sceneName: scene.name,
-        point: {
-          x: targetToken.center.x,
-          y: targetToken.center.y,
-        },
       });
 
       await createGmWhisper(
@@ -392,7 +496,38 @@
     function registerChatMessageHook() {
       if (chatHookRegistered === true) return;
 
-      Hooks.on("renderChatMessageHTML", (_message, html) => bindDirectionRevealButtons(html));
+      Hooks.on("preCreateChatMessage", (message) => {
+        const flags = getMessageFlags(message);
+        if (flags?.private !== true) return undefined;
+
+        const recipients = getMessageWhisperRecipients(message);
+        if (!validatePrivateChatData({
+          recipients,
+          audience: flags.audience,
+          containsSecret: flags.containsSecret === true,
+          reason: "module-flagged Scent chat card",
+        })) {
+          return false;
+        }
+
+        return undefined;
+      });
+
+      Hooks.on("renderChatMessageHTML", (message, html) => {
+        const flags = getMessageFlags(message);
+        if (flags?.private === true) {
+          const recipients = getMessageWhisperRecipients(message);
+          const allowed = recipients.includes(game.user?.id) || game.user?.isGM === true && isSecretAudience(flags.audience, flags.containsSecret);
+          if (!allowed) {
+            const root = html?.[0] ?? html;
+            if (root?.remove) root.remove();
+            else if (root?.style) root.style.display = "none";
+            return;
+          }
+        }
+
+        bindDirectionRevealButtons(html);
+      });
 
       chatHookRegistered = true;
     }
@@ -406,9 +541,12 @@
     return Object.freeze({
       dispatchPinpointAlert,
       dispatchPresenceAlert,
+      createPrivateMessage,
       getActiveGmIds,
       getActiveOwnerRecipients,
+      getOwnerAndGmRecipients,
       getDirectionStatus,
+      handleSocketMessage,
       isPrimaryActiveGm,
       registerChatMessageHook,
       registerSocket,

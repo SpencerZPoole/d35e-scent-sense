@@ -72,7 +72,7 @@ trails.
   most diagnostics.
 
 The module is distributed through GitHub releases. The current stable module
-version is `1.2.1`.
+version is `1.2.2`.
 
 ## 3. Installation
 
@@ -98,7 +98,7 @@ version is `1.2.1`.
 Use this path only if the manifest installer is unavailable.
 
 1. Open the latest GitHub release for `SpencerZPoole/d35e-scent-sense`.
-2. Download the release zip named like `d35e-scent-sense-v1.2.1.zip`.
+2. Download the release zip named like `d35e-scent-sense-v1.2.2.zip`.
 3. Extract the zip into your Foundry user data module folder so the module
    folder is named `d35e-scent-sense`.
 4. Confirm that `module.json` is directly inside that folder, not inside an
@@ -246,26 +246,32 @@ The module scans current scene tokens and evaluates Scent in bands and states.
 ### Presence Alerts
 
 Presence alerts tell a token owner that something is nearby. They do not reveal
-the hidden target's identity to the player.
+the hidden target's identity, token ID, actor ID, scene coordinates, or GM notes
+to the player. Scent chat cards are private whispers to the sensing owner and
+active GMs.
 
 ### Direction Requests
 
-When a player chooses to request direction, the module whispers supporting
-details to the GM. The GM decides what direction to reveal and can mark the
-request as revealed. The module tracks the state, but it does not spend actions
-or decide the direction automatically.
+When a player chooses to request direction, the player's request remains
+generic and the module whispers supporting details to the GM only. The GM
+decides what direction to reveal and can mark the request as revealed. The
+module tracks the state, but it does not spend actions or decide the direction
+automatically.
 
 ### Pinpoint Alerts
 
-Within 5 ft, the module can notify the owner and GM that the source is in the
-pinpoint band. The GM still controls how exact location information is described
-at the table.
+Within 5 ft, the module can notify the owner and GM that a scent source is in
+the pinpoint band. Player-facing cards stay generic. GM-only detail cards may
+include the hidden source name so the GM can adjudicate the table result.
 
 ### Privacy Boundary
 
-Player-facing messages are deliberately vague. GM-facing messages can include
-target names, range details, context values, and trail notes so the GM can
-adjudicate clearly.
+Player-facing messages are deliberately vague and stay private between the
+sensing token's active assigned/owner user and active GMs. GM-facing messages
+can include target names, range details, context values, and trail notes so the
+GM can adjudicate clearly, but those cards are GM-only whispers. If a
+secret-bearing Scent card cannot be created with safe GM-only recipients, the
+module refuses to create it instead of creating a public card.
 
 ## 8. Settings And Controls
 
@@ -284,7 +290,9 @@ Open **Configure Settings** for the module to adjust alert and overlay behavior.
 ### Respect Walls
 
 When enabled, automated Scent alerts are blocked through walls and closed
-barriers. The GM can still override or adjudicate unusual circumstances manually.
+barriers. If Foundry's wall collision check is unavailable or fails, the module
+blocks the automated alert rather than risk revealing a hidden source through a
+wall. The GM can still override or adjudicate unusual circumstances manually.
 
 ### Presence And Pinpoint Alerts
 

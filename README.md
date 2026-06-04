@@ -12,7 +12,7 @@ This repository contains module code, public-safe documentation, package-page sc
 
 - Foundry Virtual Tabletop: minimum `14`, verified `14.362`
 - D35E system: minimum `3.0.2`, verified `3.0.2`
-- Module version: `1.2.1`
+- Module version: `1.2.2`
 
 ## Install
 
@@ -22,7 +22,7 @@ In Foundry, open **Add-on Modules > Install Module**, paste this into **Manifest
 https://github.com/SpencerZPoole/d35e-scent-sense/releases/latest/download/module.json
 ```
 
-The current stable package version is `1.2.1`.
+The current stable package version is `1.2.2`.
 
 For development testing, copy or clone this folder into your Foundry `Data/modules` directory, then enable **D35E Scent Sense** in a D35E world.
 
@@ -43,8 +43,9 @@ For a shorter first-use checklist, see:
 - Reads Scent range from D35E prepared actor senses, base actor senses, and eligible item senses.
 - Provides Scent range source diagnostics and module-owned flag migration helpers.
 - Adds owner/GM-local Scent range rings.
-- Sends owner and GM alerts for presence, direction requests, and pinpoint events.
+- Sends private owner+GM alerts for presence, direction requests, and pinpoint events.
 - Keeps GM adjudication in the loop for direction and exact-location calls.
+- Keeps hidden target identity out of player-facing Scent cards; GM detail cards are GM-only whispers.
 - Tracks Scent detection state for presence, available direction requests, requested direction, GM-revealed direction, and 5 ft pinpoint.
 - Provides RAW-aware helper calculations for wind, odor strength, masking odors, and tracking by Scent.
 - Adds odor profiles for odor strength and masking odors, with false odor and familiar odor tags available as advanced GM helper data.
@@ -134,7 +135,7 @@ await token.document.setFlag("d35e-scent-sense", "falseOdor", true);
 await token.document.setFlag("d35e-scent-sense", "odorTags", ["wolf", "smoke"]);
 ```
 
-Supported context values are `normal`, `upwind`, and `downwind` for wind; `normal`, `strong`, and `overpowering` for odor strength; booleans for masking and false odors; and comma-separated or array odor tags for familiar-odor helpers. Masking odor suppresses detection. False odor and odor tags are GM helper data: they persist into context and familiar-odor checks, but they do not automatically lie to players or identify a creature. Tracking helpers compute RAW-derived DCs only; they do not roll Survival or replace GM adjudication.
+Supported context values are `normal`, `upwind`, and `downwind` for wind; `normal`, `strong`, and `overpowering` for odor strength; booleans for masking and false odors; and comma-separated or array odor tags for familiar-odor helpers. Masking odor suppresses detection. False odor and odor tags are GM helper data: they persist into context and familiar-odor checks, but they do not automatically lie to players or identify a creature. Tracking helpers compute RAW-derived DCs only; the default tracking prompt path is private and redacted for owners, with GM-only detail cards. Native D35E rolls are opt-in for API callers that explicitly pass `nativeRoll: true`.
 
 GMs can open **Scent Menu** from Token Controls to create a **Scent Source** for a scene token. A source stores the odor strength, wind band, masking odor, water state, competing odor, manual DC modifier, visibility, and whether the **Source leaves trail** as it moves. Less common helper data such as false odor, odor tags, and notes lives under **Advanced GM details**. The table below the create controls shows only scene tokens that have been created as Scent Sources, so the GM can quickly edit live source facts without sorting through every token on the map.
 

@@ -50,6 +50,12 @@ Use `game.d35eScentSense.getScentRangeBreakdown(actorOrToken)` when a token does
 
 The default alert scope is conservative: unknown hostile targets. In practice, hidden or invisible hostile tokens can trigger owner alerts. GMs can change the scope in module settings to all hostiles, all creatures, or GM-marked hostiles.
 
+Scent chat alerts are private. Player-facing cards are redacted and whisper to
+the sensing token's active assigned/owner user and active GMs. GM detail cards
+can include hidden target identity, but they are GM-only whispers. With
+**Respect Walls** enabled, blocked walls or unavailable wall-collision checks
+suppress automated alerts rather than risk revealing a hidden target.
+
 ## 4. Create Scene Scent Sources
 
 Open **Scent Menu** from Token Controls as GM. The menu is one page:
@@ -73,7 +79,7 @@ Tracking DC helper APIs remain available for macros and future UI work. The Scen
 
 ## 6. Know The Boundary
 
-The module does not spend actions, decide every direction call, identify hidden creatures for players, or reveal trail paths to players unless the GM enables that visibility. Those calls remain GM-adjudicated.
+The module does not spend actions, decide every direction call, identify hidden creatures for players, or reveal trail paths to players unless the GM enables that visibility. Those calls remain GM-adjudicated. Tracking prompts are private by default; API callers must explicitly opt into native D35E rolls with `nativeRoll: true` if they want the system roll path.
 
 ## More Help
 

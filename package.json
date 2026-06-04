@@ -1,6 +1,6 @@
 {
   "name": "d35e-scent-sense",
-  "version": "1.2.1",
+  "version": "1.2.2",
   "description": "Conservative 3.5e SRD Scent support and GM-managed Scent Sources for the D35E Foundry system.",
   "private": true,
   "type": "module",
@@ -16,7 +16,7 @@
   "scripts": {
     "build:release": "node tools/build-release.mjs",
     "check:js": "node --check scripts/scent-rules.js && node --check scripts/scent-context.js && node --check scripts/scent-odor-profile.js && node --check scripts/scent-trails.js && node --check scripts/scent-d35e-sources.js && node --check scripts/scent-migration.js && node --check scripts/scent-state.js && node --check scripts/scent-detection.js && node --check scripts/scent-overlay.js && node --check scripts/scent-alerts.js && node --check scripts/scent-d35e-integration.js && node --check scripts/scent-context-manager.js && node --check scripts/scent-trail-manager.js && node --check scripts/scent-api.js && node --check scripts/d35e-scent-sense.js",
-    "check:tools": "node --check tools/build-release.mjs && node --check tools/check-localization.mjs && node --check tools/check-public-surface.mjs && node --check tools/publish-foundry-release.mjs && node --check tools/test-scent-api.mjs && node --check tools/test-scent-context.mjs && node --check tools/test-scent-d35e-integration.mjs && node --check tools/test-scent-d35e-sources.mjs && node --check tools/test-scent-migration.mjs && node --check tools/test-scent-odor-profile.mjs && node --check tools/test-scent-rules.mjs && node --check tools/test-scent-state.mjs && node --check tools/test-scent-trail-manager.mjs && node --check tools/test-scent-trails.mjs && node --check tools/validate-module.mjs",
+    "check:tools": "node --check tools/build-release.mjs && node --check tools/check-localization.mjs && node --check tools/check-public-surface.mjs && node --check tools/publish-foundry-release.mjs && node --check tools/test-scent-alerts.mjs && node --check tools/test-scent-api.mjs && node --check tools/test-scent-context.mjs && node --check tools/test-scent-d35e-integration.mjs && node --check tools/test-scent-d35e-sources.mjs && node --check tools/test-scent-migration.mjs && node --check tools/test-scent-odor-profile.mjs && node --check tools/test-scent-rules.mjs && node --check tools/test-scent-state.mjs && node --check tools/test-scent-trail-manager.mjs && node --check tools/test-scent-trails.mjs && node --check tools/validate-module.mjs",
     "check:localization": "node tools/check-localization.mjs",
     "check:public": "node tools/check-public-surface.mjs",
     "publish:foundry": "node tools/publish-foundry-release.mjs",
@@ -24,6 +24,7 @@
     "test:rules": "node tools/test-scent-rules.mjs",
     "test:context": "node tools/test-scent-context.mjs",
     "test:odor-profile": "node tools/test-scent-odor-profile.mjs",
+    "test:alerts": "node tools/test-scent-alerts.mjs",
     "test:api": "node tools/test-scent-api.mjs",
     "test:state": "node tools/test-scent-state.mjs",
     "test:trails": "node tools/test-scent-trails.mjs",
@@ -31,7 +32,7 @@
     "test:d35e-sources": "node tools/test-scent-d35e-sources.mjs",
     "test:d35e-integration": "node tools/test-scent-d35e-integration.mjs",
     "test:migration": "node tools/test-scent-migration.mjs",
-    "validate": "node tools/validate-module.mjs && npm run check:js && npm run check:tools && npm run check:localization && npm run check:public && npm run test:rules && npm run test:context && npm run test:odor-profile && npm run test:api && npm run test:state && npm run test:trails && npm run test:trail-manager && npm run test:d35e-sources && npm run test:d35e-integration && npm run test:migration",
+    "validate": "node tools/validate-module.mjs && npm run check:js && npm run check:tools && npm run check:localization && npm run check:public && npm run test:rules && npm run test:context && npm run test:odor-profile && npm run test:alerts && npm run test:api && npm run test:state && npm run test:trails && npm run test:trail-manager && npm run test:d35e-sources && npm run test:d35e-integration && npm run test:migration",
     "test": "npm run validate"
   }
 }

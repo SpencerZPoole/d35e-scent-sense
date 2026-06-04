@@ -24,7 +24,7 @@ Use this checklist for public releases.
 2. Confirm the manifest version, manifest URL, download URL, socket flag, and compatibility metadata.
 3. Unpack the zip into a temporary folder and run `npm run validate` from the extracted artifact.
 4. Install the downloaded artifact in the scratch Foundry world.
-5. Run GM runtime smoke tests for APIs, actor-sheet Scent setup, no-Scent behavior, Scent Menu source creation/editing, Source leaves trail movement recording, View Scent Trails, masking odor suppression, false odor/tag helper data, scan behavior, migration dry-run, cleanup, and runtime events.
+5. Run GM runtime smoke tests for APIs, actor-sheet Scent setup, no-Scent behavior, Scent Menu source creation/editing, Source leaves trail movement recording, View Scent Trails, masking odor suppression, false odor/tag helper data, private owner+GM Scent chat, GM-only hidden-target detail cards, Respect Walls blocking, scan behavior, migration dry-run, cleanup, and runtime events.
 6. Confirm the public Foundry package page shows the target version, verified Foundry compatibility, release manifest/download links, package description, and live Foundry screenshots.
 
 Do not use a live campaign world for release validation unless a later plan explicitly approves it. Public screenshots must be captured from a live Foundry app session, preferably in a neutral scratch world with temporary data that is cleaned up afterward.

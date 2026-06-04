@@ -91,21 +91,26 @@
 
       const source = sourceToken?.center;
       const target = targetToken?.center;
-      if (!source || !target) return false;
+      if (!source || !target) return true;
 
       try {
-        const backend = CONFIG.Canvas?.polygonBackends?.sight;
+        const backend = CONFIG.Canvas?.polygonBackends?.sight ?? canvas?.polygonBackends?.sight;
         if (typeof backend?.testCollision === "function") {
           return backend.testCollision(source, target, { type: "sight", mode: "any" }) === true;
         }
       } catch (error) {
         if (!wallCollisionWarningShown) {
-          console.warn(`${MODULE_ID} | Could not test wall collision for Scent alerts; falling back to unblocked alerts.`, error);
+          console.warn(`${MODULE_ID} | Could not test wall collision for Scent alerts; blocking alerts to avoid leaking hidden targets.`, error);
           wallCollisionWarningShown = true;
         }
+        return true;
       }
 
-      return false;
+      if (!wallCollisionWarningShown) {
+        console.warn(`${MODULE_ID} | Wall collision API is unavailable for Scent alerts; blocking alerts to avoid leaking hidden targets.`);
+        wallCollisionWarningShown = true;
+      }
+      return true;
     }
 
     return Object.freeze({

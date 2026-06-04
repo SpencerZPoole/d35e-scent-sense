@@ -44,6 +44,7 @@ const requiredFiles = [
   "tools/check-public-surface.mjs",
   "tools/check-localization.mjs",
   "tools/publish-foundry-release.mjs",
+  "tools/test-scent-alerts.mjs",
   "tools/test-scent-api.mjs",
   "tools/test-scent-context.mjs",
   "tools/test-scent-odor-profile.mjs",
@@ -166,7 +167,7 @@ if (packageJson) {
   if (packageJson.version !== manifest?.version) fail("package.json version must match module.json version");
   if (packageJson.license !== "MIT") fail("package.json license must be MIT");
   if (packageJson.private !== true) fail("package.json should be private to prevent accidental npm publication");
-  for (const scriptName of ["build:release", "check:js", "check:tools", "check:localization", "check:public", "publish:foundry", "publish:foundry:dry-run", "test:api", "test:context", "test:odor-profile", "test:rules", "test:state", "test:trails", "test:trail-manager", "test:d35e-sources", "test:d35e-integration", "test:migration", "validate", "test"]) {
+  for (const scriptName of ["build:release", "check:js", "check:tools", "check:localization", "check:public", "publish:foundry", "publish:foundry:dry-run", "test:alerts", "test:api", "test:context", "test:odor-profile", "test:rules", "test:state", "test:trails", "test:trail-manager", "test:d35e-sources", "test:d35e-integration", "test:migration", "validate", "test"]) {
     if (!packageJson.scripts?.[scriptName]) fail(`package.json missing script: ${scriptName}`);
   }
 }

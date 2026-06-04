@@ -46,7 +46,8 @@
   <li>Registers Scent as a D35E sense label when the D35E system is active.</li>
   <li>Reads Scent range from supported D35E actor sense data and eligible item sense data.</li>
   <li>Adds 5 ft Scent pinpoint handling through a module-managed token detection mode.</li>
-  <li>Sends owner and GM alerts for scent presence, direction requests, and pinpoint states.</li>
+  <li>Sends private owner+GM alerts for scent presence, direction requests, and pinpoint states.</li>
+  <li>Keeps player-facing Scent cards anonymous while sending hidden target details only to GMs.</li>
   <li>Provides optional owner/GM-local Scent range rings for quick table visibility.</li>
   <li>Tracks Scent states such as presence, direction available, direction requested, direction revealed, and pinpoint.</li>
 </ul>
@@ -59,7 +60,7 @@
 
 <h3>Source Trails And Tracking</h3>
 
-<p>Sources can leave trails. When <strong>Source leaves trail</strong> is enabled, future token movement records visual path segments. A separate View Scent Trails token-control toggle shows or hides the path overlay without opening the menu. Tracking DC helper APIs remain available for macros and future UI work; the menu stays focused on source setup and source editing.</p>
+<p>Sources can leave trails. When <strong>Source leaves trail</strong> is enabled, future token movement records visual path segments. A separate View Scent Trails token-control toggle shows or hides the path overlay without opening the menu. Tracking DC helper APIs remain available for macros and future UI work; the menu stays focused on source setup and source editing. Tracking prompts are private by default, with redacted owner cards and GM-only detail cards.</p>
 
 <h3>Diagnostics And Support</h3>
 
@@ -78,11 +79,11 @@ game.d35eScentSense.migrateFlags({ dryRun: true })</pre>
 <ul>
   <li>Foundry VTT: minimum 14, verified 14.362.</li>
   <li>D35E system: minimum 3.0.2, verified 3.0.2.</li>
-<li>Module version: 1.2.1.</li>
+<li>Module version: 1.2.2.</li>
 </ul>
 
 <h3>Boundaries</h3>
 
-<p>This module does not spend actions, decide every direction call, identify hidden creatures for players, backfill trail movement before the GM creates a trail, reveal trail paths to players unless the GM allows it, or replace GM rulings. It is meant to make Scent easier to run at the table while keeping the GM in control.</p>
+<p>This module does not spend actions, decide every direction call, identify hidden creatures for players, backfill trail movement before the GM creates a trail, reveal trail paths to players unless the GM allows it, or replace GM rulings. Respect Walls blocks automated alerts through walls; if the wall collision check cannot be verified, the module suppresses the automated alert rather than risk revealing a hidden source. It is meant to make Scent easier to run at the table while keeping the GM in control.</p>
 
 <p>This is independent community tooling for Foundry VTT and D35E. It does not include copied rulebook prose, stat blocks, adventure text, setting lore, compendium data, artwork, audio, fonts, or private campaign material.</p>

@@ -726,16 +726,8 @@
     return getScentTrailDisplayState(segmentOrSource, options);
   }
 
-  async function createWhisper(userIds, content) {
-    const recipients = Array.from(new Set(userIds.filter(Boolean)));
-    if (recipients.length === 0 || !globalThis.ChatMessage?.create) return null;
-
-    return ChatMessage.create({
-      user: game.user.id,
-      speaker: ChatMessage.getSpeaker({ alias: "Scent" }),
-      whisper: recipients,
-      content,
-    });
+  async function createWhisper(userIds, content, options = {}) {
+    return ensureRuntimes().alerts.createPrivateMessage(userIds, content, options);
   }
 
   function getTrackingReasonLabel(reason) {
@@ -767,7 +759,7 @@
   }
 
   async function tryNativeSurvivalRoll(actor, dcResult, options = {}) {
-    if (options.nativeRoll === false) return null;
+    if (options.nativeRoll !== true) return null;
     if (typeof options.rollFunction === "function") {
       return { rolled: true, method: "custom", result: await options.rollFunction({ actor, dcResult, options }) };
     }
@@ -813,10 +805,18 @@
       : ensureRuntimes().alerts.getActiveOwnerRecipients(trackerToken).filter((userId) => !game.users?.get?.(userId)?.isGM);
     const messages = [];
 
-    const gmMessage = await createWhisper(gmIds, buildTrackingPromptContent(promptData.gm, { gm: true }));
+    const gmMessage = await createWhisper(gmIds, buildTrackingPromptContent(promptData.gm, { gm: true }), {
+      audience: "gm",
+      containsSecret: true,
+      reason: "GM-only Scent tracking prompt",
+    });
     if (gmMessage) messages.push(gmMessage.id);
 
-    const ownerMessage = await createWhisper(ownerIds, buildTrackingPromptContent(promptData.player, { gm: false }));
+    const ownerMessage = await createWhisper([...ownerIds, ...gmIds], buildTrackingPromptContent(promptData.player, { gm: false }), {
+      audience: "owner-gm",
+      containsSecret: false,
+      reason: "owner Scent tracking prompt",
+    });
     if (ownerMessage) messages.push(ownerMessage.id);
 
     return {

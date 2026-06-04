@@ -1,6 +1,6 @@
 # API Reference
 
-This document records the stable public API for the `v1.x` release line as of `v1.2.1`. New helpers may be added later, but the names and result fields below should remain backward compatible unless a future major version says otherwise.
+This document records the stable public API for the `v1.x` release line as of `v1.2.2`. New helpers may be added later, but the names and result fields below should remain backward compatible unless a future major version says otherwise.
 
 ## Entry Points
 
@@ -38,7 +38,7 @@ The range helpers below read both locations and use the highest positive value.
 - `getScentSourceDc(sourceOrId, tracker, options)`: returns tracking eligibility and DC details for one source/trail.
 - `getScentSourceDisplayState(segmentOrSource, options)`: returns age, fade state, visibility, and opacity metadata for source trail display.
 - `getScentTrails(scene, options)`, `createScentTrail(scene, data)`, `updateScentTrail(scene, trailId, data)`, `deleteScentTrail(scene, trailId)`, `getScentTrailDc(trailOrId, tracker, options)`, and `getScentTrailDisplayState(segmentOrTrail, options)`: legacy-compatible aliases for the source APIs. Stored scene flags remain `scentTrails` for backward compatibility.
-- `rollTrackByScent(trackerToken, trailId, options)`: attempts a compatible native Survival roll or creates a redacted prompt.
+- `rollTrackByScent(trackerToken, trailId, options)`: creates a private redacted owner+GM tracking prompt plus a GM-only detail prompt by default. Pass `nativeRoll: true` only when the caller explicitly wants to use the D35E native roll path.
 - `openContextManager(options)` and `openTrailManager(options)`: GM-only ApplicationV2 tools. The primary toolbar entry is the unified Scent Menu; `openContextManager` is preserved for compatibility and now opens that same menu instead of a separate context window.
 - `migrateFlags(options)`: GM-only migration helper; dry-run by default.
 - `syncActorTokens(actor)`, `refresh(options)`, `scan(options)`, `resetNotificationState(options)`, `isOverlayVisible(actorOrToken)`, and `setOverlayVisible(actorOrToken, visible)`: runtime integration and local Scent-ring presentation helpers.
@@ -62,3 +62,13 @@ The module reads older scene, token, and actor flags for context inheritance, bu
 Scent Source records are stored in the legacy `scentTrails` scene flag. Normalized records include `active`, `recordMovement`, `visibleToPlayers`, `sourceTokenId`, `createdWorldTime`, `updatedWorldTime`, `windBand`, water/odor/DC fields, notes, an odor profile snapshot, and `pathSegments`. Path segments store `trailId`, `sourceTokenId`, `sceneId`, `createdWorldTime`, `start`, and `end` canvas coordinates.
 
 Masking odor is a mechanical detection suppressor. False odor and odor tags are preserved in context/profile data and can support familiar-odor checks, but they do not modify range or identify creatures automatically.
+
+## Chat Privacy Boundary
+
+Scent alert and tracking chat cards are private module-flagged whispers. Owner
+cards are redacted and sent only to the sensing token's active assigned/owner
+user plus active GMs. GM detail cards may include hidden target identity, scene
+context, source notes, or exact adjudication details, but those cards are
+GM-only. Module-flagged Scent cards with no whisper recipients, public fallback
+recipients, or non-GM recipients on secret-bearing cards are rejected before
+creation.
